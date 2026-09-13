@@ -21,4 +21,5 @@ export const EMERGENCY_TEL = '911';
 export const WALLET_BALANCE_PLACEHOLDER = '₱350.00';
 
 // API base path (network-relative so it works in dev, prod, and Capacitor).
-export const API_BASE = '/api';
+// In production, /api is proxied to the backend via Vercel rewrite (vercel.json).
+export const API_BASE = import.meta.env.VITE_API_URL || '/api';
