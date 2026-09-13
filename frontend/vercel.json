@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://fair-trike-3j8wapjej-erolindwayneee-8656s-projects.vercel.app/api/:path*"
+      "destination": "https://fairtrike.vercel.app/api/:path*"
     }
   ]
 }
