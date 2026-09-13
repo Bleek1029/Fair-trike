@@ -82,25 +82,34 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
 app.use(errorHandler);
 
 // ── Start ───────────────────────────────────────────────
-const server = app.listen(env.port, async () => {
-  console.log(`🚀 Fairtrike backend running at http://localhost:${env.port}`);
-  console.log(`📡 API base: http://localhost:${env.port}/api`);
-  try {
-    await testConnection();
-    await ensureDatabase();
-  } catch (err) {
-    console.error('❌ Startup database check failed:', err.message);
-    console.error('   Verify PostgreSQL is running and backend/.env credentials are correct.');
-  }
-});
+// On Vercel (serverless), the app is exported and invoked per-request;
+// only listen when running as a normal server.
+const isVercel = Boolean(process.env.VERCEL);
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${env.port} is already in use — a previous server instance is likely still running.`);
-    console.error(`   Fix: stop the other process first, e.g.:`);
-    console.error(`     PowerShell: Get-NetTCPConnection -LocalPort ${env.port} -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`);
-    console.error(`     or:         npx kill-port ${env.port}`);
-    process.exit(1);
-  }
-  throw err;
-});
+if (!isVercel) {
+  const server = app.listen(env.port, async () => {
+    console.log(`🚀 Fairtrike backend running at http://localhost:${env.port}`);
+    console.log(`📡 API base: http://localhost:${env.port}/api`);
+    try {
+      await testConnection();
+      await ensureDatabase();
+    } catch (err) {
+      console.error('❌ Startup database check failed:', err.message);
+      console.error('   Verify PostgreSQL is running and backend/.env credentials are correct.');
+    }
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${env.port} is already in use — a previous server instance is likely still running.`);
+      console.error(`   Fix: stop the other process first, e.g.:`);
+      console.error(`     PowerShell: Get-NetTCPConnection -LocalPort ${env.port} -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`);
+      console.error(`     or:         npx kill-port ${env.port}`);
+      process.exit(1);
+    }
+    throw err;
+  });
+}
+
+// Export for Vercel serverless (see api/index.js)
+export default app;
