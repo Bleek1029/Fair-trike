@@ -1,0 +1,1057 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ─────────────────────────────────────────── */
+html {
+  overscroll-behavior: none;
+}
+body {
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif;
+  background-color: #faf8ff;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Shared loader / spinner ──────────────────────── */
+.page-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #d3e4fe;
+  border-top-color: #004328;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.spin-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  border-top-color: #004328;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Branded Fairtrike loader (logo + name) ─────────── */
+.brand-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(600px 300px at 50% 18%, rgba(13, 92, 58, 0.16), transparent 70%),
+    radial-gradient(500px 260px at 50% 85%, rgba(0, 108, 73, 0.10), transparent 70%),
+    #faf8ff;
+}
+.brand-loader--overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  min-height: 0;
+  height: 100vh;
+  background: rgba(248, 249, 255, 0.92);
+  backdrop-filter: blur(6px);
+  animation: brandOverlayIn 0.25s ease-out;
+}
+@keyframes brandOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.brand-loader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+  animation: brandInnerIn 0.35s ease-out;
+}
+@keyframes brandInnerIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.brand-loader--done .brand-loader-inner {
+  animation: brandInnerOut 0.3s ease-in forwards;
+}
+@keyframes brandInnerOut {
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
+/* Logo badge */
+.brand-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #0d5c3a 0%, #004328 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 12px 32px rgba(13, 92, 58, 0.45), inset 0 1px 0 rgba(255,255,255,0.5);
+  animation: brandBounce 1.6s ease-in-out infinite;
+}
+@keyframes brandBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.04); }
+}
+.brand-mark-ft {
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.brand-mark-check {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #006c49;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #faf8ff;
+  box-shadow: 0 4px 10px rgba(0, 108, 73, 0.4);
+  animation: brandPop 1.6s ease-in-out infinite;
+}
+.brand-mark-check .material-symbols-outlined {
+  font-size: 14px;
+  font-weight: 700;
+}
+@keyframes brandPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+.brand-mark-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 28px;
+  border: 3px solid transparent;
+  border-top-color: #004328;
+  animation: spin 1.1s linear infinite;
+  pointer-events: none;
+}
+
+/* Animated name */
+.brand-loader-name {
+  margin-top: 18px;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #131b2e;
+  display: flex;
+}
+.brand-loader-letter {
+  display: inline-block;
+  animation: brandLetter 1.4s ease-in-out infinite;
+}
+@keyframes brandLetter {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-7px); opacity: 0.75; }
+}
+.brand-loader-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: #004328;
+}
+.brand-loader-bar {
+  margin-top: 18px;
+  width: 200px;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5eeff;
+  overflow: hidden;
+}
+.brand-loader-bar-fill {
+  height: 100%;
+  width: 40%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0d5c3a, #004328);
+  animation: brandBar 1.1s ease-in-out infinite;
+}
+@keyframes brandBar {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(520%); }
+}
+.brand-loader-msg {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #565e74;
+  min-height: 18px;
+}
+
+/* Boot splash (plain HTML, visible before React mounts) */
+#boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #faf8ff;
+  transition: opacity 0.35s ease;
+}
+#boot-splash.boot-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+#boot-splash .brand-loader {
+  min-height: 0;
+}
+
+/* ════════ Map app (Leaflet navigator) — Material theme ════════ */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  margin-top: 64px;
+}
+#map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* GPS status bar */
+#gps-status {
+  position: absolute;
+  top: 16px;
+  left: 340px;
+  background: rgba(248, 249, 255, 0.94);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+#gps-status.gps-searching {
+  background: rgba(13, 92, 58, 0.9);
+  color: #131b2e;
+}
+#gps-status.gps-active {
+  background: rgba(0, 108, 73, 0.9);
+  color: #fff;
+}
+#gps-status.gps-error {
+  background: rgba(186, 26, 26, 0.9);
+  color: #fff;
+}
+
+/* Left panel */
+#left-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100%;
+  background: #faf8ff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #d8e4ff;
+}
+.user-avatar,
+.pfp-preview {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #004328, #0d5c3a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.user-avatar img,
+/* ═══════════════════════════════════════════════════════════════
+   Mobile-Only Styles (screens < 768px)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Mobile Bottom Sheet (booking panel) ── */
+.mobile-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #ffffff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+  max-height: 55vh;
+  overflow-y: auto;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mobile-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 999px;
+  margin: 10px auto 4px;
+}
+
+.mobile-sheet-content {
+  padding: 0 16px 24px;
+}
+
+.mobile-sheet-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.mobile-sheet-title h2 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #131b2e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-sheet-title .badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+/* ── Booking inputs inside bottom sheet ── */
+.booking-input-group {
+  margin-bottom: 8px;
+}
+
+.booking-input-group label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+.booking-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.booking-input-wrap .input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.booking-input-wrap .input-icon.amber {
+  color: #0d5c3a;
+}
+
+.booking-input {
+  width: 100%;
+  padding: 10px 12px 10px 34px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #131b2e;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.booking-input:focus {
+  border-color: #0d5c3a;
+  box-shadow: 0 0 0 3px rgba(13, 92, 58, 0.12);
+  background: #fff;
+}
+
+.booking-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ── Locate button (inside bottom sheet) ── */
+.locate-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #059669;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  transition: background 0.15s, transform 0.1s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.locate-btn:active {
+  transform: scale(0.97);
+  background: #e2e8f0;
+}
+
+.locate-btn .locate-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Fare preview strip inside bottom sheet ── */
+.fare-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+.fare-preview .fare-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #64748b;
+}
+
+.fare-preview .fare-stat strong {
+  color: #131b2e;
+  font-weight: 700;
+}
+
+.fare-preview .fare-divider {
+  width: 1px;
+  height: 14px;
+  background: #fde68a;
+  margin: 0 8px;
+}
+
+.fare-preview .fare-amount {
+  font-weight: 800;
+  color: #d97706;
+  font-size: 12px;
+}
+
+/* ── Bottom sheet action buttons ── */
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.sheet-primary-btn {
+  width: 100%;
+  padding: 11px;
+  background: #0d5c3a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(13, 92, 58, 0.3);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.sheet-primary-btn:active {
+  transform: scale(0.97);
+  background: #d97706;
+}
+
+.sheet-primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sheet-secondary-btn {
+  width: 100%;
+  padding: 9px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.sheet-secondary-btn:active {
+  transform: scale(0.97);
+  background: #fecaca;
+}
+
+/* ── Route result items inside bottom sheet ── */
+.sheet-route-result {
+  margin-top: 10px;
+}
+
+.sheet-route-option {
+  padding: 8px 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sheet-route-option:hover {
+  border-color: #0d5c3a;
+  background: #fffbeb;
+}
+
+.sheet-route-option.selected {
+  border-color: #004328;
+  background: #c3ecd7;
+}
+
+.sheet-route-option:last-child {
+  margin-bottom: 0;
+}
+
+.sheet-route-option-name {
+  font-weight: 700;
+  color: #006c49;
+  font-size: 12px;
+}
+
+.sheet-route-option-desc {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.sheet-route-result .error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #991b1b;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+/* ── Mobile app bottom nav (phones only, above footer) ── */
+.app-bottomnav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: 2px;
+  min-height: 64px;
+  padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: rgba(250, 248, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid #dae2fd;
+  box-shadow: 0 -2px 12px rgba(13, 92, 58, 0.08);
+}
+.app-bottomnav-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 6px 2px 4px;
+  border-radius: 10px;
+  color: #404942;
+  text-decoration: none;
+  overflow: hidden;
+}
+.app-bottomnav-tab .material-symbols-outlined {
+  font-size: 24px;
+  line-height: 24px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.app-bottomnav-label {
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.app-bottomnav-tab--active {
+  color: #0d5c3a;
+}
+
+/* ── Mobile-only: hide desktop side panels ── */
+@media (max-width: 767px) {
+  #directions-panel {
+    display: none !important;
+  }
+  #settings-panel {
+    display: none !important;
+  }
+  .fare-card.float {
+    display: none !important;
+  }
+  .free-info {
+    display: none !important;
+  }
+}
+
+/* ── Desktop-only: hide mobile sheet elements ── */
+@media (min-width: 768px) {
+  .mobile-sheet {
+    display: none !important;
+  }
+  .gps-banner {
+    display: none !important;
+  }
+  .map-controls-mobile {
+    display: none !important;
+  }
+  .fare-matrix-badge {
+    display: none !important;
+  }
+}
+
+/* ── Map fills the viewport on mobile ── */
+.mobile-map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+  border-radius: 999px;
+}
+
+/* ── GPS Banner (floating top, mobile only) ── */
+.gps-banner {
+  position: absolute;
+  top: 56px;
+  left: 12px;
+  right: 12px;
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #fcd34d;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #334155;
+}
+
+.gps-banner .gps-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0d5c3a;
+  flex-shrink: 0;
+}
+
+/* ── Custom Map Controls (top-right, mobile only) ── */
+.map-controls-mobile {
+  position: absolute;
+  right: 10px;
+  top: 56px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-controls-mobile button {
+  width: 36px;
+  height: 36px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: transform 0.1s;
+  padding: 0;
+  line-height: 1;
+}
+
+.map-controls-mobile button:active {
+  transform: scale(0.92);
+}
+.pfp-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-initials {
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+}
+.user-name {
+  font-weight: 700;
+  color: #131b2e;
+}
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #006c49;
+}
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #006c49;
+}
+
+.nav-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.nav-item:hover {
+  background: #eff4ff;
+}
+.nav-item.active {
+  background: #0d5c3a;
+  color: white;
+}
+.nav-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #c3ecd7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #004328;
+}
+.nav-item.active .nav-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+.nav-text {
+  flex: 1;
+  font-weight: 600;
+  color: #131b2e;
+}
+.nav-badge {
+  background: #004328;
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.nav-badge.new {
+  background: #ba1a1a;
+}
+
+.logout-section {
+  padding: 14px;
+  border-top: 1px solid #ffdad6;
+}
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  background: #ffdad6;
+  color: #93000a;
+  border: 1px solid #ffc1bd;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Directions panel */
+#directions-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100%;
+  overflow-y: auto;
+  background: #faf8ff;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  padding: 20px;
+}
+#directions-panel h3,
+#settings-panel h3 {
+  color: #004328;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+.location-btn {
+  width: 100%;
+  padding: 12px;
+  background: #eff4ff;
+  color: #006c49;
+  border: 1px solid #d8e4ff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.location-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.panel-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d8dff2;
+  border-radius: 12px;
+  font-size: 15px;
+  margin-bottom: 12px;
+  outline: none;
+  background: #eff4ff;
+}
+.panel-input:focus {
+  border-color: #004328;
+}
+
+.suggestions {
+  background: #faf8ff;
+  border: 1px solid #e5e5ef;
+  border-radius: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+.suggestion-item:hover {
+  background: #c3ecd7;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  background: #0d5c3a;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 8px;
+}
+.action-btn:hover {
+  background: #8ed6aa;
+}
+.action-btn:disabled {
+  opacity: 0.6;
+}
+.clear-btn {
+  width: 100%;
+  padding: 10px;
+  background: #ffdad6;
+  color: #93000a;
+  border: 1px solid #ffc1bd;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.directions-result {
+  margin-top: 14px;
+}
+.route-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #565e74;
+}
+.route-option {
+  padding: 12px;
+  border: 1px solid #e5e5ef;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.route-option.selected {
+  border: 2px solid #004328;
+  background: #c3ecd7;
+}
+
+.fare-card,
+.fare-card.float {
+  margin-top: 14px;
+  padding: 14px;
+  background: #f0f7f0;
+  border-radius: 12px;
+  border-left: 4px solid #006c49;
+}
+.fare-card.float {
+  position: absolute;
+  bottom: 120px;
+  left: 340px;
+  z-index: 1001;
+  max-width: 260px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.fare-card .badge {
+  background: #006c49;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.fare-divider {
+  border: 0;
+  border-top: 1px solid #cfe8d9;
+  margin: 10px 0;
+}
+.fare-total {
+  font-size: 22px;
+  color: #006c49;
+  font-weight: 700;
+}
+
+/* Settings panel */
+#settings-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100%;
+  overflow-y: auto;
+  background: #faf8ff;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  padding: 20px;
+}
+.settings-section h4 {
+  color: #131b2e;
+  font-weight: 700;
+  margin: 16px 0 12px;
+}
+.pfp-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.pfp-preview {
+  width: 72px;
+  height: 72px;
+}
+.pfp-controls {
+  display: flex;
+  gap: 10px;
+}
+.pfp-upload-btn {
+  background: #0d5c3a;
+  color: #ffffff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pfp-remove-btn {
+  background: #ffdad6;
+  color: #93000a;
+  border: 1px solid #ffc1bd;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Fare matrix overlay */
+.free-info {
+  position: absolute;
+  bottom: 16px;
+  left: 340px;
+  background: rgba(248, 249, 255, 0.94);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  color: #131b2e;
+}

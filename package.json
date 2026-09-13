@@ -1,0 +1,15 @@
+{
+  "name": "fairtrike",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fairtrike — React + Node.js + PostgreSQL (one-command start)",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "start": "node scripts/start.mjs",
+    "dev": "node scripts/start.mjs --dev"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

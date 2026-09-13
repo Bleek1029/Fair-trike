@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# environment
+.env
+
+# builds
+dist/
+build/
+
+# uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
