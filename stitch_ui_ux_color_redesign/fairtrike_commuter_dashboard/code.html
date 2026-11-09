@@ -1,0 +1,632 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "on-primary": "#ffffff",
+        "secondary": "#565e74",
+        "primary": "#855300",
+        "tertiary-fixed": "#6ffbbe",
+        "surface-container": "#e5eeff",
+        "on-error-container": "#93000a",
+        "surface-tint": "#855300",
+        "on-secondary-fixed-variant": "#3f465c",
+        "on-secondary-fixed": "#131b2e",
+        "outline": "#867461",
+        "on-background": "#0b1c30",
+        "outline-variant": "#d8c3ad",
+        "error": "#ba1a1a",
+        "surface-variant": "#d3e4fe",
+        "surface-container-highest": "#d3e4fe",
+        "on-secondary": "#ffffff",
+        "on-tertiary-container": "#004e34",
+        "inverse-primary": "#ffb95f",
+        "surface-container-high": "#dce9ff",
+        "primary-fixed-dim": "#ffb95f",
+        "on-tertiary-fixed": "#002113",
+        "on-secondary-container": "#5c647a",
+        "surface-bright": "#f8f9ff",
+        "primary-container": "#f59e0b",
+        "inverse-on-surface": "#eaf1ff",
+        "on-surface-variant": "#534434",
+        "secondary-fixed-dim": "#bec6e0",
+        "on-primary-container": "#613b00",
+        "secondary-fixed": "#dae2fd",
+        "surface-container-low": "#eff4ff",
+        "tertiary-fixed-dim": "#4edea3",
+        "on-surface": "#0b1c30",
+        "on-primary-fixed-variant": "#653e00",
+        "tertiary-container": "#30c88f",
+        "surface-dim": "#cbdbf5",
+        "background": "#f8f9ff",
+        "on-error": "#ffffff",
+        "error-container": "#ffdad6",
+        "surface": "#f8f9ff",
+        "on-primary-fixed": "#2a1700",
+        "on-tertiary": "#ffffff",
+        "secondary-container": "#dae2fd",
+        "primary-fixed": "#ffddb8",
+        "inverse-surface": "#213145",
+        "surface-container-lowest": "#ffffff",
+        "on-tertiary-fixed-variant": "#005236",
+        "tertiary": "#006c49"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "gutter": "1rem",
+        "space-lg": "1.5rem",
+        "space-sm": "0.5rem",
+        "gutter-desktop": "1.5rem",
+        "space-md": "1rem",
+        "margin-desktop": "2rem",
+        "space-xs": "0.25rem",
+        "space-xl": "2rem",
+        "margin": "1rem"
+      },
+      "fontFamily": {
+        "display-mobile": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-lg-mobile": [
+          "Plus Jakarta Sans"
+        ],
+        "label-sm": [
+          "Plus Jakarta Sans"
+        ],
+        "body-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-md": [
+          "Plus Jakarta Sans"
+        ],
+        "label-md": [
+          "Plus Jakarta Sans"
+        ],
+        "label-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "body-md": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-sm": [
+          "Plus Jakarta Sans"
+        ],
+        "display": [
+          "Plus Jakarta Sans"
+        ],
+        "body-sm": [
+          "Plus Jakarta Sans"
+        ]
+      },
+      "fontSize": {
+        "display-mobile": [
+          "32px",
+          {
+            "lineHeight": "40px",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "800"
+          }
+        ],
+        "headline-lg": [
+          "28px",
+          {
+            "lineHeight": "36px",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "headline-lg-mobile": [
+          "24px",
+          {
+            "lineHeight": "32px",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "label-sm": [
+          "11px",
+          {
+            "lineHeight": "14px",
+            "letterSpacing": "0.04em",
+            "fontWeight": "600"
+          }
+        ],
+        "body-lg": [
+          "16px",
+          {
+            "lineHeight": "24px",
+            "fontWeight": "400"
+          }
+        ],
+        "headline-md": [
+          "20px",
+          {
+            "lineHeight": "28px",
+            "fontWeight": "700"
+          }
+        ],
+        "label-md": [
+          "12px",
+          {
+            "lineHeight": "16px",
+            "letterSpacing": "0.02em",
+            "fontWeight": "600"
+          }
+        ],
+        "label-lg": [
+          "14px",
+          {
+            "lineHeight": "20px",
+            "letterSpacing": "0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "body-md": [
+          "14px",
+          {
+            "lineHeight": "20px",
+            "fontWeight": "400"
+          }
+        ],
+        "headline-sm": [
+          "16px",
+          {
+            "lineHeight": "24px",
+            "fontWeight": "600"
+          }
+        ],
+        "display": [
+          "40px",
+          {
+            "lineHeight": "48px",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "800"
+          }
+        ],
+        "body-sm": [
+          "12px",
+          {
+            "lineHeight": "16px",
+            "fontWeight": "400"
+          }
+        ]
+      }
+    }
+  }
+};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-xl"><a class="flex items-center gap-space-sm text-decoration-none group" data-path="home" href="#"><div class="w-10 h-10 rounded-xl bg-[#059669] flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-white text-[24px]">electric_rickshaw</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-bold">Fairtrike</span><span class="font-label-sm text-label-sm text-primary tracking-wide uppercase">Olongapo City Transit</span></div></a><nav class="hidden lg:flex items-center gap-space-xs p-space-xs bg-surface-container-low rounded-xl" data-active-classes="bg-surface-container-high text-on-surface font-bold"><a aria-current="page" class="px-space-md py-space-sm rounded-lg transition-colors bg-surface-container-high text-on-surface font-bold" data-path="home" href="#">Home</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-label-lg text-label-lg" data-path="book-a-ride" href="#">Book a Ride</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-label-lg text-label-lg" data-path="fare-calculator" href="#">Fare Calculator</a><a class="px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-label-lg text-label-lg" data-path="driver-info" href="#">Driver Info</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center bg-surface-container-low px-space-md py-space-xs rounded-full gap-space-sm"><span class="material-symbols-outlined text-secondary text-[20px]">radar</span><span class="font-label-md text-label-md text-on-surface-variant">Transit Live:</span><span class="font-label-md text-label-md text-tertiary flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>Active</span></div><div class="flex items-center gap-space-sm"><a class="px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="sign-in" href="#">Sign In</a><a class="px-space-lg py-2.5 rounded-xl bg-[#059669] text-white font-label-lg text-label-lg hover:bg-[#047857] transition-all shadow-sm" data-path="create-account" href="#">Create Account</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-20 bg-surface"><div class="flex flex-col w-full">
+<!-- Content Wrapper -->
+<div class="w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop py-space-lg flex flex-col gap-space-xl">
+<!-- Top Greeting Banner & Live Micro-Climate Strip -->
+<div class="relative overflow-hidden bg-surface-container-low rounded-2xl p-space-lg lg:p-space-xl shadow-sm">
+<!-- Background Ambient Glow -->
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-primary-container/15 blur-3xl pointer-events-none"></div>
+<div class="absolute left-1/3 -bottom-20 w-64 h-64 rounded-full bg-tertiary-container/10 blur-2xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-lg">
+<!-- Identity & Greeting -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="px-space-sm py-0.5 rounded-full bg-tertiary-container/20 text-on-tertiary-container font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+              Verified Olongapo Commuter
+            </span>
+<span class="text-secondary font-label-sm text-label-sm">•</span>
+<span class="font-label-sm text-label-sm text-secondary">Brgy. East Bajac-Bajac Transit Hub</span>
+</div>
+<h1 class="font-display text-display tracking-tight text-on-surface">
+            Welcome back, <span class="text-[#059669]">Juan Dela Cruz!</span>
+</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+            Tricycle lines across Gordon Heights, Mabayuan, and Subic Gateway are running on smooth municipal schedules today.
+          </p>
+</div>
+<!-- Weather, Transit Conditions & Station Card -->
+<div class="flex items-center gap-space-md bg-surface-container-lowest p-space-md rounded-xl shadow-sm self-start lg:self-auto">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary-fixed-variant">
+<span class="material-symbols-outlined text-[28px]">wb_sunny</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface">29°C</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase">Sunny</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">East Bajac-Bajac • Low Humidity</span>
+</div>
+<div class="h-8 w-px bg-surface-container mx-space-xs"></div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-tertiary font-bold flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+              98.4% On-Time
+            </span>
+<span class="font-body-sm text-body-sm text-secondary">Zone Tariffs Active</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Operational Grid: Profile, Wallet & Quick Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Left Column: Profile Summary & Wallet Card (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-lg">
+<!-- User Profile Summary Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Commuter Credentials</span>
+<span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-container text-on-secondary-fixed">Zone A Passholder</span>
+</div>
+<div class="flex items-center gap-space-md pt-space-xs">
+<div class="relative"><img alt="Juan Dela Cruz profile picture" class="w-18 h-18 rounded-full object-cover shadow-sm ring-2 ring-[#059669]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_G1gZ5PX6jgi8BmYIRC7eCqq5wzIiFlIfnlGuyPSIvF_7MClQ8U6qZwF4EdXxG37AQyMgX3lr0m_9PtL2M6MC_6n8JttLI_uay04HjsEk-ie_FcE6IRopGxBVl6s_WvoC_O7zbY5-X1XMy-plNz-DTkDBa4uZGxku3prB_ckE1qHhXqkys7XEmsiKsZ0vZLEFbxG5EZNyd0Szu4zv6cjapawBSd-p0Rdd3mKFOvw4hJ1e_5Blr2nJ"><span class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#10b981] ring-2 ring-surface-container-lowest"></span></div>
+<div class="flex flex-col min-w-0">
+<h2 class="font-headline-md text-headline-md text-on-surface truncate">Juan Dela Cruz</h2>
+<span class="font-body-sm text-body-sm text-secondary truncate">juan.delacruz@email.ph</span>
+<div class="flex items-center gap-space-xs mt-1">
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-bold">#FT-9042</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Member since 2024</span>
+</div>
+</div>
+</div>
+<!-- Trip Statistics Micro-grid -->
+<div class="grid grid-cols-3 gap-space-sm pt-space-sm bg-surface-container-low p-space-sm rounded-xl text-center">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">142</span>
+<span class="font-label-sm text-label-sm text-secondary">Rides Taken</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-tertiary font-bold">₱0.00</span>
+<span class="font-label-sm text-label-sm text-secondary">Overcharges</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">5.0 ★</span>
+<span class="font-label-sm text-label-sm text-secondary">Rating</span>
+</div>
+</div>
+</div>
+<!-- Wallet & Fare Balance Card -->
+<div class="relative overflow-hidden bg-inverse-surface text-inverse-on-surface rounded-2xl p-space-lg shadow-md flex flex-col justify-between min-h-[260px]"><div class="absolute right-0 top-0 w-48 h-48 bg-[#059669]/10 rounded-full blur-3xl pointer-events-none"></div><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-10 h-10 rounded-xl bg-[#059669] flex items-center justify-center text-white shadow-sm"><span class="material-symbols-outlined text-[22px]">account_balance_wallet</span></div><div class="flex flex-col"><span class="font-label-sm text-label-sm text-[#10b981] uppercase tracking-wider">Fairtrike Wallet</span><span class="font-label-md text-label-md text-inverse-on-surface">Auto-Deduct Fare System</span></div></div><span class="px-space-sm py-1 rounded-full bg-[#059669]/20 text-[#6ffbbe] font-label-sm text-label-sm">Active Balance</span></div><div class="my-space-md"><div class="flex items-baseline gap-space-xs"><span class="font-display text-display text-inverse-on-surface">₱350.00</span><span class="font-label-md text-label-md text-surface-variant font-medium">PHP</span></div><p class="font-body-sm text-body-sm text-secondary-fixed-dim mt-1">Estimated ~7 city zone trips remaining before recharge.</p></div><div class="flex flex-col sm:flex-row items-center gap-space-sm pt-space-xs"><button class="w-full sm:w-auto flex-1 h-[48px] px-space-md rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-label-lg text-label-lg transition-all flex items-center justify-center gap-space-xs shadow-sm"><span class="material-symbols-outlined text-[20px]">add_circle</span>Top Up Credits</button><div class="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-space-xs px-space-md h-[48px] rounded-xl bg-inverse-on-surface/10 text-inverse-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-[20px] text-[#10b981]">link</span><span class="">GCash (••88) Linked</span></div></div></div>
+<!-- Security & Preferences Shortcut Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">security</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Security &amp; Settings</span>
+</div>
+<a class="font-label-md text-label-md text-primary font-bold hover:underline" href="#">Manage</a>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between p-space-sm bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">notifications_active</span>
+<span class="font-body-md text-body-md text-on-surface">SMS Trip Confirmations</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">Enabled</span>
+</div>
+<div class="flex items-center justify-between p-space-sm bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">pin</span>
+<span class="font-body-md text-body-md text-on-surface">Transit Safety PIN (Ride Start)</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">Required</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Ride Hail Dispatcher, Quick Destinations & Actions (7 cols) -->
+<div class="lg:col-span-7 flex flex-col gap-space-lg">
+<!-- Prominent Primary CTA: Book a Tricycle Ride Section -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-[#059669] text-white flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[24px]">electric_rickshaw</span></div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Instant Tricycle Hailing</h2>
+<span class="font-body-sm text-body-sm text-secondary">Verified Olongapo TODA terminal drivers nearby</span>
+</div>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm self-start sm:self-auto">
+              Terminal: Bajac-Bajac Rotonda
+            </span>
+</div>
+<!-- Destination Quick Pickers -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Quick Destination Selector</span>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<button class="flex flex-col items-center justify-center p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors text-center group">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest group-hover:bg-primary-container/30 flex items-center justify-center mb-1 text-on-surface">
+<span class="material-symbols-outlined text-[18px]">business_center</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">Work</span>
+<span class="font-body-sm text-body-sm text-secondary">SBMA Gate</span>
+</button>
+<button class="flex flex-col items-center justify-center p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors text-center group">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest group-hover:bg-primary-container/30 flex items-center justify-center mb-1 text-on-surface">
+<span class="material-symbols-outlined text-[18px]">home</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">Home</span>
+<span class="font-body-sm text-body-sm text-secondary">Gordon Hts.</span>
+</button>
+<button class="flex flex-col items-center justify-center p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors text-center group">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest group-hover:bg-primary-container/30 flex items-center justify-center mb-1 text-on-surface">
+<span class="material-symbols-outlined text-[18px]">store</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">SM Central</span>
+<span class="font-body-sm text-body-sm text-secondary">Magsaysay Dr.</span>
+</button>
+<button class="flex flex-col items-center justify-center p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors text-center group">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest group-hover:bg-primary-container/30 flex items-center justify-center mb-1 text-on-surface">
+<span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-bold">Public Market</span>
+<span class="font-body-sm text-body-sm text-secondary">Bajac-Bajac</span>
+</button>
+</div>
+</div>
+<!-- Pickup & Destination Search Inputs -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<div class="relative flex items-center bg-surface-container-low rounded-xl px-space-md h-[52px]">
+<span class="material-symbols-outlined text-secondary text-[20px] mr-space-sm">my_location</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none" placeholder="Enter pickup spot" type="text" value="Current Location (Brgy. East Bajac-Bajac Plaza)">
+</div>
+<div class="relative flex items-center bg-surface-container-low rounded-xl px-space-md h-[52px]">
+<span class="material-symbols-outlined text-primary text-[20px] mr-space-sm">location_on</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface focus:outline-none" placeholder="Where to in Olongapo City? (e.g. Barretto Beach, SM Downtown)" type="text">
+</div>
+</div>
+<!-- Ride Hail Button -->
+<button class="w-full h-[52px] rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-headline-sm text-headline-sm font-bold transition-all shadow-sm flex items-center justify-center gap-space-sm"><span class="material-symbols-outlined text-[22px]">two_wheeler</span>Request Tricycle Ride (Fixed Municipal Tariff)</button>
+</div>
+<!-- Municipal Transit Quick Actions Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Fare Matrix & Rates Action -->
+<div class="bg-surface-container-lowest p-space-md rounded-2xl shadow-sm flex flex-col justify-between hover:bg-surface-container-low transition-colors">
+<div class="flex flex-col gap-space-xs">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface mb-space-xs">
+<span class="material-symbols-outlined text-[22px]">price_change</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Fare Matrix &amp; Tariffs</h3>
+<p class="font-body-sm text-body-sm text-secondary">
+                Review official City Ordinance distance rates and terminal flag-downs.
+              </p>
+</div>
+<a class="mt-space-md font-label-md text-label-md text-primary font-bold flex items-center gap-1 group" href="#">
+              Open Rate Sheet
+              <span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+</div>
+<!-- Trip History & Receipts Action -->
+<div class="bg-surface-container-lowest p-space-md rounded-2xl shadow-sm flex flex-col justify-between hover:bg-surface-container-low transition-colors">
+<div class="flex flex-col gap-space-xs">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface mb-space-xs">
+<span class="material-symbols-outlined text-[22px]">receipt_long</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Trips &amp; Receipts</h3>
+<p class="font-body-sm text-body-sm text-secondary">
+                Generate official receipts, download expense records, and dispute rides.
+              </p>
+</div>
+<a class="mt-space-md font-label-md text-label-md text-primary font-bold flex items-center gap-1 group" href="#">
+              View History
+              <span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+</div>
+<!-- Emergency Assistance / Barangay Hotline -->
+<div class="bg-error-container/20 p-space-md rounded-2xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-xs">
+<div class="w-10 h-10 rounded-xl bg-error text-on-error flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[22px]">e911_emergency</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-error-container">Emergency / SOS</h3>
+<p class="font-body-sm text-body-sm text-secondary">
+                Instant 1-tap dispatch to Olongapo City Police &amp; Barangay Desk.
+              </p>
+</div>
+<button class="mt-space-md w-full h-[40px] rounded-lg bg-error text-on-error font-label-md text-label-md font-bold flex items-center justify-center gap-1 shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[16px]">call</span>
+              Barangay SOS (911)
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Rides Table & Transit Activity Record -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg lg:p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">history</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Recent Rides &amp; Dispatches</h2>
+<span class="font-body-sm text-body-sm text-secondary">Audited transparent municipal transactions</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-md text-label-md text-secondary">Filter by:</span>
+<div class="px-space-sm py-1 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm font-bold">
+            All Franchises (Gordon / Bajac)
+          </div>
+</div>
+</div>
+<!-- Table Layout (Responsive) -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/70">
+<th class="py-space-sm px-space-md font-label-md text-label-md uppercase text-secondary tracking-wider rounded-l-lg">Date &amp; Time</th>
+<th class="py-space-sm px-space-md font-label-md text-label-md uppercase text-secondary tracking-wider">Route &amp; Transit Corridor</th>
+<th class="py-space-sm px-space-md font-label-md text-label-md uppercase text-secondary tracking-wider">Driver &amp; Franchise</th>
+<th class="py-space-sm px-space-md font-label-md text-label-md uppercase text-secondary tracking-wider">Fare</th>
+<th class="py-space-sm px-space-md font-label-md text-label-md uppercase text-secondary tracking-wider">Status</th>
+<th class="py-space-sm px-space-md font-label-md text-label-md uppercase text-secondary tracking-wider text-right rounded-r-lg">Receipt</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Ride 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Today, 8:45 AM</span>
+<span class="font-body-sm text-body-sm text-secondary">Trip #OLG-7721</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs font-headline-sm text-headline-sm text-on-surface">
+<span class="">Gordon Heights</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">arrow_forward</span>
+<span class="">SM City Olongapo Central</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">Distance: 4.8 km • Direct Route</span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary-fixed-variant font-bold text-label-sm">
+                    KR
+                  </div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Kuya Renato</span>
+<span class="font-body-sm text-body-sm text-secondary">Trike #241 (Yellow Line TODA)</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">₱45.00</span>
+<span class="font-body-sm text-body-sm text-secondary block">Fairtrike Wallet</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-space-sm py-1 rounded-full bg-tertiary-container/20 text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Completed
+                </span>
+</td>
+<td class="py-space-md px-space-md text-right whitespace-nowrap">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold transition-colors inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                  PDF
+                </button>
+</td>
+</tr>
+<!-- Ride 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Oct 23, 5:15 PM</span>
+<span class="font-body-sm text-body-sm text-secondary">Trip #OLG-7689</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs font-headline-sm text-headline-sm text-on-surface">
+<span class="">Mabayuan Line 1</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">arrow_forward</span>
+<span class="">East Bajac-Bajac Market</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">Distance: 3.1 km • Normal Traffic</span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-bold text-label-sm">
+                    EE
+                  </div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Mang Edgardo</span>
+<span class="font-body-sm text-body-sm text-secondary">Trike #088 (Red Line TODA)</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">₱35.00</span>
+<span class="font-body-sm text-body-sm text-secondary block">Fairtrike Wallet</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-space-sm py-1 rounded-full bg-tertiary-container/20 text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Completed
+                </span>
+</td>
+<td class="py-space-md px-space-md text-right whitespace-nowrap">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold transition-colors inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                  PDF
+                </button>
+</td>
+</tr>
+<!-- Ride 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Oct 21, 1:10 PM</span>
+<span class="font-body-sm text-body-sm text-secondary">Trip #OLG-7504</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-xs font-headline-sm text-headline-sm text-on-surface">
+<span class="">Subic Bay Gateway</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">arrow_forward</span>
+<span class="">Gordon College Main</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">Distance: 5.5 km • Academic Corridor</span>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary-fixed-variant font-bold text-label-sm">
+                    DA
+                  </div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">Kuya Danilo</span>
+<span class="font-body-sm text-body-sm text-secondary">Trike #512 (Blue Line TODA)</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">₱50.00</span>
+<span class="font-body-sm text-body-sm text-secondary block">Fairtrike Wallet</span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-space-sm py-1 rounded-full bg-tertiary-container/20 text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  Completed
+                </span>
+</td>
+<td class="py-space-md px-space-md text-right whitespace-nowrap">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold transition-colors inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                  PDF
+                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Footer action within table card -->
+<div class="pt-space-sm flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+<span class="font-body-sm text-body-sm text-secondary">Showing recent 3 trips of 142 total commutes</span>
+<button class="px-space-md py-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-bold transition-all">
+          Load Full Municipal Travel Log
+        </button>
+</div>
+</div>
+<!-- Municipal Fair Fare Transparency Footer Notice with Brand Element -->
+<div class="flex flex-col md:flex-row items-center justify-between p-space-lg rounded-2xl bg-surface-container-low gap-space-md">
+<div class="flex items-center gap-space-md">
+<img alt="Fairtrike Logo" class="h-8 object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WQby-z5GbkHIm7F_whZF_S8Cu7jTRkdLQu6aTwLaxBocBmYGE8UqzD3lFj_7p185R1MNKQa1BNvJ5uKEa9zOcTuGJ-5tE7v_XxJ0CUZwi4PO_QwUtEuvpldMlrSWZK2VY3dnlcvhM9V3xrfwQhgm4XvhJvUXRv_J915iPGD27R6W1OouCNA8ulYImrw3hFDTYqyi7YcoruKAuYA5Nwa-Ij1aOAiJcCLpGbXXDnUOva9j4r-D6O6IEbfLs">
+<div class="h-6 w-px bg-surface-container-highest"></div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Authorized under the <strong>Olongapo City Tricycle Regulatory Ordinance</strong>. Regulated rates protect passengers from arbitrary surge and secure driver livelihood.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-sm text-label-sm text-secondary whitespace-nowrap">Fair Fare Certified</span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-container-low mt-space-xl"><div class="w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop py-space-xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-xl pb-space-xl"><div class="flex flex-col gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-[#059669] flex items-center justify-center"><span class="material-symbols-outlined text-white text-[20px]">electric_rickshaw</span></div><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Fairtrike</span></div><p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">Modern municipal tricycle transit hailing and fixed-zone fare matrix for Olongapo City commuters, operators, and visitors.</p><div class="flex items-center gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-tertiary">City Transit Authority Certified</span></div></div><div class="flex flex-col gap-space-sm"><h4 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wider mb-space-xs">Quick Links</h4><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="home" href="#">Home Transit Portal</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="book-a-ride" href="#">Book a Tricycle</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="fare-calculator" href="#">Official Fare Matrix</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="driver-info" href="#">Driver &amp; TODA Hub</a></div><div class="flex flex-col gap-space-sm"><h4 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wider mb-space-xs">Coverage Corridors</h4><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-secondary text-[16px]">pin_drop</span><span class="font-body-sm text-body-sm text-on-surface-variant">East Bajac-Bajac Central</span></div><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-secondary text-[16px]">pin_drop</span><span class="font-body-sm text-body-sm text-on-surface-variant">Gordon Heights Line</span></div><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-secondary text-[16px]">pin_drop</span><span class="font-body-sm text-body-sm text-on-surface-variant">Subic Bay Gateway Loop</span></div><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-secondary text-[16px]">pin_drop</span><span class="font-body-sm text-body-sm text-on-surface-variant">Barretto Beachfront Zone</span></div></div><div class="flex flex-col gap-space-sm"><h4 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wider mb-space-xs">Safety &amp; Integrity</h4><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="safety-charter" href="#">Passenger Safety Charter</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="fare-regulations" href="#">No-Overcharging Policy</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="emergency-dispatch" href="#">24/7 Hotline &amp; SOS Dispatch</a><a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacy-terms" href="#">Privacy &amp; Ordinance Terms</a></div></div><div class="pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-low"><p class="font-body-sm text-body-sm text-on-surface-variant">© 2025 Fairtrike Transit Technologies. Dedicated to fair urban mobility in Olongapo City.</p><div class="flex items-center gap-space-md"><span class="font-label-sm text-label-sm text-secondary">Olongapo City Traffic Management Board Compliant</span></div></div></div></footer>
+
+</body></html>

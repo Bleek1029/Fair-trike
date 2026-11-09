@@ -16,12 +16,12 @@ export function HeroPerk({ icon, iconBg, title, desc }) {
 }
 
 export function AuthSplit({
-  heroEyebrow = 'Olongapo City Transit',
+  heroEyebrow = 'Fairtrike',
   heroTitle = 'Join Fairtrike Today.',
-  heroSubtitle = 'Olongapo’s trusted commuter network for verified tricycles, transparent regulated fares, and safer everyday journeys.',
+  heroSubtitle = 'A tricycle ride-hailing and fare-sharing platform for commuters and drivers.',
   perks = [],
-  quote = '“Never have to haggle with fares from Subic Gate to Mabayuan anymore.”',
-  formBadge = 'Fast 1-Minute Passenger Sign-Up',
+  quote = '“Booking a ride on the map is simple.”',
+  formBadge = 'Passenger Sign-Up',
   formTitle = 'Create Account',
   formSubtitle = 'Start your journey with Fairtrike today and enjoy reliable, metered commutes.',
   children,
@@ -38,9 +38,7 @@ export function AuthSplit({
               <div className="relative z-10 flex flex-col gap-1">
                 <div className="flex items-center space-x-3">
                   <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
-                    <span className="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center shadow-sm">
-                      <span className="material-symbols-outlined text-on-primary-container text-[18px]">electric_rickshaw</span>
-                    </span>
+                    <img src="/fairtrike-logo.png" alt="Fairtrike logo" className="w-11 h-11 object-contain" />
                     <span className="text-surface-bright font-bold tracking-tight text-[13px]">Fairtrike</span>
                   </Link>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-highest/20 backdrop-blur text-primary-fixed text-[10px] uppercase tracking-wider">
@@ -60,19 +58,7 @@ export function AuthSplit({
                 </div>
               </div>
               <div className="relative z-10 pt-2 mt-2 border-t border-white/10 flex flex-col gap-1">
-                <div className="flex items-center justify-between text-surface-variant text-[10px] font-semibold">
-                  <span className="flex items-center gap-1 text-tertiary-fixed">
-                    <span className="material-symbols-outlined text-[13px]">verified_user</span>LGU Regulated
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">lock</span>256-Bit Encrypted
-                  </span>
-                  <span className="flex items-center gap-1 text-primary-fixed">
-                    <span className="material-symbols-outlined text-[13px]">shield</span>SOS Ready
-                  </span>
-                </div>
                 <div className="p-2 bg-white/5 rounded-xl flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container font-bold text-[11px] shrink-0">4.9</div>
                   <p className="text-[10px] leading-3 text-surface-variant italic ft-clamp-2">{quote}</p>
                 </div>
               </div>
@@ -85,9 +71,7 @@ export function AuthSplit({
                   </div>
                   <div className="lg:hidden flex items-center gap-2 pb-1">
                     <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
-                      <span className="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center">
-                        <span className="material-symbols-outlined text-on-primary-container text-[18px]">electric_rickshaw</span>
-                      </span>
+                      <img src="/fairtrike-logo.png" alt="Fairtrike logo" className="w-11 h-11 object-contain" />
                       <span className="text-on-surface font-bold text-[14px]">Fairtrike</span>
                     </Link>
                   </div>

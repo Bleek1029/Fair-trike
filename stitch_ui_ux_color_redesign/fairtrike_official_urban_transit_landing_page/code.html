@@ -1,0 +1,547 @@
+<!DOCTYPE html><html lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "on-primary": "#ffffff",
+        "secondary": "#565e74",
+        "primary": "#855300",
+        "tertiary-fixed": "#6ffbbe",
+        "surface-container": "#e5eeff",
+        "on-error-container": "#93000a",
+        "surface-tint": "#855300",
+        "on-secondary-fixed-variant": "#3f465c",
+        "on-secondary-fixed": "#131b2e",
+        "outline": "#867461",
+        "on-background": "#0b1c30",
+        "outline-variant": "#d8c3ad",
+        "error": "#ba1a1a",
+        "surface-variant": "#d3e4fe",
+        "surface-container-highest": "#d3e4fe",
+        "on-secondary": "#ffffff",
+        "on-tertiary-container": "#004e34",
+        "inverse-primary": "#ffb95f",
+        "surface-container-high": "#dce9ff",
+        "primary-fixed-dim": "#ffb95f",
+        "on-tertiary-fixed": "#002113",
+        "on-secondary-container": "#5c647a",
+        "surface-bright": "#f8f9ff",
+        "primary-container": "#f59e0b",
+        "inverse-on-surface": "#eaf1ff",
+        "on-surface-variant": "#534434",
+        "secondary-fixed-dim": "#bec6e0",
+        "on-primary-container": "#613b00",
+        "secondary-fixed": "#dae2fd",
+        "surface-container-low": "#eff4ff",
+        "tertiary-fixed-dim": "#4edea3",
+        "on-surface": "#0b1c30",
+        "on-primary-fixed-variant": "#653e00",
+        "tertiary-container": "#30c88f",
+        "surface-dim": "#cbdbf5",
+        "background": "#f8f9ff",
+        "on-error": "#ffffff",
+        "error-container": "#ffdad6",
+        "surface": "#f8f9ff",
+        "on-primary-fixed": "#2a1700",
+        "on-tertiary": "#ffffff",
+        "secondary-container": "#dae2fd",
+        "primary-fixed": "#ffddb8",
+        "inverse-surface": "#213145",
+        "surface-container-lowest": "#ffffff",
+        "on-tertiary-fixed-variant": "#005236",
+        "tertiary": "#006c49"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "gutter": "1rem",
+        "space-lg": "1.5rem",
+        "space-sm": "0.5rem",
+        "gutter-desktop": "1.5rem",
+        "space-md": "1rem",
+        "margin-desktop": "2rem",
+        "space-xs": "0.25rem",
+        "space-xl": "2rem",
+        "margin": "1rem"
+      },
+      "fontFamily": {
+        "display-mobile": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-lg-mobile": [
+          "Plus Jakarta Sans"
+        ],
+        "label-sm": [
+          "Plus Jakarta Sans"
+        ],
+        "body-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-md": [
+          "Plus Jakarta Sans"
+        ],
+        "label-md": [
+          "Plus Jakarta Sans"
+        ],
+        "label-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "body-md": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-sm": [
+          "Plus Jakarta Sans"
+        ],
+        "display": [
+          "Plus Jakarta Sans"
+        ],
+        "body-sm": [
+          "Plus Jakarta Sans"
+        ]
+      },
+      "fontSize": {
+        "display-mobile": [
+          "32px",
+          {
+            "lineHeight": "40px",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "800"
+          }
+        ],
+        "headline-lg": [
+          "28px",
+          {
+            "lineHeight": "36px",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "headline-lg-mobile": [
+          "24px",
+          {
+            "lineHeight": "32px",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "label-sm": [
+          "11px",
+          {
+            "lineHeight": "14px",
+            "letterSpacing": "0.04em",
+            "fontWeight": "600"
+          }
+        ],
+        "body-lg": [
+          "16px",
+          {
+            "lineHeight": "24px",
+            "fontWeight": "400"
+          }
+        ],
+        "headline-md": [
+          "20px",
+          {
+            "lineHeight": "28px",
+            "fontWeight": "700"
+          }
+        ],
+        "label-md": [
+          "12px",
+          {
+            "lineHeight": "16px",
+            "letterSpacing": "0.02em",
+            "fontWeight": "600"
+          }
+        ],
+        "label-lg": [
+          "14px",
+          {
+            "lineHeight": "20px",
+            "letterSpacing": "0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "body-md": [
+          "14px",
+          {
+            "lineHeight": "20px",
+            "fontWeight": "400"
+          }
+        ],
+        "headline-sm": [
+          "16px",
+          {
+            "lineHeight": "24px",
+            "fontWeight": "600"
+          }
+        ],
+        "display": [
+          "40px",
+          {
+            "lineHeight": "48px",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "800"
+          }
+        ],
+        "body-sm": [
+          "12px",
+          {
+            "lineHeight": "16px",
+            "fontWeight": "400"
+          }
+        ]
+      }
+    }
+  }
+};</script><style id="emerald-palette-override" class="">:root { --primary-emerald: #059669; --primary-emerald-dark: #047857; --primary-emerald-light: #10b981; --emerald-mint-bg: #ecfdf5; --emerald-mint-border: #a7f3d0; } .text-primary { color: #059669 !important; } .bg-primary { background-color: #059669 !important; color: #ffffff !important; } .hover\:bg-primary:hover { background-color: #059669 !important; color: #ffffff !important; } .hover\:bg-primary-container:hover { background-color: #047857 !important; } .bg-primary-container { background-color: #047857 !important; } .bg-primary-fixed\/20 { background-color: rgba(16, 185, 129, 0.2) !important; } .bg-secondary-container { background-color: #ecfdf5 !important; } .text-on-secondary-fixed-variant { color: #065f46 !important; } .text-on-secondary-container { color: #065f46 !important; } .bg-secondary-container\/40 { background-color: rgba(209, 250, 229, 0.5) !important; } .focus\:ring-primary:focus { --tw-ring-color: #059669 !important; } .pax-btn.bg-primary { background-color: #059669 !important; color: #ffffff !important; } .pax-btn.bg-surface-container-low { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #0f172a !important; }</style></head><body class="bg-surface font-body-md text-body-md text-on-surface"><main class="w-full bg-surface min-h-screen flex items-center justify-center"><div class="flex flex-col w-full">
+<!-- Top Navigation Bar -->
+<header class="w-full bg-surface-container-lowest sticky top-0 z-50 shadow-sm">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Fairtrike Brand Mark" class="w-10 h-10 object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida/AEtjO1UoczFxGxA01Bs6GWjX58JdZ674wmI_U-VRWlay6Ugc0Uv8bvfGQn3M3CE90ioEusAPpJp3skAZOB9yMsfURy_Ih1SpThU3dPOWa9i23Hpf2RX07PpScCzcx47HM3RorALgIVf5g69u0_biz9kXpPNtIPrWjW9-fdHBwMsAmDRAUQ75j1B267jJkLNv7GC_KgljNAdG6T7556L5SSNpsGgTCNZVeH9h6zSif149t4gLl7jRQccldSR0FA">
+<div class="flex items-baseline">
+<span class="font-headline-lg text-headline-lg font-extrabold text-on-surface tracking-tight">Fair</span>
+<span class="font-headline-lg text-headline-lg font-extrabold text-primary tracking-tight">trike</span>
+</div>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label-lg text-label-lg text-primary transition-colors" href="#home">Home</a>
+<a class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors" href="#how-it-works">How It Works</a>
+<a class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors" href="#fare-calculator">Fare Calculator</a>
+<a class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors" href="#toda-drivers">TODA Drivers</a>
+<a class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors" href="#safety">Safety &amp; Ordinance</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden sm:inline-flex font-label-lg text-label-lg text-on-surface hover:text-primary px-3 py-2 transition-colors">
+          Sign In
+        </button>
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg px-5 py-2.5 rounded-lg shadow-md transition-all duration-150 active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">download</span>
+<span class="">Get Started</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Hero Section -->
+<section class="relative overflow-hidden bg-surface py-12 md:py-20 lg:py-24" id="home">
+<div class="absolute -top-32 right-0 w-96 h-96 bg-primary-fixed/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute top-1/2 left-0 w-72 h-72 bg-secondary-fixed/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+<!-- Hero Text Content -->
+<div class="lg:col-span-7 flex flex-col items-start">
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-fixed-variant font-label-sm text-label-sm mb-6 shadow-sm">
+<span class="material-symbols-outlined text-primary text-sm">verified</span>
+<span class="">Regulated Tricycle Transit • Olongapo City LGU &amp; TODA Partnered</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface tracking-tight mb-6">
+            Safe, Metered &amp; Reliable Tricycle Rides in <span class="text-primary">Olongapo.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-8">
+            Say goodbye to arbitrary overcharging and long roadside waits. Book verified barangay tricycle operators with official city tariffs across Bajac-Bajac, Gordon Heights, Barretto, and Subic Gateway.
+          </p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full pt-4">
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">verified_user</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">500+ Verified TODA Drivers</span>
+</div>
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">policy</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">100% City Ordinance Tariff</span>
+</div>
+<div class="flex items-center gap-2.5 p-3 rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">emergency_share</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Instant GPS &amp; SOS Safety</span>
+</div>
+</div>
+</div>
+<!-- Interactive Live Estimator Card -->
+<div class="lg:col-span-5 w-full"><div class="relative mb-6 rounded-2xl overflow-hidden shadow-lg border border-surface-container bg-surface-container-lowest group"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM58er21hpgEM7rbJo0V0vdQiKNw4Xie8qptIhaJ2TVGOBjuSgcbvGwJoL82FK-WwlXCOn4FOtjVKM0l9jBuHtTEZpyClWBiXFjmVBbMbRQEeutKJL2_Gb7plxwnh0TfwYfRI1wALR2JqoziX1cAOnCmSOUMRWbWFgs-kPMhQZ8PQ6WDAXN20uT5xcwjOHEmLLQABh5dyA3mmS2VTrK9m_tlqqzOVafwgUtZHAJQ3cV2ZIsGLOF-7g2eXXja1D9Y0P8g" alt="Authentic Philippine Tricycle in Olongapo" class="w-full h-48 sm:h-56 object-cover transition-transform duration-200 group-hover:scale-105"><div class="absolute top-3 left-3 bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded-full border border-surface-container flex items-center gap-1.5 shadow-sm"><span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span><span class="font-label-sm text-label-sm font-bold text-on-surface tracking-wider uppercase">Official Green Route Fleet • Olongapo City</span></div><div class="absolute bottom-3 right-3 bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded-lg text-primary font-label-sm text-label-sm font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-sm">verified</span><span class="">Franchised &amp; Insured</span></div></div>
+<div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-xl relative" id="fare-calculator">
+<div class="flex items-center justify-between pb-4 mb-5 border-b border-surface-container">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calculate</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Live Ride Estimator</h2>
+</div>
+<span class="inline-block px-2.5 py-1 bg-secondary-container text-primary font-label-sm text-label-sm rounded-full">
+                Live LGU Matrix
+              </span>
+</div>
+<!-- Form Inputs -->
+<div class="flex flex-col gap-4">
+<!-- Origin -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-bold flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
+                  PICKUP POINT
+                </label>
+<div class="relative">
+<select class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg px-3.5 py-3 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-primary" id="pickup-select">
+<option value="bajac-bajac">Bajac-Bajac Rotonda Terminal</option>
+<option selected="" value="sm-central">SM City Olongapo Central</option>
+<option value="gordon-college">Gordon College Academic Campus</option>
+<option value="magsaysay">Magsaysay Drive Terminal</option>
+<option value="barretto">Barretto Drift Zone</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3.5 text-outline pointer-events-none text-xl">expand_more</span>
+</div>
+</div>
+<!-- Destination -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-bold flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error inline-block"></span>
+                  DROP-OFF DESTINATION
+                </label>
+<div class="relative">
+<select class="w-full bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg px-3.5 py-3 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-primary" id="dropoff-select">
+<option selected="" value="subic-gate">Subic Bay Freeport Main Gate</option>
+<option value="gordon-heights">Gordon Heights Terminal 1</option>
+<option value="kalaklan">Kalaklan Beachfront / Lighthouse</option>
+<option value="east-tapinac">East Tapinac Sports Complex</option>
+<option value="new-cabalan">New Cabalan High School</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3.5 text-outline pointer-events-none text-xl">expand_more</span>
+</div>
+</div>
+<!-- Passenger Count -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-bold">
+                  PASSENGERS
+                </label>
+<div class="grid grid-cols-3 gap-2">
+<button class="pax-btn py-2 px-3 rounded-lg font-label-lg text-label-lg text-center bg-primary text-on-primary transition-all" data-pax="1" type="button">1 Person</button>
+<button class="pax-btn py-2 px-3 rounded-lg font-label-lg text-label-lg text-center bg-surface-container-low text-on-surface transition-all" data-pax="2" type="button">2 Persons</button>
+<button class="pax-btn py-2 px-3 rounded-lg font-label-lg text-label-lg text-center bg-surface-container-low text-on-surface transition-all" data-pax="3" type="button">3 (Full)</button>
+</div>
+</div>
+<!-- Computed Official Fare -->
+<div class="mt-3 p-4 rounded-xl bg-secondary-container/40 flex flex-col gap-1">
+<div class="flex items-baseline justify-between">
+<span class="font-label-sm text-label-sm text-on-secondary-container font-semibold uppercase tracking-wider">Regulated City Tariff</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg text-primary font-extrabold" id="fare-amount">₱30.00</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">lock_clock</span>
+<span class="">Standard Municipal Tariff • No Peak Surge Pricing</span>
+</div>
+</div>
+<!-- Action CTA -->
+<button class="w-full mt-2 bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm py-3.5 rounded-xl shadow-lg transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">moped</span>
+<span class="">Hail a Tricycle Now</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Core Value Pillars Section -->
+<section class="py-16 md:py-24 bg-surface-container-lowest"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="text-center max-w-3xl mx-auto mb-16"><span class="block text-xs font-bold text-primary tracking-widest uppercase mb-3">Built for Olongapo Commuters</span><h2 class="text-3xl md:text-4xl font-extrabold text-on-surface tracking-tight mb-4">Why Commuters Choose Fairtrike</h2><p class="text-base text-on-surface-variant leading-relaxed max-w-2xl mx-auto">Empowering the community with orderly transit, standard rates, and respect for both passengers and hard-working tricycle drivers.</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><!-- Card 1: Transparent Fixed Fares --><div class="p-6 rounded-2xl bg-surface-container-low hover:bg-secondary-container/30 border border-surface-container/50 hover:shadow-md transition-all duration-200 flex flex-col"><div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center mb-6 text-primary shadow-sm ring-1 ring-primary/10"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div><h3 class="text-lg font-bold text-on-surface tracking-tight mb-2">Transparent Fixed Fares</h3><p class="text-sm text-on-surface-variant leading-relaxed">Official Sangguniang Panlungsod tariff matrix built into every ride. No guesswork, no haggling, and no surprise holiday surge fees.</p></div><!-- Card 2: Verified TODA Drivers --><div class="p-6 rounded-2xl bg-surface-container-low hover:bg-secondary-container/30 border border-surface-container/50 hover:shadow-md transition-all duration-200 flex flex-col"><div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center mb-6 text-primary shadow-sm ring-1 ring-primary/10"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg></div><h3 class="text-lg font-bold text-on-surface tracking-tight mb-2">Verified TODA Drivers</h3><p class="text-sm text-on-surface-variant leading-relaxed">Every operator holds an active franchise, barangay police clearance, and validated uniform ID badge for utmost passenger security.</p></div><!-- Card 3: Fast Barangay Dispatches --><div class="p-6 rounded-2xl bg-surface-container-low hover:bg-secondary-container/30 border border-surface-container/50 hover:shadow-md transition-all duration-200 flex flex-col"><div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center mb-6 text-primary shadow-sm ring-1 ring-primary/10"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><h3 class="text-lg font-bold text-on-surface tracking-tight mb-2">Fast Barangay Dispatches</h3><p class="text-sm text-on-surface-variant leading-relaxed">Smart terminal queue coordination matches you with nearby idling TODA units across Gordon Heights, Kalaklan, and Barretto in under 3 minutes.</p></div><!-- Card 4: Cashless or Cash Convenience --><div class="p-6 rounded-2xl bg-surface-container-low hover:bg-secondary-container/30 border border-surface-container/50 hover:shadow-md transition-all duration-200 flex flex-col"><div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center mb-6 text-primary shadow-sm ring-1 ring-primary/10"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line><path d="M6 15h2"></path><path d="M12 15h4"></path></svg></div><h3 class="text-lg font-bold text-on-surface tracking-tight mb-2">Cashless or Cash Convenience</h3><p class="text-sm text-on-surface-variant leading-relaxed">Pay smoothly with GCash, Maya, or in exact cash. Drivers receive digital receipts directly, keeping accounting straightforward.</p></div></div></div></section>
+<!-- How It Works Section -->
+<section class="py-16 md:py-24 bg-surface" id="how-it-works">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center max-w-3xl mx-auto mb-16">
+<span class="font-label-sm text-label-sm font-bold text-primary tracking-widest uppercase mb-2 block">Quick &amp; Frictionless</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">How Fairtrike Works</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+          Hail a ride from your mobile phone or step directly to any partner terminal in three simple steps.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+<!-- Step 1 -->
+<div class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm relative flex flex-col items-start">
+<div class="w-12 h-12 rounded-full bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center justify-center font-bold mb-6">
+            1
+          </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Select Route &amp; Destination</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+            Open the app or terminal scanner. Enter your pickup address and desired destination anywhere within Olongapo City and Subic borders.
+          </p>
+<div class="mt-auto w-full p-3 rounded-lg bg-surface-container-low flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">pin_drop</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">GPS Auto-detects Olongapo Landmarks</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm relative flex flex-col items-start">
+<div class="w-12 h-12 rounded-full bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center justify-center font-bold mb-6">
+            2
+          </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Instant TODA Operator Match</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+            The platform pings the nearest franchised driver from the active TODA queue. You get the driver’s plate, photo, and municipal body number.
+          </p>
+<div class="mt-auto w-full p-3 rounded-lg bg-surface-container-low flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">two_wheeler</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Average pickup arrival in 2.8 mins</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm relative flex flex-col items-start">
+<div class="w-12 h-12 rounded-full bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center justify-center font-bold mb-6">
+            3
+          </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">Safe Ride &amp; Regulated Fare</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+            Hop in and enjoy your commute with live GPS tracking. Pay the transparent municipal fare automatically through your chosen method.
+          </p>
+<div class="mt-auto w-full p-3 rounded-lg bg-surface-container-low flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Digital SMS Receipt &amp; Trip Log</span>
+</div>
+</div>
+</div>
+<div class="mt-12 bg-surface-container-lowest rounded-3xl p-6 sm:p-8 border border-surface-container shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center"><div class="lg:col-span-6 rounded-2xl overflow-hidden shadow-md relative"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMZFbc6iOW_EMiqUO4aEkQ4JuchbEYHDQTxxS4pNxqWiDYKtE5zo3soTTiDlzTDzSUr5u3dTdpytZvlEzh5j97JdwIzEwlxG3PKZtkTixLy0A7QIYL2Jlp67gvo8xueVbQtDb8hemweBl0X5o23I8J3tyyIkwpY_FxTk1G-p2LiBaaY6OBlRhHlSiPGkqA2TeCdDETFCqo6o4xdROH3LdMwG0HKJMlhRJEvgZ0k3pTtfIeXShXiyngKkVnMZZInQU8Lw" alt="Authentic Philippine Tricycle in Olongapo" class="w-full h-64 sm:h-80 object-cover"><div class="absolute bottom-3 left-3 bg-surface-container-lowest/95 px-3 py-1.5 rounded-xl border border-surface-container shadow-sm flex items-center gap-2"><span class="material-symbols-outlined text-primary text-base">airline_seat_recline_normal</span><span class="font-label-sm text-label-sm font-bold text-on-surface">Standardized Weatherproof Passenger Cab</span></div></div><div class="lg:col-span-6 flex flex-col justify-center"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-fixed-variant font-label-sm text-label-sm mb-3 w-fit"><span class="material-symbols-outlined text-primary text-sm">shield</span><span class="">Vetted TODA Vehicle Inspection Standards</span></div><h3 class="font-headline-lg text-headline-lg text-on-surface mb-3">Clean, Spacious &amp; Maintained for Everyday Safety</h3><p class="font-body-md text-body-md text-on-surface-variant mb-6">Every Fairtrike sidecar undergoes bi-annual LGU roadworthiness checks. Enjoy cushioned, spacious seating, overhead rain guards, calibrated safety grab handles, and prominent municipal tariff rate cards posted inside.</p><div class="grid grid-cols-2 gap-4 pt-2 border-t border-surface-container"><div class="flex items-start gap-2"><span class="material-symbols-outlined text-primary text-lg">check_circle</span><div><span class="font-label-sm text-label-sm font-bold block text-on-surface">Sanitized Cabins</span><span class="font-body-sm text-body-sm text-on-surface-variant">Clean upholstery and dry interiors</span></div></div><div class="flex items-start gap-2"><span class="material-symbols-outlined text-primary text-lg">check_circle</span><div><span class="font-label-sm text-label-sm font-bold block text-on-surface">Luggage Space</span><span class="font-body-sm text-body-sm text-on-surface-variant">Ample space for grocery and bags</span></div></div></div></div></div></div>
+</section>
+<!-- Popular Olongapo Transit Corridors & Fares -->
+
+<!-- Commuter Testimonials & TODA Driver Voices -->
+
+<!-- CTA Banner Section -->
+
+<!-- Footer Section -->
+<footer class="bg-surface-container-low text-on-surface pt-16 pb-12" id="safety">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-surface-container">
+<!-- Brand & Description -->
+<div class="lg:col-span-2">
+<div class="flex items-center gap-3 mb-4">
+<img alt="Fairtrike Brand Mark" class="w-8 h-8 object-contain rounded-md" src="https://lh3.googleusercontent.com/aida/AEtjO1UoczFxGxA01Bs6GWjX58JdZ674wmI_U-VRWlay6Ugc0Uv8bvfGQn3M3CE90ioEusAPpJp3skAZOB9yMsfURy_Ih1SpThU3dPOWa9i23Hpf2RX07PpScCzcx47HM3RorALgIVf5g69u0_biz9kXpPNtIPrWjW9-fdHBwMsAmDRAUQ75j1B267jJkLNv7GC_KgljNAdG6T7556L5SSNpsGgTCNZVeH9h6zSif149t4gLl7jRQccldSR0FA">
+<div class="flex items-baseline">
+<span class="font-headline-sm text-headline-sm font-extrabold text-on-surface tracking-tight">Fair</span>
+<span class="font-headline-sm text-headline-sm font-extrabold text-primary tracking-tight">trike</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-sm mb-6">
+            Olongapo City’s official regulated tricycle ride-hailing and fare monitoring ecosystem. Operating under local municipal transport ordinances.
+          </p>
+<div class="p-3.5 rounded-xl bg-surface-container-lowest flex items-start gap-3 max-w-sm">
+<span class="material-symbols-outlined text-primary text-xl mt-0.5">verified_user</span>
+<div>
+<span class="font-label-sm text-label-sm font-bold block text-on-surface">LGU Authorized Platform</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">In accordance with Olongapo City Sangguniang Panlungsod Ordinance No. 42-2023.</span>
+</div>
+</div>
+</div>
+<!-- Quick Links -->
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-4">Platform</h4>
+<ul class="flex flex-col gap-2.5 font-body-md text-body-md text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-colors" href="#fare-calculator">Tariff Calculator</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#how-it-works">How It Works</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Passenger Mobile App</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Terminal Hub Map</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Student &amp; PWD Discounts</a></li>
+</ul>
+</div>
+<!-- TODA & Drivers -->
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-4">TODA Community</h4>
+<ul class="flex flex-col gap-2.5 font-body-md text-body-md text-on-surface-variant">
+<li class=""><a class="hover:text-primary transition-colors" href="#">Driver Portal</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Franchise Validation</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">TODA Association Rules</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Fuel Subsidy Info</a></li>
+<li class=""><a class="hover:text-primary transition-colors" href="#">Digital Payments Support</a></li>
+</ul>
+</div>
+<!-- Emergency & Support -->
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-4">City Hotlines</h4>
+<ul class="flex flex-col gap-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">call</span>
+<span class="">LGU Traffic Bureau: (047) 222-2565</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">emergency</span>
+<span class="">Olongapo 911 Emergency</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">mail</span>
+<span class="">support@fairtrike.ph</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-body-sm text-body-sm text-on-surface-variant">
+<p class="">© 2025 Fairtrike Mobility Technologies Inc. Partnered with Olongapo City TODA Federations.</p>
+<div class="flex items-center gap-6">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Municipal Tariff Code</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- Interactive Script for Live Estimator -->
+<script>
+    (function() {
+      const pickup = document.getElementById('pickup-select');
+      const dropoff = document.getElementById('dropoff-select');
+      const fareAmount = document.getElementById('fare-amount');
+      const paxButtons = document.querySelectorAll('.pax-btn');
+
+      let currentPax = 1;
+
+      const fareMatrix = {
+        'bajac-bajac': { 'subic-gate': 35, 'gordon-heights': 45, 'kalaklan': 30, 'east-tapinac': 25, 'new-cabalan': 65 },
+        'sm-central': { 'subic-gate': 30, 'gordon-heights': 50, 'kalaklan': 35, 'east-tapinac': 25, 'new-cabalan': 70 },
+        'gordon-college': { 'subic-gate': 40, 'gordon-heights': 45, 'kalaklan': 25, 'east-tapinac': 20, 'new-cabalan': 65 },
+        'magsaysay': { 'subic-gate': 25, 'gordon-heights': 55, 'kalaklan': 40, 'east-tapinac': 30, 'new-cabalan': 75 },
+        'barretto': { 'subic-gate': 60, 'gordon-heights': 70, 'kalaklan': 45, 'east-tapinac': 55, 'new-cabalan': 90 }
+      };
+
+      function calculateFare() {
+        const from = pickup.value;
+        const to = dropoff.value;
+        let base = (fareMatrix[from] && fareMatrix[from][to]) ? fareMatrix[from][to] : 35;
+
+        // Apply slight adjustment for multiple passengers per ordinance
+        let total = base;
+        if (currentPax === 2) total = Math.round(base * 1.25);
+        if (currentPax === 3) total = Math.round(base * 1.45);
+
+        fareAmount.textContent = '₱' + total + '.00';
+      }
+
+      pickup.addEventListener('change', calculateFare);
+      dropoff.addEventListener('change', calculateFare);
+
+      paxButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          paxButtons.forEach(b => {
+            b.classList.remove('bg-primary', 'text-on-primary');
+            b.classList.add('bg-surface-container-low', 'text-on-surface');
+          });
+          btn.classList.add('bg-primary', 'text-on-primary');
+          btn.classList.remove('bg-surface-container-low', 'text-on-surface');
+          currentPax = parseInt(btn.getAttribute('data-pax'), 10);
+          calculateFare();
+        });
+      });
+
+      calculateFare();
+    })();
+  </script>
+</div></main>
+
+</body></html>

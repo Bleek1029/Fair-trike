@@ -2,9 +2,9 @@ import React from 'react';
 import { Icon } from './Icon.jsx';
 
 const DEFAULT_BADGES = [
-  { icon: 'verified_user', title: 'Verified TODA Fleet', desc: 'LGU Franchise Monitored' },
-  { icon: 'price_check', title: 'Guaranteed City Tariff', desc: 'Zero Overcharging Policy' },
-  { icon: 'emergency', title: 'Live SOS & Security', desc: '911 PNP Hotline Connected', danger: true },
+  { icon: 'verified_user', title: 'Registered drivers', desc: 'Accounts reviewed before approval' },
+  { icon: 'price_check', title: 'Computed fare', desc: 'Fare derived from route distance' },
+  { icon: 'emergency', title: 'In-app SOS', desc: 'Reach emergency services', danger: true },
 ];
 
 export function AssuranceBadges({ badges = DEFAULT_BADGES }) {

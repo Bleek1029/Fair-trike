@@ -52,9 +52,43 @@ CREATE TABLE IF NOT EXISTS drivers (
     vehicle_plate    VARCHAR(50)  DEFAULT NULL,
     contact_number   VARCHAR(50)  DEFAULT NULL,
     status           VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    last_lat         DOUBLE PRECISION DEFAULT NULL,
+    last_lng         DOUBLE PRECISION DEFAULT NULL,
+    last_location_at TIMESTAMPTZ    DEFAULT NULL,
     created_at       TIMESTAMPTZ DEFAULT NOW(),
     updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Backfill for databases created before driver live-location columns existed.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'drivers' AND column_name = 'last_lat'
+    ) THEN
+        ALTER TABLE drivers ADD COLUMN last_lat DOUBLE PRECISION DEFAULT NULL;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'drivers' AND column_name = 'last_lng'
+    ) THEN
+        ALTER TABLE drivers ADD COLUMN last_lng DOUBLE PRECISION DEFAULT NULL;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'drivers' AND column_name = 'last_location_at'
+    ) THEN
+        ALTER TABLE drivers ADD COLUMN last_location_at TIMESTAMPTZ DEFAULT NULL;
+    END IF;
+END $$;
 
 -- Auto-update updated_at on UPDATE (like MySQL ON UPDATE CURRENT_TIMESTAMP)
 CREATE OR REPLACE FUNCTION set_updated_at()

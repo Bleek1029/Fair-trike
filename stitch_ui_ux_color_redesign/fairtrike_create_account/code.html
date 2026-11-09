@@ -1,0 +1,583 @@
+<!DOCTYPE html><html lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "on-primary": "#ffffff",
+        "secondary": "#565e74",
+        "primary": "#855300",
+        "tertiary-fixed": "#6ffbbe",
+        "surface-container": "#e5eeff",
+        "on-error-container": "#93000a",
+        "surface-tint": "#855300",
+        "on-secondary-fixed-variant": "#3f465c",
+        "on-secondary-fixed": "#131b2e",
+        "outline": "#867461",
+        "on-background": "#0b1c30",
+        "outline-variant": "#d8c3ad",
+        "error": "#ba1a1a",
+        "surface-variant": "#d3e4fe",
+        "surface-container-highest": "#d3e4fe",
+        "on-secondary": "#ffffff",
+        "on-tertiary-container": "#004e34",
+        "inverse-primary": "#ffb95f",
+        "surface-container-high": "#dce9ff",
+        "primary-fixed-dim": "#ffb95f",
+        "on-tertiary-fixed": "#002113",
+        "on-secondary-container": "#5c647a",
+        "surface-bright": "#f8f9ff",
+        "primary-container": "#f59e0b",
+        "inverse-on-surface": "#eaf1ff",
+        "on-surface-variant": "#534434",
+        "secondary-fixed-dim": "#bec6e0",
+        "on-primary-container": "#613b00",
+        "secondary-fixed": "#dae2fd",
+        "surface-container-low": "#eff4ff",
+        "tertiary-fixed-dim": "#4edea3",
+        "on-surface": "#0b1c30",
+        "on-primary-fixed-variant": "#653e00",
+        "tertiary-container": "#30c88f",
+        "surface-dim": "#cbdbf5",
+        "background": "#f8f9ff",
+        "on-error": "#ffffff",
+        "error-container": "#ffdad6",
+        "surface": "#f8f9ff",
+        "on-primary-fixed": "#2a1700",
+        "on-tertiary": "#ffffff",
+        "secondary-container": "#dae2fd",
+        "primary-fixed": "#ffddb8",
+        "inverse-surface": "#213145",
+        "surface-container-lowest": "#ffffff",
+        "on-tertiary-fixed-variant": "#005236",
+        "tertiary": "#006c49"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "gutter": "1rem",
+        "space-lg": "1.5rem",
+        "space-sm": "0.5rem",
+        "gutter-desktop": "1.5rem",
+        "space-md": "1rem",
+        "margin-desktop": "2rem",
+        "space-xs": "0.25rem",
+        "space-xl": "2rem",
+        "margin": "1rem"
+      },
+      "fontFamily": {
+        "display-mobile": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-lg-mobile": [
+          "Plus Jakarta Sans"
+        ],
+        "label-sm": [
+          "Plus Jakarta Sans"
+        ],
+        "body-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-md": [
+          "Plus Jakarta Sans"
+        ],
+        "label-md": [
+          "Plus Jakarta Sans"
+        ],
+        "label-lg": [
+          "Plus Jakarta Sans"
+        ],
+        "body-md": [
+          "Plus Jakarta Sans"
+        ],
+        "headline-sm": [
+          "Plus Jakarta Sans"
+        ],
+        "display": [
+          "Plus Jakarta Sans"
+        ],
+        "body-sm": [
+          "Plus Jakarta Sans"
+        ]
+      },
+      "fontSize": {
+        "display-mobile": [
+          "32px",
+          {
+            "lineHeight": "40px",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "800"
+          }
+        ],
+        "headline-lg": [
+          "28px",
+          {
+            "lineHeight": "36px",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "headline-lg-mobile": [
+          "24px",
+          {
+            "lineHeight": "32px",
+            "letterSpacing": "-0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "label-sm": [
+          "11px",
+          {
+            "lineHeight": "14px",
+            "letterSpacing": "0.04em",
+            "fontWeight": "600"
+          }
+        ],
+        "body-lg": [
+          "16px",
+          {
+            "lineHeight": "24px",
+            "fontWeight": "400"
+          }
+        ],
+        "headline-md": [
+          "20px",
+          {
+            "lineHeight": "28px",
+            "fontWeight": "700"
+          }
+        ],
+        "label-md": [
+          "12px",
+          {
+            "lineHeight": "16px",
+            "letterSpacing": "0.02em",
+            "fontWeight": "600"
+          }
+        ],
+        "label-lg": [
+          "14px",
+          {
+            "lineHeight": "20px",
+            "letterSpacing": "0.01em",
+            "fontWeight": "700"
+          }
+        ],
+        "body-md": [
+          "14px",
+          {
+            "lineHeight": "20px",
+            "fontWeight": "400"
+          }
+        ],
+        "headline-sm": [
+          "16px",
+          {
+            "lineHeight": "24px",
+            "fontWeight": "600"
+          }
+        ],
+        "display": [
+          "40px",
+          {
+            "lineHeight": "48px",
+            "letterSpacing": "-0.02em",
+            "fontWeight": "800"
+          }
+        ],
+        "body-sm": [
+          "12px",
+          {
+            "lineHeight": "16px",
+            "fontWeight": "400"
+          }
+        ]
+      }
+    }
+  }
+};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><main class="w-full bg-surface min-h-screen flex items-center justify-center"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-4 py-6 md:py-10">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch rounded-3xl overflow-hidden shadow-2xl bg-surface-container-lowest">
+<!-- Left Hero Showcase Panel -->
+<div class="lg:col-span-5 relative flex flex-col justify-between p-8 md:p-12 bg-gradient-to-br from-on-background via-inverse-surface to-on-background text-on-primary overflow-hidden">
+<!-- Subtle Decorative Ambient Light Gradients -->
+<div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-primary-container/20 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-tertiary-container/15 blur-3xl pointer-events-none"></div>
+<!-- Header Section with Logo & Brand Anchor -->
+<div class="relative z-10 flex flex-col space-y-6">
+<div class="flex items-center space-x-3"><div class="flex items-center gap-2"><img alt="Fairtrike Logo" class="h-10 w-auto object-contain rounded-md" src="https://lh3.googleusercontent.com/aida/AEtjO1WQby-z5GbkHIm7F_whZF_S8Cu7jTRkdLQu6aTwLaxBocBmYGE8UqzD3lFj_7p185R1MNKQa1BNvJ5uKEa9zOcTuGJ-5tE7v_XxJ0CUZwi4PO_QwUtEuvpldMlrSWZK2VY3dnlcvhM9V3xrfwQhgm4XvhJvUXRv_J915iPGD27R6W1OouCNA8ulYImrw3hFDTYqyi7YcoruKAuYA5Nwa-Ij1aOAiJcCLpGbXXDnUOva9j4r-D6O6IEbfLs"><span class="text-white font-headline-md text-headline-md tracking-tight font-bold" style="color: #ffffff;">Fairtrike</span></div><span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container-highest/20 backdrop-blur text-primary-fixed text-label-sm font-label-sm uppercase tracking-wider" style="background-color: rgba(5, 150, 105, 0.2); color: rgb(110, 231, 183); border: 1px solid rgba(16, 185, 129, 0.3);">Transit Utility</span></div>
+<div class="space-y-3 pt-2">
+<span class="text-primary-fixed text-label-md font-label-md tracking-wider uppercase flex items-center gap-1.5" style="color: #34d399;">
+<span class="material-symbols-outlined text-sm text-primary-container" style="font-variation-settings: &quot;FILL&quot; 1; color: rgb(16, 185, 129);">local_taxi</span>
+              Olongapo City Transit
+            </span>
+<h1 class="font-headline-lg text-headline-lg md:font-display text-display text-surface-bright leading-tight tracking-tight">
+              Join Fairtrike Today.
+            </h1>
+<p class="font-body-lg text-body-lg text-surface-variant font-medium">
+              Olongapo’s trusted commuter network for verified tricycles, transparent regulated fares, and safer everyday journeys.
+            </p>
+</div>
+<!-- Feature & Perks Stack -->
+<div class="space-y-4 pt-4">
+<!-- Perk 1 -->
+<div class="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 backdrop-blur hover:bg-white/10 transition-all duration-300">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-sm" style="background-color: rgb(5, 150, 105); color: rgb(255, 255, 255);">
+<span class="material-symbols-outlined text-xl">percent</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-surface-bright">15% Off Your First 3 Trips</span>
+<span class="font-body-sm text-body-sm text-surface-variant">Instant welcome credit applied to standard municipal zone fares automatically.</span>
+</div>
+</div>
+<!-- Perk 2 -->
+<div class="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 backdrop-blur hover:bg-white/10 transition-all duration-300">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-xl">receipt_long</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-surface-bright">Automated Fare Receipts</span>
+<span class="font-body-sm text-body-sm text-surface-variant">Clear breakdown of base flag-down, distance, and zero illegal surcharge protection.</span>
+</div>
+</div>
+<!-- Perk 3 -->
+<div class="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white/5 backdrop-blur hover:bg-white/10 transition-all duration-300">
+<div class="w-10 h-10 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-xl">map</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-surface-bright">Barangay Zone Terminal Telemetry</span>
+<span class="font-body-sm text-body-sm text-surface-variant">Color-coded line franchise terminals from East Bajac-Bajac to Gordon Heights.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Trust Badges & Safety Seal -->
+<div class="relative z-10 pt-8 mt-6 border-t border-white/10 flex flex-col gap-4">
+<div class="flex items-center justify-between text-surface-variant font-label-md text-label-md">
+<span class="flex items-center gap-1.5 text-tertiary-fixed">
+<span class="material-symbols-outlined text-base">verified_user</span>
+              LGU Regulated
+            </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base">lock</span>
+              256-Bit Encrypted
+            </span>
+<span class="flex items-center gap-1.5 text-primary-fixed" style="color: rgb(52, 211, 153);">
+<span class="material-symbols-outlined text-base">shield</span>
+              Passenger SOS Ready
+            </span>
+</div>
+<!-- Mini Testimonial Quote -->
+<div class="p-3 bg-white/5 rounded-xl flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container font-headline-sm text-headline-sm shrink-0" style="background-color: rgba(16, 185, 129, 0.2); color: rgb(16, 185, 129);">
+              4.9
+            </div>
+<p class="font-body-sm text-body-sm text-surface-variant italic">
+              “Never have to haggle with fares from Subic Gate to Mabayuan anymore.”
+            </p>
+</div>
+</div>
+</div>
+<!-- Right Registration Form Panel -->
+<div class="lg:col-span-7 p-6 md:p-12 flex flex-col justify-center bg-surface-container-lowest" style="background-color: rgb(241, 245, 249); border-left: 1px solid rgb(203, 213, 225);">
+<div class="max-w-xl w-full mx-auto space-y-6">
+<!-- Form Header -->
+<div class="space-y-1.5">
+<div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-label-sm font-label-sm mb-1" style="background-color: rgb(230, 247, 240); color: rgb(6, 95, 70); border: 1px solid rgb(167, 243, 208);">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse" style="background-color: rgb(16, 185, 129);"></span>
+              Fast 1-Minute Passenger Sign-Up
+            </div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Create Account</h2>
+<p class="font-body-md text-body-md text-secondary">
+              Start your journey with Fairtrike today and enjoy reliable, metered commutes.
+            </p>
+</div>
+<!-- Dynamic Alert Banners (Toggled via JS) -->
+<div class="hidden p-4 rounded-xl bg-error-container text-on-error-container flex items-start gap-3 transition-all duration-200" id="errorAlert">
+<span class="material-symbols-outlined text-error text-xl shrink-0">error</span>
+<div class="flex-1 text-body-md font-body-md">
+<p class="font-headline-sm text-headline-sm font-bold">Please check your inputs</p>
+<p class="text-body-sm font-body-sm" id="errorMessage">Make sure all fields are filled accurately.</p>
+</div>
+<button class="text-on-error-container hover:opacity-75" onclick="dismissAlert('errorAlert')" type="button">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="hidden p-4 rounded-xl bg-tertiary-container/20 text-on-tertiary-container flex items-start gap-3 transition-all duration-200" id="successAlert">
+<span class="material-symbols-outlined text-tertiary text-xl shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="flex-1 text-body-md font-body-md">
+<p class="font-headline-sm text-headline-sm font-bold">Welcome aboard!</p>
+<p class="text-body-sm font-body-sm">Your commuter account is created. Redirecting to your booking hub...</p>
+</div>
+</div>
+<!-- Main Registration Form -->
+<form class="space-y-4" id="registerForm" onsubmit="handleFormSubmit(event)">
+<!-- Full Name Input Field -->
+<div class="space-y-1.5">
+<label class="block font-label-lg text-label-lg text-on-surface" for="fullName" style="color: rgb(11, 28, 48); font-weight: 700;">
+                Full Name
+              </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-secondary text-xl pointer-events-none">person</span>
+<input class="w-full h-13 py-3.5 pl-12 pr-4 bg-surface-container-low rounded-xl text-body-lg font-body-lg text-on-surface placeholder:text-secondary/70 focus:outline-none focus:bg-surface transition-all duration-150 shadow-sm" id="fullName" name="fullName" oninput="validateField(this)" placeholder="Enter your full name, e.g., Juan Dela Cruz" required="" type="text" style="background-color: rgb(255, 255, 255); border: 1.5px solid rgb(148, 163, 184); box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 3px; color: rgb(15, 23, 42);">
+<span class="material-symbols-outlined absolute right-4 text-tertiary text-xl hidden" id="nameValidIcon" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary px-1">Must match your valid government or student ID for passenger insurance verification.</p>
+</div>
+<!-- Email Input Field -->
+<div class="space-y-1.5">
+<label class="block font-label-lg text-label-lg text-on-surface" for="email" style="color: rgb(11, 28, 48); font-weight: 700;">
+                Email Address
+              </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-secondary text-xl pointer-events-none">mail</span>
+<input class="w-full h-13 py-3.5 pl-12 pr-4 bg-surface-container-low rounded-xl text-body-lg font-body-lg text-on-surface placeholder:text-secondary/70 focus:outline-none focus:bg-surface transition-all duration-150 shadow-sm" id="email" name="email" oninput="validateEmail(this)" placeholder="example@mail.com" required="" type="email" style="background-color: rgb(255, 255, 255); border: 1.5px solid rgb(148, 163, 184); box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 3px; color: rgb(15, 23, 42);">
+<span class="material-symbols-outlined absolute right-4 text-tertiary text-xl hidden" id="emailValidIcon" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary px-1">We will send automated electronic ride fare receipts here.</p>
+</div>
+<!-- Password Field -->
+<div class="space-y-1.5">
+<label class="block font-label-lg text-label-lg text-on-surface" for="password" style="color: rgb(11, 28, 48); font-weight: 700;">
+                Password
+              </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-secondary text-xl pointer-events-none">lock</span>
+<input class="w-full h-13 py-3.5 pl-12 pr-12 bg-surface-container-low rounded-xl text-body-lg font-body-lg text-on-surface placeholder:text-secondary/70 focus:outline-none focus:bg-surface transition-all duration-150 shadow-sm" id="password" name="password" oninput="updatePasswordSecurity(this.value)" placeholder="Create secure password" required="" type="password" style="background-color: rgb(255, 255, 255); border: 1.5px solid rgb(148, 163, 184); box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 3px; color: rgb(15, 23, 42);">
+<button aria-label="Toggle password visibility" class="absolute right-3.5 p-1.5 rounded-lg text-secondary hover:text-on-surface focus:outline-none transition-colors" id="togglePasswordBtn" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-xl" id="passwordEyeIcon">visibility</span>
+</button>
+</div>
+<!-- Password Strength Visual Meter -->
+<div class="pt-1.5 space-y-2">
+<div class="flex items-center justify-between text-label-sm font-label-sm">
+<span class="text-secondary font-medium">Strength Meter</span>
+<span class="font-bold text-secondary" id="strengthLabel">Awaiting input</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden flex gap-1" style="background-color: rgb(226, 232, 240); border: 1px solid rgb(203, 213, 225); padding: 1px;">
+<div class="h-full flex-1 bg-surface-variant transition-all duration-300" id="bar1"></div>
+<div class="h-full flex-1 bg-surface-variant transition-all duration-300" id="bar2"></div>
+<div class="h-full flex-1 bg-surface-variant transition-all duration-300" id="bar3"></div>
+</div>
+<!-- Live Rule Checklist -->
+<div class="grid grid-cols-3 gap-2 pt-1 font-body-sm text-body-sm">
+<div class="flex items-center gap-1 text-secondary transition-colors" id="reqLength">
+<span class="material-symbols-outlined text-sm" id="iconLength">fiber_manual_record</span>
+<span class="text-label-sm">6+ chars</span>
+</div>
+<div class="flex items-center gap-1 text-secondary transition-colors" id="reqUpper">
+<span class="material-symbols-outlined text-sm" id="iconUpper">fiber_manual_record</span>
+<span class="text-label-sm">Uppercase</span>
+</div>
+<div class="flex items-center gap-1 text-secondary transition-colors" id="reqNum">
+<span class="material-symbols-outlined text-sm" id="iconNum">fiber_manual_record</span>
+<span class="text-label-sm">Number</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Terms & Safety Agreement Checkbox -->
+<div class="pt-2">
+<label class="flex items-start gap-3 cursor-pointer select-none group">
+<div class="relative flex items-center justify-center mt-0.5">
+<input class="peer sr-only" id="termsAgreement" required="" type="checkbox">
+<div class="w-5 h-5 rounded bg-surface-container-high peer-checked:bg-on-background peer-focus:ring-2 peer-focus:ring-primary-container transition-all flex items-center justify-center" style="background-color: rgb(255, 255, 255); border: 1.5px solid rgb(148, 163, 184); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 2px;">
+<span class="material-symbols-outlined text-white text-base opacity-0 peer-checked:opacity-100 transition-opacity font-bold">check</span>
+</div>
+</div>
+<span class="font-body-md text-body-md text-secondary group-hover:text-on-surface transition-colors leading-snug">
+                  I accept the <a class="font-bold text-on-surface underline hover:text-primary transition-colors" href="#">Terms of Transit Service</a> and agree to Fairtrike’s <a class="font-bold text-on-surface underline hover:text-primary transition-colors" href="#">Commuter Safety &amp; Fair Fare Guidelines</a> in Olongapo.
+                </span>
+</label>
+</div>
+<!-- Primary Submission CTA Button -->
+<div class="pt-2">
+<button class="w-full min-h-[52px] px-8 py-3.5 rounded-xl bg-gradient-to-r from-primary-container to-primary-container hover:from-primary hover:to-primary-container text-on-primary font-headline-md text-headline-md tracking-tight shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 group" id="submitBtn" type="submit" style="background: rgb(5, 150, 105); color: rgb(255, 255, 255); font-weight: 700; transition: background-color 0.2s;">
+<span class="">Create Account</span>
+<span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</form>
+<!-- Alternative Actions / Bottom Navigation -->
+<div class="pt-2 text-center space-y-3">
+<p class="font-body-md text-body-md text-secondary">
+              Already have an account?
+              <a class="font-headline-sm text-headline-sm text-primary hover:text-on-primary-container font-bold underline transition-colors ml-1" href="#" style="color: rgb(5, 150, 105);">
+                Sign In
+              </a>
+</p>
+<div class="flex items-center justify-center gap-6 pt-3 text-secondary font-label-sm text-label-sm">
+<a class="hover:text-on-surface transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-base">support_agent</span>
+                Driver Application
+              </a>
+<span class="text-surface-container-high">•</span>
+<a class="hover:text-on-surface transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-base">local_police</span>
+                Barangay Helpdesk
+              </a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive JavaScript Logic -->
+<script>
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('password');
+      const icon = document.getElementById('passwordEyeIcon');
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        pwdInput.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    }
+
+    function updatePasswordSecurity(val) {
+      const bar1 = document.getElementById('bar1');
+      const bar2 = document.getElementById('bar2');
+      const bar3 = document.getElementById('bar3');
+      const label = document.getElementById('strengthLabel');
+
+      const hasMinLength = val.length >= 6;
+      const hasUppercase = /[A-Z]/.test(val);
+      const hasNumber = /[0-9]/.test(val);
+
+      // Requirement indicators
+      updateRuleState('reqLength', 'iconLength', hasMinLength);
+      updateRuleState('reqUpper', 'iconUpper', hasUppercase);
+      updateRuleState('reqNum', 'iconNum', hasNumber);
+
+      const score = (hasMinLength ? 1 : 0) + (hasUppercase ? 1 : 0) + (hasNumber ? 1 : 0);
+
+      // Reset bars
+      bar1.className = 'h-full flex-1 bg-surface-variant transition-all duration-300';
+      bar2.className = 'h-full flex-1 bg-surface-variant transition-all duration-300';
+      bar3.className = 'h-full flex-1 bg-surface-variant transition-all duration-300';
+
+      if (val.length === 0) {
+        label.textContent = 'Awaiting input';
+        label.className = 'font-bold text-secondary';
+      } else if (score === 1) {
+        bar1.classList.remove('bg-surface-variant');
+        bar1.classList.add('bg-error');
+        label.textContent = 'Weak';
+        label.className = 'font-bold text-error';
+      } else if (score === 2) {
+        bar1.classList.remove('bg-surface-variant');
+        bar1.classList.add('bg-primary-container');
+        bar2.classList.remove('bg-surface-variant');
+        bar2.classList.add('bg-primary-container');
+        label.textContent = 'Moderate';
+        label.className = 'font-bold text-primary';
+      } else if (score === 3) {
+        bar1.classList.remove('bg-surface-variant');
+        bar1.classList.add('bg-tertiary-container');
+        bar2.classList.remove('bg-surface-variant');
+        bar2.classList.add('bg-tertiary-container');
+        bar3.classList.remove('bg-surface-variant');
+        bar3.classList.add('bg-tertiary-container');
+        label.textContent = 'Strong & Secure';
+        label.className = 'font-bold text-tertiary';
+      }
+    }
+
+    function updateRuleState(elemId, iconId, valid) {
+      const elem = document.getElementById(elemId);
+      const icon = document.getElementById(iconId);
+      if (valid) {
+        elem.classList.remove('text-secondary');
+        elem.classList.add('text-tertiary', 'font-semibold');
+        icon.textContent = 'check';
+      } else {
+        elem.classList.remove('text-tertiary', 'font-semibold');
+        elem.classList.add('text-secondary');
+        icon.textContent = 'fiber_manual_record';
+      }
+    }
+
+    function validateField(input) {
+      const validIcon = document.getElementById('nameValidIcon');
+      if (input.value.trim().length >= 3) {
+        validIcon.classList.remove('hidden');
+      } else {
+        validIcon.classList.add('hidden');
+      }
+    }
+
+    function validateEmail(input) {
+      const validIcon = document.getElementById('emailValidIcon');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailRegex.test(input.value.trim())) {
+        validIcon.classList.remove('hidden');
+      } else {
+        validIcon.classList.add('hidden');
+      }
+    }
+
+    function dismissAlert(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('password').value;
+      const terms = document.getElementById('termsAgreement').checked;
+      const errorBox = document.getElementById('errorAlert');
+      const successBox = document.getElementById('successAlert');
+      const errorMsg = document.getElementById('errorMessage');
+
+      const hasMinLength = pwd.length >= 6;
+      const hasUppercase = /[A-Z]/.test(pwd);
+      const hasNumber = /[0-9]/.test(pwd);
+
+      if (!hasMinLength || !hasUppercase || !hasNumber) {
+        errorMsg.textContent = 'Password must meet all 3 safety criteria: 6+ characters, uppercase letter, and a number.';
+        errorBox.classList.remove('hidden');
+        successBox.classList.add('hidden');
+        return;
+      }
+
+      if (!terms) {
+        errorMsg.textContent = 'Please accept the Terms of Transit Service and Safety Guidelines.';
+        errorBox.classList.remove('hidden');
+        successBox.classList.add('hidden');
+        return;
+      }
+
+      errorBox.classList.add('hidden');
+      successBox.classList.remove('hidden');
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+        <span>Registering Passenger...</span>
+      `;
+
+      setTimeout(() => {
+        submitBtn.innerHTML = `
+          <span class="material-symbols-outlined text-xl">done</span>
+          <span>Account Created!</span>
+        `;
+      }, 1500);
+    }
+  </script>
+</div></main>
+
+
+
+
+
+</body></html>

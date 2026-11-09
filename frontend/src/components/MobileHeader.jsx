@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { isDriver } from '../lib/roles.js';
 import { initialsOf, avatarUrl } from '../lib/utils.js';
 import { SignOutModal } from './SignOutModal.jsx';
 
@@ -9,18 +10,18 @@ export function MobileHeader() {
   const [signOutOpen, setSignOutOpen] = React.useState(false);
   const confirmSignOut = () => {
     setSignOutOpen(false);
+    const target = isDriver(user) ? '/login-driver' : '/login';
     logout();
+    navigate(target);
   };
   return (
     <header className="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
       <div className="h-16 px-margin flex items-center justify-between">
         <Link to="/dashboard" className="flex items-center gap-space-sm" style={{ textDecoration: 'none' }}>
-          <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container text-[20px]">electric_rickshaw</span>
-          </div>
+          <img src="/fairtrike-logo.png" alt="Fairtrike logo" className="w-12 h-12 object-contain" />
           <div className="flex flex-col">
             <span className="text-headline-sm text-primary leading-tight font-bold">Fairtrike</span>
-            <span className="text-label-sm text-secondary uppercase tracking-wider">Olongapo City</span>
+            <span className="text-label-sm text-secondary uppercase tracking-wider">Tricycle Transit</span>
           </div>
         </Link>
         <div className="flex items-center gap-space-sm">

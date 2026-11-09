@@ -14,12 +14,14 @@ const NAV_LINKS = [
 export function Brand({ to = '/dashboard', compact = false }) {
   return (
     <Link to={to} className="flex items-center gap-space-sm group min-w-0" style={{ textDecoration: 'none' }}>
-      <div className={`${compact ? 'w-8 h-8 rounded-lg' : 'w-8 h-8 md:w-10 md:h-10 md:rounded-xl'} bg-primary-container flex items-center justify-center shadow-sm shrink-0`}>
-        <span className={`material-symbols-outlined text-on-primary-container ${compact ? 'text-[20px]' : 'text-[20px] md:text-[24px]'}`}>electric_rickshaw</span>
-      </div>
+      <img
+        src="/fairtrike-logo.png"
+        alt="Fairtrike logo"
+        className={`${compact ? 'w-12 h-12' : 'w-12 h-12 md:w-14 md:h-14'} object-contain shrink-0`}
+      />
       <div className="flex flex-col min-w-0">
         <span className={`${compact ? 'text-[16px]' : 'text-[16px] md:text-headline-sm'} text-on-surface font-bold tracking-tight leading-tight truncate`}>Fairtrike</span>
-        <span className="text-label-sm text-primary tracking-wide uppercase truncate">Olongapo City Transit</span>
+        <span className="text-label-sm text-primary tracking-wide uppercase truncate">Tricycle Transit</span>
       </div>
     </Link>
   );

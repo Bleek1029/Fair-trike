@@ -25,16 +25,22 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = (token, userData) => {
-    setToken(token);
+  // `remember` (from the sign-in "Remember device" checkbox) selects the
+  // backing store: true → localStorage (survives restarts), false →
+  // sessionStorage (signed out when the browser closes). Default true keeps
+  // auto-login flows (driver register, passenger register) persistent.
+  const login = (token, userData, { remember = true } = {}) => {
+    setToken(token, { remember });
     setStoredUser(userData);
     setUser(userData);
+    setLoading(false);
   };
 
   const logout = () => {
     setToken(null);
     setStoredUser(null);
     setUser(null);
+    setLoading(false);
   };
 
   const updateUser = (patch) => {

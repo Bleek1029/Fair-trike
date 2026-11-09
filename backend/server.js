@@ -2,15 +2,22 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
+import { createServer } from 'node:http';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { env } from './config.js';
 import { testConnection, ensureDatabase } from './db.js';
+import { initSocket } from './socket.js';
+import { initWebSocketServer } from './ws-server.js';
 import authRouter from './routes/auth.js';
 import usersRouter, { uploadDir } from './routes/users.js';
 import driversRouter from './routes/drivers.js';
 import routingRouter from './routes/routing.js';
 import geoRouter from './routes/geo.js';
+import placesRouter from './routes/places.js';
+import ridesRouter from './routes/rides.js';
+import adminRouter from './routes/admin.js';
+import { sendIndex, originFor } from './lib/spa.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -58,6 +65,9 @@ app.use('/api/users', usersRouter);
 app.use('/api/drivers', driversRouter);
 app.use('/api/route', routingRouter);
 app.use('/api/geo', geoRouter);
+app.use('/api/places', placesRouter);
+app.use('/api/rides', ridesRouter);
+app.use('/api/admin', adminRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtrike-backend' }));
@@ -68,12 +78,22 @@ app.use('/api', notFoundHandler);
 // ── Serve the built React app (single-process mode) ──────
 const distDir = path.resolve(__dirname, '..', 'frontend', 'dist');
 if (fs.existsSync(path.join(distDir, 'index.html'))) {
-  app.use(express.static(distDir, { index: 'index.html', maxAge: '1h' }));
+  // index: false so index.html is only ever sent through sendIndex() below,
+  // which injects the runtime config (app port vs admin port).
+  app.use(express.static(distDir, { index: false, maxAge: '1h' }));
+
+  // The admin dashboard has its own port — send browsers there instead of
+  // rendering it inside the app.
+  app.get(['/admin', '/admin/*'], (req, res) => {
+    res.redirect(302, `${originFor(req, env.adminPort)}/admin`);
+  });
+
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
-    res.sendFile(path.join(distDir, 'index.html'));
+    sendIndex(res, distDir, req);
   });
   console.log(`🌐 Serving frontend from ${distDir}`);
+  console.log(`🛡️  Admin dashboard lives on port ${env.adminPort} — /admin here redirects there.`);
 } else {
   console.log('⚠️  frontend/dist not found — API-only mode. Run `npm run setup` in the project root to build it.');
 }
@@ -87,9 +107,23 @@ app.use(errorHandler);
 const isVercel = Boolean(process.env.VERCEL);
 
 if (!isVercel) {
-  const server = app.listen(env.port, async () => {
+  // Express MUST be the request listener BEFORE Socket.io attaches: engine.io
+  // caches the listeners present at attach time and re-invokes them for every
+  // non-/socket.io request. (Adding Express afterwards left it as a separate
+  // listener that also ran on /socket.io requests → ERR_HTTP_HEADERS_SENT.)
+  const appServer = createServer(app);
+
+  // Attach Socket.io first (must be before Express becomes the sole listener)
+  initSocket(appServer);
+
+  // Attach raw WebSocket server (ws) to the same HTTP server
+  initWebSocketServer(appServer);
+
+  const server = appServer.listen(env.port, async () => {
     console.log(`🚀 Fairtrike backend running at http://localhost:${env.port}`);
     console.log(`📡 API base: http://localhost:${env.port}/api`);
+    console.log(`🔌 Socket.io on http://localhost:${env.port}/socket.io`);
+    console.log(`💬 Raw WebSocket on ws://localhost:${env.port}`);
     try {
       await testConnection();
       await ensureDatabase();
@@ -102,7 +136,8 @@ if (!isVercel) {
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       console.error(`❌ Port ${env.port} is already in use — a previous server instance is likely still running.`);
-      console.error(`   Fix: stop the other process first, e.g.:`);
+      console.error(`   Fix: free the Fairtrike ports, then start again:`);
+      console.error(`     npm run stop        (from the project root)`);
       console.error(`     PowerShell: Get-NetTCPConnection -LocalPort ${env.port} -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`);
       console.error(`     or:         npx kill-port ${env.port}`);
       process.exit(1);

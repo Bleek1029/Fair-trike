@@ -18,3 +18,35 @@ export async function openOSMRoute(start, end, opts = {}) {
   window.open(url, "_blank", "noopener,noreferrer");
   return url;
 }
+
+// --- Debugging helpers ---
+
+/**
+ * Wrap an onClick handler to add debugging.
+ * Logs the click and optionally breaks execution with debugger.
+ * Usage: onClick={debugOnClick(() => myFunction())}
+ */
+export function debugOnClick(handler) {
+  return function(event) {
+    console.debug('Button clicked:', event.target);
+    console.debug('Event target tagName:', event.target.tagName);
+    console.debug('Event target className:', event.target.className);
+    debugger; // Breaks execution in DevTools
+    if (handler) {
+      handler(event);
+    }
+  };
+}
+
+/**
+ * Logs button click information without breaking execution.
+ * Usage: onClick={debugOnClickSimple(() => myFunction)}
+ */
+export function debugOnClickSimple(handler) {
+  return function(event) {
+    console.debug('Button clicked:', event.target?.tagName, event.target?.className, event.target?.id);
+    if (handler) {
+      handler(event);
+    }
+  };
+}

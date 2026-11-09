@@ -1,4 +1,4 @@
-const CACHE = 'fairtrike-v3';
+const CACHE = 'fairtrike-v5';
 const PRECACHE = [
   '/',
   '/index.html',
@@ -8,7 +8,7 @@ const PRECACHE = [
   '/icons/icon-512.png',
   '/icons/maskable-512.png',
   '/icons/apple-touch-icon.png',
-  '/Fairtrike.png',
+  '/fairtrike-logo.png',
   '/seal.png',
 ];
 

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { pool } from '../db.js';
 import { signToken, publicUser, publicDriver } from '../middleware/auth.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
-import { badRequest, notFound, conflict, unauthorized } from '../lib/AppError.js';
+import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/AppError.js';
 import { ok, created } from '../lib/http.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
 
@@ -79,6 +79,8 @@ const client = await pool.connect();
 }));
 
 // ── POST /api/auth/login ─────────────────────────────────
+// Commuter (passenger) sign-in. Driver accounts are rejected here so each
+// portal stays role-specific; drivers use /api/auth/login-driver instead.
 router.post('/login', asyncHandler(async (req, res) => {
   const email = normalizeEmail(req.body.email);
   const password = req.body.password || '';
@@ -90,6 +92,59 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const isMatch = await bcrypt.compare(password, user.password_hash);
   if (!isMatch) throw unauthorized('Invalid email or password.');
+
+  if (user.role === 'driver') {
+    throw forbidden('This is a driver account. Please sign in through the Driver Portal.');
+  }
+
+  // NOTE: admins are NOT rejected here. A single-port deployment (Vercel) has
+  // only this login page, so blocking admins would lock them out; the SPA hides
+  // it on the app port when a separate admin port exists, and /login-admin
+  // enforces the admin role server-side.
+  const token = signToken(user.id);
+  ok(res, { token, user: publicUser(user) });
+}));
+
+// ── POST /api/auth/login-driver ──────────────────────────
+// Driver-portal sign-in. Passenger accounts are rejected so the portals
+// remain separate. Driver approval status is still handled elsewhere.
+router.post('/login-driver', asyncHandler(async (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  const password = req.body.password || '';
+  if (!email || !password) throw badRequest('Please fill in all fields.');
+
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  const user = result.rows[0];
+  if (!user) throw unauthorized('Invalid email or password.');
+
+  const isMatch = await bcrypt.compare(password, user.password_hash);
+  if (!isMatch) throw unauthorized('Invalid email or password.');
+
+  if (user.role !== 'driver') {
+    throw forbidden('This is a commuter account. Please sign in as a passenger.');
+  }
+
+  const token = signToken(user.id);
+  ok(res, { token, user: publicUser(user) });
+}));
+
+// ── POST /api/auth/login-admin ───────────────────────────
+// Admin-dashboard sign-in. Only admin accounts are accepted.
+router.post('/login-admin', asyncHandler(async (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  const password = req.body.password || '';
+  if (!email || !password) throw badRequest('Please fill in all fields.');
+
+  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  const user = result.rows[0];
+  if (!user) throw unauthorized('Invalid email or password.');
+
+  const isMatch = await bcrypt.compare(password, user.password_hash);
+  if (!isMatch) throw unauthorized('Invalid email or password.');
+
+  if (user.role !== 'admin') {
+    throw forbidden('This account does not have admin access.');
+  }
 
   const token = signToken(user.id);
   ok(res, { token, user: publicUser(user) });

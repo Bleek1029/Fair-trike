@@ -38,36 +38,22 @@ if (!isDev) {
   }
 }
 
-// ── Start the backend (serves API + frontend on the same port) ──
-// We invoke `node server.js` directly (no npm wrapper) — cleaner and avoids
-// the Windows .cmd spawn issue entirely.
-console.log('\n🚀 Starting Fairtrike…');
-const serverArgs = isDev ? ['--watch', 'server.js'] : ['server.js'];
-const server = spawn(process.execPath, serverArgs, {
+// ── Start the servers ──
+// Both processes (app + admin dashboard) are owned by backend/start.mjs so that
+// `npm start` inside backend/ behaves identically. This root script only adds
+// the frontend build check above (the child prints its own startup banner).
+const launcherArgs = [...(isDev ? ['--dev'] : []), 'start.mjs'];
+const launcher = spawn(process.execPath, launcherArgs, {
   cwd: backendDir,
   stdio: 'inherit',
   env: { ...process.env, FORCE_COLOR: '1' },
 });
 
-// URL to open once the server is listening (backend prints its own banner too).
-const PORT = (fs.existsSync(path.join(backendDir, '.env'))
-  ? fs.readFileSync(path.join(backendDir, '.env'), 'utf8').match(/^PORT=(\d+)$/m)?.[1]
-  : null) || '5000';
-const url = `http://localhost:${PORT}`;
-
-if (!isDev) {
-  setTimeout(() => {
-    console.log(`👉 Open ${url} in your browser.`);
-  }, 2000);
-} else {
-  console.log(`👉 Frontend (dev): http://localhost:5173  |  Backend API: ${url}/api`);
-}
-
 function shutdown() {
   console.log('\n🛑 Stopping Fairtrike…');
-  server.kill();
+  launcher.kill();
   process.exit(0);
 }
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
-server.on('exit', (code) => process.exit(code ?? 0));
+launcher.on('exit', (code) => process.exit(code ?? 0));

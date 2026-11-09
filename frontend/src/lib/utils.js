@@ -1,4 +1,5 @@
 // ── Shared string / validation helpers ──
+import { UPLOADS_BASE } from '../config.js';
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -22,8 +23,10 @@ export function passwordChecks(val) {
 
 // Turns a stored profile-picture path into an absolute route.
 // Handles both POSIX and Windows-style stored paths.
+// UPLOADS_BASE is `/uploads` in the browser and the backend origin in the native
+// shell (Capacitor serves the bundle from https://localhost).
 export function avatarUrl(profilePicture) {
   if (!profilePicture) return null;
   const filename = String(profilePicture).split(/[\\/]/).pop();
-  return filename ? `/uploads/${filename}` : null;
+  return filename ? `${UPLOADS_BASE}/${filename}` : null;
 }

@@ -1,5 +1,12 @@
 // ── Central configuration: single source of truth for env-derived settings ──
-import 'dotenv/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+
+// Load backend/.env relative to THIS file (not the process cwd) so the servers
+// behave identically no matter which directory launched them (npm start from the
+// repo root, `node backend/admin-server.js`, etc.).
+dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.env') });
 
 function intFromEnv(name, fallback) {
   const n = Number.parseInt(process.env[name], 10);
@@ -15,6 +22,10 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
   port: intFromEnv('PORT', 5000),
+  adminPort: intFromEnv('ADMIN_PORT', 5001),
+  // Optional: serve the admin SPA shell from the Vite dev server (e.g.
+  // http://localhost:5173) instead of frontend/dist — keeps HMR in dev.
+  adminSpaOrigin: (process.env.ADMIN_SPA_ORIGIN || '').trim().replace(/\/+$/, ''),
   jwt: {
     secret: requireSecret('JWT_SECRET', 'dev-insecure-secret-change-me'),
     expiresIn: (process.env.JWT_EXPIRES_IN || '7d').trim(),

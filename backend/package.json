@@ -5,8 +5,13 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node start.mjs",
+    "start:app": "node server.js",
+    "start:admin": "node admin-server.js",
+    "stop": "node ../scripts/stop.mjs",
+    "android": "node ../scripts/android.mjs",
+    "dev": "node start.mjs --dev",
+    "dev:app": "node --watch server.js",
     "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {

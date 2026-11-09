@@ -1,5 +1,7 @@
 import React from 'react';
 import { Icon } from './Icon.jsx';
+import { FARE } from '../config.js';
+import { formatPeso } from '../lib/format.js';
 
 export function TariffSheet({ open, driver, onClose, onBook }) {
   if (!open || !driver) return null;
@@ -16,7 +18,7 @@ export function TariffSheet({ open, driver, onClose, onBook }) {
           <div className="flex flex-col">
             <span className="text-label-sm text-secondary font-bold uppercase tracking-wider">{driver.toda}</span>
             <h3 id="sheet-driver-name" className="text-headline-md text-on-surface font-extrabold">{driver.name}</h3>
-            <p className="text-body-sm text-on-surface-variant">{driver.terminal} • LGU MTOP {driver.franchise}</p>
+            <p className="text-body-sm text-on-surface-variant">{driver.terminal} • Franchise {driver.franchise}</p>
           </div>
           <button type="button" aria-label="Close tariff dialog" onClick={onClose} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest">
             <Icon name="close" size={20} />
@@ -31,37 +33,25 @@ export function TariffSheet({ open, driver, onClose, onBook }) {
             <span className="text-label-sm text-outline">Plate Number</span>
             <p className="text-label-lg text-on-surface font-bold">{driver.plate}</p>
           </div>
-          <div>
-            <span className="text-label-sm text-outline">Rating</span>
-            <p className="text-label-lg text-on-surface font-bold">★ {driver.rating}</p>
-          </div>
         </div>
         <div className="flex flex-col gap-space-xs">
           <div className="flex items-center justify-between">
-            <h4 className="text-headline-sm text-on-surface font-bold">Official Fare Matrix</h4>
-            <span className="text-label-sm text-on-secondary-container bg-secondary-container px-2 py-0.5 rounded-full">LGU Approved</span>
+            <h4 className="text-headline-sm text-on-surface font-bold">Fare Matrix</h4>
           </div>
           <div className="flex flex-col rounded-xl bg-surface-container gap-1 p-2">
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest">
               <div>
-                <p className="text-label-lg text-on-surface font-bold">First 1.0 km (Base Fare)</p>
-                <p className="text-body-sm text-on-surface-variant">Regular Commuter</p>
+                <p className="text-label-lg text-on-surface font-bold">Base fare</p>
+                <p className="text-body-sm text-on-surface-variant">Flag-down rate</p>
               </div>
-              <span className="text-headline-sm text-primary font-black">₱15.00</span>
+              <span className="text-headline-sm text-primary font-black">{formatPeso(FARE.base)}</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest">
               <div>
-                <p className="text-label-lg text-on-surface font-bold">Student / Senior / PWD</p>
-                <p className="text-body-sm text-on-surface-variant">20% Statutory Discount</p>
+                <p className="text-label-lg text-on-surface font-bold">Per kilometre</p>
+                <p className="text-body-sm text-on-surface-variant">Distance rate</p>
               </div>
-              <span className="text-headline-sm text-secondary font-black">₱12.00</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest">
-              <div>
-                <p className="text-label-lg text-on-surface font-bold">Each Succeeding km</p>
-                <p className="text-body-sm text-on-surface-variant">Standard Rate per km</p>
-              </div>
-              <span className="text-headline-sm text-on-surface font-black">+₱3.00</span>
+              <span className="text-headline-sm text-on-surface font-black">+{formatPeso(FARE.perKm)}</span>
             </div>
           </div>
         </div>

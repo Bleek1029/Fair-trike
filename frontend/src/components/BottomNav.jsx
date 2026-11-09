@@ -3,18 +3,26 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 
 // ── Mobile bottom tab bar (app-style navigation, phones only) ──
-const TABS = [
+// Tabs differ per role: drivers get the duty console, commuters get booking.
+const PASSENGER_TABS = [
   { label: 'Home', to: '/dashboard', icon: 'electric_rickshaw' },
   { label: 'Book', to: '/app', icon: 'near_me' },
-  { label: 'Drivers', to: '/driver-info', icon: 'two_wheeler' },
-  { label: 'History', to: '/dashboard', icon: 'receipt_long' },
-  { label: 'Account', to: '/dashboard', icon: 'person' },
+  { label: 'History', to: '/history', icon: 'receipt_long' },
+  { label: 'Account', to: '/account', icon: 'person' },
+];
+
+const DRIVER_TABS = [
+  { label: 'Duty', to: '/driver', icon: 'wifi_tethering' },
+  { label: 'Earnings', to: '/driver/earnings', icon: 'payments' },
+  { label: 'History', to: '/driver/history', icon: 'receipt_long' },
+  { label: 'Account', to: '/driver/account', icon: 'person' },
 ];
 
 export function BottomNav() {
   const { user } = useAuth();
   const { pathname } = useLocation();
   if (!user) return null;
+  const TABS = user.role === 'driver' ? DRIVER_TABS : PASSENGER_TABS;
   return (
     <nav
       aria-label="Primary"
