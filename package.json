@@ -24,5 +24,8 @@
     "ws": "^8.22.1"
   },
   "devDependencies": {},
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12"
+  },
   "postinstall": "npm --prefix frontend install && npm --prefix frontend run build"
 }
