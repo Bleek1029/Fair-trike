@@ -3,10 +3,7 @@ services:
     name: fairtrike
     runtime: node
     plan: free
-    buildCommand: |
-      npm install --no-fund --no-audit
-      npm --prefix frontend install --no-fund --no-audit
-      npm --prefix frontend run build
+    buildCommand: npm install --no-fund --no-audit && npm --prefix frontend install --no-fund --no-audit && npm --prefix frontend run build
     startCommand: node scripts/start.mjs --skip-frontend-install
     envVars:
       - key: NODE_ENV
@@ -15,8 +12,6 @@ services:
         value: "10000"
       - key: SKIP_FRONTEND_INSTALL
         value: "true"
-    # Ensure clean builds by not caching node_modules
-    # render.yaml doesn't directly control cache, but explicit install commands help
 
   # Optional: PostgreSQL database (uncomment and configure if needed)
   # - type: pserv
