@@ -53,6 +53,18 @@ if (!isDev && !skipFrontendInstall) {
   console.log('⏭️  Skipping frontend install/build (SKIP_FRONTEND_INSTALL=true)');
 }
 
+// ── Ensure backend deps exist (fallback if build phase deps didn't persist) ──
+const backendNodeModules = path.join(backendDir, 'node_modules');
+if (!fs.existsSync(backendNodeModules)) {
+  console.log('📦 Installing backend dependencies (fallback)…');
+  const installEnv = { ...process.env, NODE_ENV: 'development' };
+  const installResult = spawnSync(npmCmd, ['install', '--prefix', backendDir], { stdio: 'inherit', shell: process.platform === 'win32', env: installEnv });
+  if (installResult.status !== 0) {
+    console.error('❌ Failed to install backend dependencies.');
+    process.exit(1);
+  }
+}
+
 // ── Start the servers ──
 // Both processes (app + admin dashboard) are owned by backend/start.mjs so that
 // `npm start` inside backend/ behaves identically. This root script only adds
