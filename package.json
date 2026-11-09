@@ -27,5 +27,5 @@
   "overrides": {
     "@xmldom/xmldom": "^0.9.12"
   },
-  "postinstall": "npm --prefix frontend install && npm --prefix frontend run build"
+  "postinstall": "npm --prefix backend install --no-fund --no-audit && npm --prefix frontend install --no-fund --no-audit && npm --prefix frontend run build"
 }
