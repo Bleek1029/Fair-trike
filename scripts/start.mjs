@@ -33,13 +33,15 @@ if (!isDev && !skipFrontendInstall) {
     const frontendNodeModules = path.join(frontendDir, 'node_modules');
     if (!fs.existsSync(frontendNodeModules)) {
       console.log('📦 Installing frontend dependencies…');
-      const installResult = spawnSync(npmCmd, ['install', '--prefix', frontendDir], { stdio: 'inherit', shell: process.platform === 'win32' });
+      const installEnv = { ...process.env, NODE_ENV: 'development' };
+      const installResult = spawnSync(npmCmd, ['install', '--prefix', frontendDir], { stdio: 'inherit', shell: process.platform === 'win32', env: installEnv });
       if (installResult.status !== 0) {
         console.error('❌ Failed to install frontend dependencies.');
         process.exit(1);
       }
     }
-    const build = spawnSync(npmCmd, ['run', 'build'], { cwd: frontendDir, stdio: 'inherit', ...npmOpts });
+    const buildEnv = { ...process.env, NODE_ENV: 'development' };
+    const build = spawnSync(npmCmd, ['run', 'build'], { cwd: frontendDir, stdio: 'inherit', ...npmOpts, env: buildEnv });
     if (build.status !== 0) {
       console.error('❌ Frontend build failed. Try: npm run setup');
       process.exit(build.status ?? 1);
