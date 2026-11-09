@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: fairtrike
+    runtime: node
+    plan: free
+    buildCommand: |
+      npm install --no-fund --no-audit
+      npm --prefix frontend install --no-fund --no-audit
+      npm --prefix frontend run build
+    startCommand: node scripts/start.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+    # Ensure clean builds by not caching node_modules
+    # render.yaml doesn't directly control cache, but explicit install commands help
+
+  # Optional: PostgreSQL database (uncomment and configure if needed)
+  # - type: pserv
+  #   name: fairtrike-db
+  #   plan: free
+  #   ipAllowList: []
