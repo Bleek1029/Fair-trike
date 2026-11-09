@@ -3,7 +3,7 @@ services:
     name: fairtrike
     runtime: node
     plan: free
-    buildCommand: npm install --no-fund --no-audit && npm --prefix frontend install --no-fund --no-audit && npm --prefix frontend run build
+    buildCommand: npm install --no-fund --no-audit && npm --prefix backend install --no-fund --no-audit && npm --prefix frontend install --no-fund --no-audit && npm --prefix frontend run build
     startCommand: node scripts/start.mjs --skip-frontend-install
     envVars:
       - key: NODE_ENV
