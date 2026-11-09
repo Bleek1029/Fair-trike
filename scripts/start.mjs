@@ -15,12 +15,13 @@ const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 const isDev = process.argv.includes('--dev');
 const forceRebuild = process.argv.includes('--rebuild');
+const skipFrontendInstall = process.argv.includes('--skip-frontend-install') || process.env.SKIP_FRONTEND_INSTALL === 'true';
 
 // Windows needs shell:true to spawn .cmd files (Node >= 18.20 rejects bare .cmd spawn).
 const npmOpts = { shell: process.platform === 'win32' };
 
 // ── Make sure a frontend build exists (skipped in --dev mode) ──
-if (!isDev) {
+if (!isDev && !skipFrontendInstall) {
   const missing = !fs.existsSync(distIndex);
   if (missing || forceRebuild) {
     if (missing) {
@@ -46,6 +47,8 @@ if (!isDev) {
   } else {
     console.log('✅ Frontend build found (use --rebuild to rebuild).');
   }
+} else if (skipFrontendInstall) {
+  console.log('⏭️  Skipping frontend install/build (SKIP_FRONTEND_INSTALL=true)');
 }
 
 // ── Start the servers ──
