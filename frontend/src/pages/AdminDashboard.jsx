@@ -1,14 +1,15 @@
+
 // Admin console — stats + driver verification + ride audit.
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { apiAdminStats, apiAdminDrivers } from '../api.js';
 import { apiSetDriverStatus, apiAdminRides } from '../api.js';
-import { Header } from '../components/Chrome.jsx';
+import { AdminHeader } from '../components/Chrome.jsx';
 import { Footer } from '../components/Footer.jsx';
 import { Icon } from '../components/Icon.jsx';
 
 export function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [stats, setStats] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [rides, setRides] = useState([]);
@@ -36,7 +37,7 @@ export function AdminDashboard() {
   const total = (o) => Object.values(o || {}).reduce((a, n) => a + Number(n || 0), 0);
   return (
     <div className="w-full min-h-screen bg-surface text-on-surface" style={{ paddingTop: '5rem' }}>
-      <Header />
+      <AdminHeader user={user} onLogout={logout} />
       <main className="w-full max-w-[1280px] mx-auto px-margin py-space-lg flex flex-col gap-space-lg">
         <section className="flex items-center gap-space-sm">
           <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center"><Icon name="shield_person" size={22} /></div>

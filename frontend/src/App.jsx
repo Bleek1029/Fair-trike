@@ -19,6 +19,7 @@ import { DriverAccount } from './pages/DriverAccount.jsx';
 import { HistoryPage } from './pages/HistoryPage.jsx';
 import { AccountPage } from './pages/AccountPage.jsx';
 import { AdminDashboard } from './pages/AdminDashboard.jsx';
+import { AdminLogin } from './pages/AdminLogin.jsx';
 import { InstallPrompt } from './components/InstallPrompt.jsx';
 
 export function Protected({ children }) {
@@ -85,7 +86,7 @@ export function AdminOnly({ children }) {
     return <BrandLoader message="Checking your session..." />;
   }
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
   if (!isAdmin(user)) {
     // Served by the admin dashboard's own port: bounce non-admins back to the
@@ -128,6 +129,7 @@ export function App() {
       <Route path="/driver/account" element={<DriverOnly><DriverAccount /></DriverOnly>} />
       <Route path="/history" element={<PassengerOnly><HistoryPage /></PassengerOnly>} />
       <Route path="/account" element={<PassengerOnly><AccountPage /></PassengerOnly>} />
+      <Route path="/admin/login" element={<GuestOnly><AdminLogin /></GuestOnly>} />
       <Route path="/admin" element={<AdminOnly><AdminDashboard /></AdminOnly>} />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

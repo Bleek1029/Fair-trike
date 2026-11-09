@@ -179,3 +179,62 @@ export function Header() {
     </header>
   );
 }
+
+// ── Admin-specific header (replaces the shared Header on /admin surfaces) ──
+export function AdminHeader({ user, onLogout }) {
+  const [signOutOpen, setSignOutOpen] = useState(false);
+
+  const confirmSignOut = () => {
+    setSignOutOpen(false);
+    onLogout();
+  };
+
+  return (
+    <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+      <div className="h-16 md:h-20 w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop flex items-center justify-between gap-space-sm md:gap-space-md">
+        <div className="flex items-center gap-space-sm min-w-0">
+          <div className="flex items-center gap-2 group">
+            <img
+              src="/fairtrike-logo.png"
+              alt="Fairtrike logo"
+              className="w-10 h-10 object-contain shrink-0"
+            />
+            <div className="flex flex-col min-w-0">
+              <span className="text-[16px] md:text-headline-sm text-on-surface font-bold tracking-tight leading-tight truncate">
+                Fairtrike
+              </span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-highest/20 backdrop-blur text-primary-fixed text-[10px] uppercase tracking-wider">
+                Transit Utility
+              </span>
+            </div>
+          </div>
+          <div className="hidden md:block ml-2">
+            <span className="text-[10px] font-bold tracking-wider uppercase text-secondary">Admin Access</span>
+            <h1 className="text-headline-sm font-bold text-on-surface">Operations Console</h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-space-sm shrink-0">
+          <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl text-label-sm">
+            <span className="material-symbols-outlined text-secondary text-[16px]">shield_person</span>
+            <span className="text-on-surface font-medium">{user?.fullname ?? user?.email}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse" />
+          </div>
+          <button
+            type="button"
+            onClick={() => setSignOutOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-error-container/10 text-error font-bold hover:bg-error-container/20 transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+      <SignOutModal
+        open={signOutOpen}
+        onConfirm={confirmSignOut}
+        onClose={() => setSignOutOpen(false)}
+        name={user?.fullname}
+      />
+    </header>
+  );
+}

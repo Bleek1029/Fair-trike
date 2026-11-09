@@ -28,6 +28,16 @@ if (!isDev) {
     } else {
       console.log('🏗️  --rebuild flag set — rebuilding the frontend…');
     }
+    // Ensure the frontend node_modules exists (needed for CI/deploy)
+    const frontendNodeModules = path.join(frontendDir, 'node_modules');
+    if (!fs.existsSync(frontendNodeModules)) {
+      console.log('📦 Installing frontend dependencies…');
+      spawnSync(npmCmd, ['install', '--prefix', frontendDir], { stdio: 'inherit', shell: process.platform === 'win32' });
+      if (process.exitCode !== 0) {
+        console.error('❌ Failed to install frontend dependencies.');
+        process.exit(1);
+      }
+    }
     const build = spawnSync(npmCmd, ['run', 'build'], { cwd: frontendDir, stdio: 'inherit', ...npmOpts });
     if (build.status !== 0) {
       console.error('❌ Frontend build failed. Try: npm run setup');
