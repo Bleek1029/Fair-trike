@@ -33,8 +33,8 @@ if (!isDev && !skipFrontendInstall) {
     const frontendNodeModules = path.join(frontendDir, 'node_modules');
     if (!fs.existsSync(frontendNodeModules)) {
       console.log('📦 Installing frontend dependencies…');
-      spawnSync(npmCmd, ['install', '--prefix', frontendDir], { stdio: 'inherit', shell: process.platform === 'win32' });
-      if (process.exitCode !== 0) {
+      const installResult = spawnSync(npmCmd, ['install', '--prefix', frontendDir], { stdio: 'inherit', shell: process.platform === 'win32' });
+      if (installResult.status !== 0) {
         console.error('❌ Failed to install frontend dependencies.');
         process.exit(1);
       }
