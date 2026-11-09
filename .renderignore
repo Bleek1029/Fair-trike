@@ -1,7 +1,7 @@
 # Ignore local node_modules and build artifacts on Render deploy
 node_modules/
 frontend/node_modules/
-backend/node_modules/
+# backend/node_modules/ must persist from build phase to start phase
 frontend/dist/
 *.log
 .env
