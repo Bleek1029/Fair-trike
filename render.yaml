@@ -34,7 +34,7 @@ services:
         value: "731b617556a64c9d8ad12b66c648797d"
       - key: GEMINI_API_KEY
         sync: false
-        # Google AI Studio API key for AI features
+        # Google AI Studio API key (auth key format AQ.*) - add in Render Dashboard
       - key: UPLOAD_DIR
         value: uploads
       - key: MAX_FILE_SIZE_MB
