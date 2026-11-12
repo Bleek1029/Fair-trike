@@ -31,8 +31,7 @@ services:
         sync: false
         # Set to your frontend URL after deploy: https://fairtrike.onrender.com
       - key: ORS_API_KEY
-        sync: false
-        # OpenRouteService API key for routing
+        value: "731b617556a64c9d8ad12b66c648797d"
       - key: GEMINI_API_KEY
         sync: false
         # Google AI Studio API key for AI features
