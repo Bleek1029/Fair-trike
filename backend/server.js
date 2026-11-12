@@ -82,18 +82,59 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
   // which injects the runtime config (app port vs admin port).
   app.use(express.static(distDir, { index: false, maxAge: '1h' }));
 
-  // The admin dashboard has its own port — send browsers there instead of
-  // rendering it inside the app.
-  app.get(['/admin', '/admin/*'], (req, res) => {
-    res.redirect(302, `${originFor(req, env.adminPort)}/admin`);
-  });
+  // App-only routes (landing, registration, login, map, dashboard, etc.) belong
+  // to the commuter/driver SPA on this port — do not redirect them to admin.
+  const APP_ONLY_PATHS = [
+    /^\/$/,
+    /^\/app(\/|$)/,
+    /^\/dashboard(\/|$)/,
+    /^\/driver(\/|$)/,
+    /^\/driver-info(\/|$)/,
+    /^\/history(\/|$)/,
+    /^\/login(\/|$)/,
+    /^\/login-driver(\/|$)/,
+    /^\/register(\/|$)/,
+    /^\/register-driver(\/|$)/,
+  ];
 
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
-    sendIndex(res, distDir, req);
-  });
-  console.log(`🌐 Serving frontend from ${distDir}`);
-  console.log(`🛡️  Admin dashboard lives on port ${env.adminPort} — /admin here redirects there.`);
+  if (env.singlePort) {
+    // ─── Single-port mode (e.g., Render): serve admin on same port ───
+    // Admin routes that should serve the admin SPA
+    const ADMIN_PATHS = ['/admin', '/login'];
+
+    app.get(ADMIN_PATHS, (req, res) => sendIndex(res, distDir, req));
+
+    // Catch-all for admin: any other path on admin port -> redirect to /admin
+    app.get('/{*splat}', (req, res, next) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+      if (APP_ONLY_PATHS.some((re) => re.test(req.path))) return next();
+      // Everything else goes to admin
+      res.redirect(302, '/admin');
+    });
+
+    console.log(`🌐 Serving frontend from ${distDir}`);
+    console.log(`🛡️  Single-port mode: admin dashboard at /admin on same port`);
+  } else {
+    // ─── Dual-port mode (local dev): redirect /admin to admin port ───
+    // The admin dashboard has its own port — send browsers there instead of
+    // rendering it inside the app.
+    app.get('/admin', (req, res) => {
+      res.redirect(302, `${originFor(req, env.adminPort)}/admin`);
+    });
+    app.get('/{*splat}', (req, res, next) => {
+      if (APP_ONLY_PATHS.some((re) => re.test(req.path))) return next();
+      const matchedPath = req.params.splat || '';
+      const targetPath = matchedPath ? `/${matchedPath}` : '';
+      res.redirect(302, `${originFor(req, env.adminPort)}/admin${targetPath}`);
+    });
+
+    app.get('/{*splat}', (req, res, next) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+      sendIndex(res, distDir, req);
+    });
+    console.log(`🌐 Serving frontend from ${distDir}`);
+    console.log(`🛡️  Admin dashboard lives on port ${env.adminPort} — /admin here redirects there.`);
+  }
 } else {
   console.log('⚠️  frontend/dist not found — API-only mode. Run `npm run setup` in the project root to build it.');
 }

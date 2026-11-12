@@ -1,6 +1,7 @@
 {
   "name": "fairtrike-backend",
   "version": "1.0.0",
+  "allowScripts": true,
   "description": "Fairtrike backend - Node.js + Express + PostgreSQL",
   "type": "module",
   "main": "server.js",
@@ -12,7 +13,9 @@
     "android": "node ../scripts/android.mjs",
     "dev": "node start.mjs --dev",
     "dev:app": "node --watch server.js",
-    "test": "node --test \"tests/**/*.test.js\""
+    "test": "node --test \"tests/**/*.test.js\"",
+    "create-admin": "node create-admin.js",
+    "build": "npm run build --prefix ../frontend"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

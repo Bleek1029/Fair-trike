@@ -18,6 +18,26 @@ function requireSecret(name, fallback) {
   return value || fallback;
 }
 
+// Parse DATABASE_URL if provided (Render, Railway, Fly.io, etc.)
+// Format: postgresql://user:pass@host:port/dbname
+function parseDatabaseUrl(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return {
+      host: parsed.hostname,
+      port: parsed.port ? parseInt(parsed.port, 10) : 5432,
+      user: parsed.username,
+      password: parsed.password,
+      database: parsed.pathname.slice(1), // remove leading /
+    };
+  } catch {
+    return null;
+  }
+}
+
+const dbFromUrl = parseDatabaseUrl(process.env.DATABASE_URL);
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
@@ -31,11 +51,11 @@ export const env = {
     expiresIn: (process.env.JWT_EXPIRES_IN || '7d').trim(),
   },
   db: {
-    host: process.env.PGHOST || 'localhost',
-    port: intFromEnv('PGPORT', 5432),
-    user: process.env.PGUSER || 'postgres',
-    password: process.env.PGPASSWORD || '',
-    database: process.env.PGDATABASE || 'appdev',
+    host: dbFromUrl?.host || process.env.PGHOST || 'localhost',
+    port: dbFromUrl?.port || intFromEnv('PGPORT', 5432),
+    user: dbFromUrl?.user || process.env.PGUSER || 'postgres',
+    password: dbFromUrl?.password || process.env.PGPASSWORD || '',
+    database: dbFromUrl?.database || process.env.PGDATABASE || 'appdev',
   },
   uploads: {
     dir: process.env.UPLOAD_DIR || 'uploads',
@@ -51,4 +71,6 @@ export const env = {
     windowMs: intFromEnv('AUTH_RATE_WINDOW_MS', 15 * 60 * 1000),
     max: intFromEnv('AUTH_RATE_MAX', 100),
   },
+  // Single-port mode (e.g., Render): serve admin on same port as app
+  singlePort: process.env.SINGLE_PORT === 'true',
 };

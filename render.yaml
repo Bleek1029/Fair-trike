@@ -1,20 +1,36 @@
+# Render Blueprint for Fairtrike
+# Free tier web service + external PostgreSQL (Neon/Supabase/Railway free tiers)
+# Total cost: $0/mo (with cold starts on free web tier)
+
 services:
   - type: web
     name: fairtrike
     runtime: node
     plan: free
-    buildCommand: npm install --no-fund --no-audit && npm --prefix backend install --no-fund --no-audit && NODE_ENV=development npm --prefix frontend install --no-fund --no-audit && NODE_ENV=development npm --prefix frontend run build
-    startCommand: node scripts/start.mjs --skip-frontend-install
+    region: singapore
+    repo: https://github.com/Bleek1029/Fair-trike
+    branch: main
+    rootDir: backend
+    buildCommand: npm ci && npm run build --prefix ../frontend
+    startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: "10000"
-      - key: SKIP_FRONTEND_INSTALL
+      - key: SINGLE_PORT
         value: "true"
-
-  # Optional: PostgreSQL database (uncomment and configure if needed)
-  # - type: pserv
-  #   name: fairtrike-db
-  #   plan: free
-  #   ipAllowList: []
+      - key: DATABASE_URL
+        sync: false
+        # Set this to your external PostgreSQL connection string:
+        # Neon: postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/dbname?sslmode=require
+        # Supabase: postgresql://postgres:pass@db.xxx.supabase.co:5432/postgres
+        # Railway: postgresql://user:pass@containers-us-xxx.railway.app:5432/railway
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ORS_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+        # Set to your Render URL after deploy: https://fairtrike.onrender.com
