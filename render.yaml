@@ -1,5 +1,5 @@
 # Render Blueprint for Fairtrike
-# Free tier web service + external PostgreSQL (Neon/Supabase/Railway free tiers)
+# Free tier web service + external PostgreSQL (Neon)
 # Total cost: $0/mo (with cold starts on free web tier)
 
 services:
@@ -23,14 +23,24 @@ services:
         value: "true"
       - key: DATABASE_URL
         sync: false
-        # Set this to your external PostgreSQL connection string:
-        # Neon: postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/dbname?sslmode=require
-        # Supabase: postgresql://postgres:pass@db.xxx.supabase.co:5432/postgres
-        # Railway: postgresql://user:pass@containers-us-xxx.railway.app:5432/railway
+        # Neon pooled connection string (set in Render dashboard)
+        # postgresql://neondb_owner:npg_rOQK8iUwR7dh@ep-gentle-credit-a1u8bndm-pooler.ap-southeast-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require
       - key: JWT_SECRET
         generateValue: true
-      - key: ORS_API_KEY
-        sync: false
       - key: CORS_ORIGINS
         sync: false
-        # Set to your Render URL after deploy: https://fairtrike.onrender.com
+        # Set to your frontend URL after deploy: https://fairtrike.onrender.com
+      - key: ORS_API_KEY
+        sync: false
+        # OpenRouteService API key for routing
+      - key: GEMINI_API_KEY
+        sync: false
+        # Google AI Studio API key for AI features
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_FILE_SIZE_MB
+        value: "5"
+      - key: AUTH_RATE_WINDOW_MS
+        value: "900000"
+      - key: AUTH_RATE_MAX
+        value: "100"
