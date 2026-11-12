@@ -766,7 +766,7 @@ main > :last-child  { margin-bottom: 0; }
 }
 
 .admin-nav-item.active {
-  background: linear-gradient(135deg, var(--primary-container/20), var(--tertiary-container/20));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary-container) 20%, transparent), color-mix(in srgb, var(--tertiary-container) 20%, transparent));
   color: var(--primary);
   box-shadow: 0 4px 16px rgba(133, 83, 0, 0.15);
 }
