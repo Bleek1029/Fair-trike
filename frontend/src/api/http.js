@@ -14,6 +14,8 @@ export async function rawRequest(method, url, { body, isForm, token, timeoutMs =
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body && !isForm) headers['Content-Type'] = 'application/json';
 
+  console.log('🌐 API Request:', { method, url, headers, body: body ? JSON.stringify(body) : undefined });
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -41,6 +43,8 @@ export async function rawRequest(method, url, { body, isForm, token, timeoutMs =
   } catch {
     data = {};
   }
+
+  console.log('🌐 API Response:', { status: response.status, ok: response.ok, data });
 
   if (!response.ok) {
     throw new ApiError(data.message || 'Request failed', {

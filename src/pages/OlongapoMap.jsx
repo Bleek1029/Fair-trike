@@ -26,19 +26,11 @@ export function OlongapoMap() {
     const loadOsmData = async () => {
         setLoading(true);
         try {
-            // Note: In a real app, you'd fetch this from a public folder or API
-            // For now, we assume the user might want to see how to integrate it.
-            // Since the file is 47MB, we'll just log that it's ready for processing.
-            console.log("OSM file detected (47MB). Parsing this much data in the browser might be slow.");
-            
-            // Example of how you would fetch and convert if it was in public/
-            /*
             const response = await fetch('/olongapo.osm');
             const str = await response.text();
             const xml = new DOMParser().parseFromString(str, "text/xml");
             const geojson = osmtogeojson(xml);
             setGeoData(geojson);
-            */
         } catch (err) {
             console.error("Error loading OSM data:", err);
         } finally {

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export function Footer() {
+export function Footer({ hideOnAdmin = false }) {
+  if (hideOnAdmin) return null;
   return (
     <footer className="w-full bg-surface-container-low mt-8 md:mt-12 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
       <div className="w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop py-6 md:py-8">

@@ -43,14 +43,8 @@ export function DriverRegister() {
       const data = await withPageLoading(showLoading, hideLoading, 'Registering your driver franchise...', () =>
         apiRegisterDriver({ fullname, email, password, license_number: license, toda_association: toda, trike_number: trike, vehicle_plate: plate, contact_number: contact })
       );
-      setSuccess(`${data.message || 'Driver account created!'} Redirecting...`);
-      setTimeout(async () => {
-        try {
-          const res = await apiLoginDriver({ email, password });
-          if (res.token) { login(res.token, res.user); navigate('/driver'); return; }
-        } catch { /* fall through */ }
-        navigate('/login');
-      }, 1400);
+      setSuccess(data.message || 'Driver account created! Your application is pending admin approval. You will be able to sign in once approved.');
+      setTimeout(() => navigate('/login-driver'), 3000);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -72,7 +66,7 @@ export function DriverRegister() {
           </p>
           <p className="text-[12px] leading-5 text-secondary">
             Already have an account?
-            <Link className="text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1" to="/login">Sign In</Link>
+            <Link className="text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1" to="/login-driver">Sign In</Link>
           </p>
         </div>
       )}

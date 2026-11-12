@@ -69,7 +69,7 @@ if (!fs.existsSync(backendNodeModules)) {
 // Both processes (app + admin dashboard) are owned by backend/start.mjs so that
 // `npm start` inside backend/ behaves identically. This root script only adds
 // the frontend build check above (the child prints its own startup banner).
-const launcherArgs = [...(isDev ? ['--dev'] : []), 'start.mjs'];
+const launcherArgs = ['start.mjs', ...(isDev ? ['--dev'] : [])];
 const launcher = spawn(process.execPath, launcherArgs, {
   cwd: backendDir,
   stdio: 'inherit',

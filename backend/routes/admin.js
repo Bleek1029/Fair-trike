@@ -4,11 +4,14 @@ import { requireAuth, requireRole, publicDriver, publicUser } from '../middlewar
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { ok } from '../lib/http.js';
 import { badRequest, notFound } from '../lib/AppError.js';
+import { emitAdminUserStatusChanged, emitAdminDriverStatusChanged, emitAdminResetStatusChanged, emitAdminDocumentStatusChanged } from '../socket.js';
 
 const router = Router();
 
 const DRIVER_STATUSES = ['pending', 'approved', 'rejected'];
 const DOC_STATUSES = ['pending', 'approved', 'rejected'];
+const RESET_STATUSES = ['pending', 'approved', 'rejected'];
+const USER_STATUSES = ['pending', 'approved', 'rejected'];
 
 // ── GET /api/admin/stats — dashboard overview ────────────
 router.get('/stats', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
@@ -58,7 +61,16 @@ router.post('/drivers/:userId/status', requireAuth, requireRole(pool, 'admin'), 
     [status, userId]
   );
   if (result.rows.length === 0) throw notFound('No driver profile for that user.');
-  ok(res, { message: `Driver marked as ${status}.`, driver: publicDriver(result.rows[0]) });
+
+  // Fetch user info for the socket event
+  const userResult = await pool.query(`SELECT * FROM users WHERE id = $1`, [userId]);
+  const driver = result.rows[0];
+  if (userResult.rows.length > 0) {
+    driver.user = userResult.rows[0];
+  }
+
+  ok(res, { message: `Driver marked as ${status}.`, driver: publicDriver(driver) });
+  emitAdminDriverStatusChanged(driver);
 }));
 
 // ── GET /api/admin/documents — document review queue ─────
@@ -97,6 +109,7 @@ router.post('/documents/:id/status', requireAuth, requireRole(pool, 'admin'), as
     message: `Document marked as ${status}.`,
     document: { id: d.id, docType: d.doc_type, status: d.status },
   });
+  emitAdminDocumentStatusChanged(d);
 }));
 
 // ── GET /api/admin/users — all accounts ──────────────────
@@ -123,6 +136,149 @@ router.get('/rides', requireAuth, requireRole(pool, 'admin'), asyncHandler(async
       createdAt: r.created_at, completedAt: r.completed_at,
     })),
   });
+}));
+
+// ── GET /api/admin/users/pending — pending user approvals ──
+router.get('/users/pending', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+  const result = await pool.query(
+    `SELECT id, fullname, email, role, status, created_at
+     FROM users
+     WHERE status = 'pending'
+     ORDER BY created_at DESC`
+  );
+  ok(res, { users: result.rows.map((u) => ({ ...publicUser(u), status: u.status })) });
+}));
+
+// ── POST /api/admin/users/:id/status — approve/reject user account ──
+router.post('/users/:id/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const userId = Number.parseInt(req.params.id, 10);
+  const status = req.body?.status;
+  const adminUserId = req.user?.id;
+  const { admin_note } = req.body || {};
+  if (!Number.isFinite(userId)) throw badRequest('Invalid user id.');
+  if (!USER_STATUSES.includes(status)) throw badRequest(`status must be one of: ${USER_STATUSES.join(', ')}.`);
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const reqRes = await client.query(
+      `SELECT * FROM users WHERE id = $1 FOR UPDATE`,
+      [userId]
+    );
+    const user = reqRes.rows[0];
+    if (!user) throw notFound('User not found.');
+    if (user.status !== 'pending') throw badRequest(`User account already ${user.status}.`);
+
+    await client.query(
+      `UPDATE users SET status = $1 WHERE id = $2`,
+      [status, userId]
+    );
+    await client.query('COMMIT');
+    const updatedUser = { ...user, status };
+    ok(res, { message: `User account ${status}.`, user: publicUser(updatedUser) });
+    emitAdminUserStatusChanged(updatedUser);
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// ── POST /api/admin/drivers/delete-all — delete ALL drivers ──
+router.post('/drivers/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+  const result = await pool.query(`DELETE FROM drivers`);
+  ok(res, { message: `Deleted ${result.rowCount} driver(s).`, count: result.rowCount });
+}));
+
+// ── POST /api/admin/users/delete-all — delete ALL non-admin users ──
+router.post('/users/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const adminUserId = req.user?.id;
+  const result = await pool.query(`DELETE FROM users WHERE role != 'admin' AND id != $1`, [adminUserId]);
+  ok(res, { message: `Deleted ${result.rowCount} user(s).`, count: result.rowCount });
+}));
+
+// ── POST /api/admin/reset-requests/delete-all — delete ALL reset requests ──
+router.post('/reset-requests/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+  const result = await pool.query(`DELETE FROM password_reset_requests`);
+  ok(res, { message: `Deleted ${result.rowCount} reset request(s).`, count: result.rowCount });
+}));
+
+// ── POST /api/admin/documents/delete-all — delete ALL documents ──
+router.post('/documents/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+  const result = await pool.query(`DELETE FROM driver_documents`);
+  ok(res, { message: `Deleted ${result.rowCount} document(s).`, count: result.rowCount });
+}));
+
+// ── GET /api/admin/reset-requests — password reset approval queue ──
+router.get('/reset-requests', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+  const result = await pool.query(
+    `SELECT rr.id, rr.email, rr.status, rr.admin_note, rr.created_at, rr.reviewed_at,
+            u.fullname, u.role
+     FROM password_reset_requests rr
+     JOIN users u ON u.id = rr.user_id
+     ORDER BY rr.created_at DESC`
+  );
+  ok(res, { requests: result.rows });
+}));
+
+// ── POST /api/admin/reset-requests/:id/approve ──
+router.post('/reset-requests/:id/approve', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  const adminUserId = req.user?.id;
+  const { admin_note } = req.body || {};
+  if (!Number.isFinite(id)) throw badRequest('Invalid request id.');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const reqRes = await client.query(
+      `SELECT * FROM password_reset_requests WHERE id = $1 FOR UPDATE`,
+      [id]
+    );
+    const resetReq = reqRes.rows[0];
+    if (!resetReq) throw notFound('Reset request not found.');
+    if (resetReq.status !== 'pending') throw badRequest(`Request already ${resetReq.status}.`);
+
+    // Apply the new password to the user account.
+    await client.query(
+      `UPDATE users SET password_hash = $1 WHERE id = $2`,
+      [resetReq.new_password_hash, resetReq.user_id]
+    );
+    await client.query(
+      `UPDATE password_reset_requests
+       SET status = 'approved', admin_note = $1, reviewed_by = $2, reviewed_at = NOW()
+       WHERE id = $3`,
+      [admin_note ?? null, adminUserId, id]
+    );
+    await client.query('COMMIT');
+    ok(res, { message: 'Password reset approved and applied.' });
+    emitAdminResetStatusChanged({ ...resetReq, status: 'approved' });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// ── POST /api/admin/reset-requests/:id/reject ──
+router.post('/reset-requests/:id/reject', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  const adminUserId = req.user?.id;
+  const { admin_note } = req.body || {};
+  if (!Number.isFinite(id)) throw badRequest('Invalid request id.');
+
+  const result = await pool.query(
+    `UPDATE password_reset_requests
+       SET status = 'rejected', admin_note = $1, reviewed_by = $2, reviewed_at = NOW()
+       WHERE id = $3 AND status = 'pending'
+       RETURNING *`,
+    [admin_note ?? null, adminUserId, id]
+  );
+  if (result.rows.length === 0) throw notFound('Reset request not found or already processed.');
+  ok(res, { message: 'Password reset request rejected.' });
+  emitAdminResetStatusChanged(result.rows[0]);
 }));
 
 export default router;

@@ -55,6 +55,12 @@ export function initSocket(server) {
 
   io.on('connection', (socket) => {
     const userId = socket.userId;
+    const userRole = socket.userRole;
+
+    // Admin joins admin room for real-time updates
+    if (userRole === 'admin') {
+      socket.join('admin');
+    }
 
     socket.on('join:ride', (rideId, ack) => {
       if (!rideId) return;
@@ -65,6 +71,15 @@ export function initSocket(server) {
 
     socket.on('join:drivers', (ack) => {
       socket.join('drivers');
+      if (typeof ack === 'function') ack({ ok: true });
+    });
+
+    socket.on('join:admin', (ack) => {
+      if (userRole !== 'admin') {
+        if (typeof ack === 'function') ack({ ok: false, error: 'Admin only' });
+        return;
+      }
+      socket.join('admin');
       if (typeof ack === 'function') ack({ ok: true });
     });
 
@@ -121,6 +136,54 @@ export function emitRideEvent(rideId, event, data = {}) {
 export function emitRideRequested(data = {}) {
   if (!io) return;
   io.to('drivers').emit('ride-requested', data);
+}
+
+/** Notify admin room of a new pending user/driver registration. */
+export function emitAdminUserCreated(user) {
+  if (!io) return;
+  io.to('admin').emit('admin:user-created', user);
+}
+
+/** Notify admin room of a new pending driver registration. */
+export function emitAdminDriverCreated(driver) {
+  if (!io) return;
+  io.to('admin').emit('admin:driver-created', driver);
+}
+
+/** Notify admin room of a user/driver status change. */
+export function emitAdminUserStatusChanged(user) {
+  if (!io) return;
+  io.to('admin').emit('admin:user-status-changed', user);
+}
+
+/** Notify admin room of a driver status change. */
+export function emitAdminDriverStatusChanged(driver) {
+  if (!io) return;
+  io.to('admin').emit('admin:driver-status-changed', driver);
+}
+
+/** Notify admin room of a new password reset request. */
+export function emitAdminResetRequested(request) {
+  if (!io) return;
+  io.to('admin').emit('admin:reset-requested', request);
+}
+
+/** Notify admin room of a reset request status change. */
+export function emitAdminResetStatusChanged(request) {
+  if (!io) return;
+  io.to('admin').emit('admin:reset-status-changed', request);
+}
+
+/** Notify admin room of a new document upload. */
+export function emitAdminDocumentCreated(document) {
+  if (!io) return;
+  io.to('admin').emit('admin:document-created', document);
+}
+
+/** Notify admin room of a document status change. */
+export function emitAdminDocumentStatusChanged(document) {
+  if (!io) return;
+  io.to('admin').emit('admin:document-status-changed', document);
 }
 
 export { io };

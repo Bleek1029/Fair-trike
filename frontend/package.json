@@ -1,6 +1,7 @@
 {
   "name": "fairtrike-frontend",
   "version": "1.0.0",
+  "allowScripts": true,
   "description": "Fairtrike frontend - React + Vite + Leaflet",
   "type": "module",
   "scripts": {

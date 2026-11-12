@@ -134,7 +134,8 @@ if (env.adminSpaOrigin) {
   console.log(`🔁 Serving the SPA shell from ${env.adminSpaOrigin}`);
 } else {
   app.use(redirectAppSurfaces);
-  app.use(express.static(distDir, { index: false }));
+  // Serve static files FIRST (favicon, sw.js, manifest, assets, etc.)
+  app.use(express.static(distDir, { index: false, maxAge: '1h' }));
   // Admin-only pages. Anything else redirects to /admin below, so this port
   // never renders the commuter/driver app.
   app.get(['/admin', '/login'], (req, res) => sendIndex(res, distDir, req));

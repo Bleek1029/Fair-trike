@@ -64,6 +64,12 @@ export function DriverLogin() {
             Not yet a driver partner?
             <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline transition-colors ml-1' to='/register-driver'>Apply as Driver</Link>
           </p>
+          <p className='text-[12px] leading-5 text-secondary'>
+            Forgot your password?
+            <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1' to='/reset-password'>
+              Request Reset
+            </Link>
+          </p>
           <div className='flex items-center justify-center gap-4 pt-1 text-secondary font-label-sm text-label-sm'>
             <Link className='hover:text-on-surface transition-colors flex items-center gap-1' to='/login'>
               <span className='material-symbols-outlined text-base'>person</span> Commuter Sign In

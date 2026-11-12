@@ -21,19 +21,26 @@ export function AdminLogin() {
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
+  const [rememberDevice, setRememberDevice] = useState(true);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!email.trim()) return setError('Email is required.');
-    if (!password) return setError('Password is required.');
+    const emailValue = email.trim().toLowerCase();
+    const passwordValue = password;
+    console.log('🔐 Admin login attempt - email:', JSON.stringify(emailValue), 'password:', JSON.stringify(passwordValue), 'passwordLength:', passwordValue?.length, 'rememberDevice');
+    if (!emailValue) return setError('Email is required.');
+    if (!passwordValue) return setError('Password is required.');
     setLoading(true);
     try {
       const data = await withPageLoading(showLoading, hideLoading, 'Signing you in…', () =>
-        apiLoginAdmin({ email: email.trim().toLowerCase(), password })
+        apiLoginAdmin({ email: emailValue, password: passwordValue })
       );
-      login(data.token, data.user);
+      console.log('✅ Admin login success:', data.user);
+      login(data.token, data.user, { remember: rememberDevice });
       navigate('/admin');
     } catch (err) {
+      console.error('❌ Admin login error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -92,6 +99,8 @@ export function AdminLogin() {
           <input
             id='rememberDevice'
             type='checkbox'
+            checked={rememberDevice}
+            onChange={(e) => setRememberDevice(e.target.checked)}
             className='w-3.5 h-3.5 rounded border-[#8fa3c4] text-primary-container focus:ring-primary accent-primary'
           />
           <label htmlFor='rememberDevice' className='text-[12px] text-secondary cursor-pointer select-none'>

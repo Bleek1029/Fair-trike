@@ -93,3 +93,65 @@ export function onRideRequested(socket, callback) {
   socket.on('ride-requested', callback);
   return () => socket.off('ride-requested', callback);
 }
+
+/** Join the admin room to receive admin notifications. */
+export function joinAdmin(socket) {
+  if (!socket) return;
+  socket.emit('join:admin');
+}
+
+/** Listen for admin:user-created events. */
+export function onAdminUserCreated(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:user-created', callback);
+  return () => socket.off('admin:user-created', callback);
+}
+
+/** Listen for admin:driver-created events. */
+export function onAdminDriverCreated(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:driver-created', callback);
+  return () => socket.off('admin:driver-created', callback);
+}
+
+/** Listen for admin:user-status-changed events. */
+export function onAdminUserStatusChanged(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:user-status-changed', callback);
+  return () => socket.off('admin:user-status-changed', callback);
+}
+
+/** Listen for admin:driver-status-changed events. */
+export function onAdminDriverStatusChanged(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:driver-status-changed', callback);
+  return () => socket.off('admin:driver-status-changed', callback);
+}
+
+/** Listen for admin:reset-requested events. */
+export function onAdminResetRequested(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:reset-requested', callback);
+  return () => socket.off('admin:reset-requested', callback);
+}
+
+/** Listen for admin:reset-status-changed events. */
+export function onAdminResetStatusChanged(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:reset-status-changed', callback);
+  return () => socket.off('admin:reset-status-changed', callback);
+}
+
+/** Listen for admin:document-created events. */
+export function onAdminDocumentCreated(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:document-created', callback);
+  return () => socket.off('admin:document-created', callback);
+}
+
+/** Listen for admin:document-status-changed events. */
+export function onAdminDocumentStatusChanged(socket, callback) {
+  if (!socket) return;
+  socket.on('admin:document-status-changed', callback);
+  return () => socket.off('admin:document-status-changed', callback);
+}

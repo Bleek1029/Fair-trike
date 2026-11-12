@@ -10,9 +10,6 @@ import './css/main.css';
 import './css/design-update.css';
 
 // ── PWA service worker (app-like install + offline shell) ──
-import './css/main.css';
-
-// ── PWA service worker (app-like install + offline shell) ──
 // Skipped inside the native shell: Capacitor already ships the bundle locally on
 // every install, and a worker would start caching cross-origin API/uploads
 // responses on the WebView's own origin for no benefit.
@@ -35,17 +32,21 @@ const root = createRoot(rootEl);
 
 // Keep the branded splash visible on every refresh so the logo + name animation plays.
 const BOOT_MIN_MS = 5000;
+// Absolute backstop so the splash can never stick forever (e.g. WebView never
+// fires `load` / reports readyState incorrectly).
+const BOOT_BACKSTOP_MS = 7000;
 const bootStart = Date.now();
 function dismissBootWhenReady() {
   const wait = Math.max(0, BOOT_MIN_MS - (Date.now() - bootStart));
   setTimeout(dismissBootSplash, wait);
 }
+// Guaranteed dismissal: never let the boot-splash remain visible indefinitely.
+setTimeout(dismissBootSplash, BOOT_BACKSTOP_MS);
+
 if (document.readyState === 'complete') {
   dismissBootWhenReady();
 } else {
   window.addEventListener('load', dismissBootWhenReady, { once: true });
-  // Safety net in case load is delayed by slow tiles/fonts.
-  setTimeout(dismissBootSplash, 6000);
 }
 
 root.render(

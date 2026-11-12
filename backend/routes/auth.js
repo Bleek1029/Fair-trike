@@ -6,6 +6,7 @@ import { asyncHandler } from '../lib/asyncHandler.js';
 import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/AppError.js';
 import { ok, created } from '../lib/http.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
+import { emitAdminUserCreated, emitAdminDriverCreated } from '../socket.js';
 
 const BCRYPT_ROUNDS = 12;
 const router = Router();
@@ -28,7 +29,9 @@ router.post('/register', asyncHandler(async (req, res) => {
     "INSERT INTO users (fullname, email, password_hash, role) VALUES ($1, $2, $3, 'passenger') RETURNING *",
     [fullname, email, hash]
   );
-  created(res, { message: 'Account created successfully!', user: publicUser(inserted.rows[0]) });
+  const newUser = inserted.rows[0];
+  created(res, { message: 'Account created successfully!', user: publicUser(newUser) });
+  emitAdminUserCreated(newUser);
 }));
 
 // ── POST /api/auth/register-driver ───────────────────────
@@ -65,11 +68,15 @@ const client = await pool.connect();
       [insertedUser.rows[0].id, licenseNumber, todaAssociation, trikeNumber, vehiclePlate, contactNumber]
     );
     await client.query('COMMIT');
+    const newUser = insertedUser.rows[0];
+    const newDriver = insertedDriver.rows[0];
     created(res, {
       message: 'Driver account created! Your application is pending TODA verification.',
-      user: publicUser(insertedUser.rows[0]),
-      driver: publicDriver(insertedDriver.rows[0]),
+      user: publicUser(newUser),
+      driver: publicDriver(newDriver),
     });
+    emitAdminUserCreated(newUser);
+    emitAdminDriverCreated(newDriver);
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;

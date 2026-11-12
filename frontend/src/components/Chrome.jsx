@@ -190,7 +190,7 @@ export function AdminHeader({ user, onLogout }) {
   };
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <header className="w-full bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] sticky top-0 z-40">
       <div className="h-16 md:h-20 w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop flex items-center justify-between gap-space-sm md:gap-space-md">
         <div className="flex items-center gap-space-sm min-w-0">
           <div className="flex items-center gap-2 group">
