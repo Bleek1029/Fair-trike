@@ -65,7 +65,8 @@ root.render(
             <App />
           </ToastProvider>
         </AuthProvider>
-      </LoadingProvider    </BrowserRouter>
+      </LoadingProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );
 
