@@ -41,11 +41,16 @@ export function originFor(req, port) {
 
 // Send index.html with the runtime config injected.
 export function sendIndex(res, distDir, req) {
+  // In single-port mode, both app and admin share the same origin
+  const isSinglePort = env.singlePort;
+  const appOrigin = originFor(req, env.port);
+  const adminOrigin = isSinglePort ? appOrigin : originFor(req, env.adminPort);
+
   const config = JSON.stringify({
     appPort: env.port,
     adminPort: env.adminPort,
-    appOrigin: originFor(req, env.port),
-    adminOrigin: originFor(req, env.adminPort),
+    appOrigin,
+    adminOrigin,
   });
 
   const html = readIndex(distDir).replace(
