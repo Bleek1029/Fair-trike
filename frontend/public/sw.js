@@ -61,7 +61,9 @@ self.addEventListener('fetch', (event) => {
 // Listen for version check messages from the app
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'VERSION_CHECK') {
-    event.ports[0]?.postMessage({ version: CACHE });
+    // Return just the version number (without timestamp) for comparison with meta tag
+    const version = CACHE.match(/fairtrike-v([^-]+)/)?.[1] || CACHE;
+    event.ports[0]?.postMessage({ version });
   }
 });
 
