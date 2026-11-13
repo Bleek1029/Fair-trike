@@ -29,7 +29,8 @@ export function BottomNav() {
       style={{
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 60,
         display: 'flex', flexDirection: 'row', alignItems: 'stretch', justifyContent: 'space-around',
-        gap: 0, minHeight: 64, padding: '8px 4px calc(8px + env(safe-area-inset-bottom, 0px))',
+        gap: 0, minHeight: 64,
+        padding: `8px calc(4px + env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(4px + env(safe-area-inset-right, 0px))`,
         background: 'rgba(250, 248, 255, 0.97)', borderTop: '1px solid #dae2fd',
         boxShadow: '0 -2px 12px rgba(13, 92, 58, 0.08)',
       }}

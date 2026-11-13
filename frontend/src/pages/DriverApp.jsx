@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { useSearchParams } from 'react-router-dom';
 import {
   apiGetMyDriver, apiGetAvailableRides, apiAcceptRide, apiCompleteRide,
   apiGetEarnings, apiGetDriverDocuments, apiUploadDriverDocument,
@@ -27,6 +28,7 @@ const DOC_TYPES = [
 // from the commuter booking app (/app). Reached only when user.role === 'driver'.
 export function DriverApp() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [driver, setDriver] = useState(null);
   const [driverLoading, setDriverLoading] = useState(true);
   const [online, setOnline] = useState(false);
@@ -43,6 +45,7 @@ export function DriverApp() {
   const socketRef = useRef(null);
   const watchRef = useRef(null);
   const activeRideId = useRef(null);
+  const urlSyncRef = useRef(false); // Prevent circular updates
 
   // Documents
   const [documents, setDocuments] = useState([]);
@@ -52,6 +55,29 @@ export function DriverApp() {
 
   const isApproved = driver?.status === 'approved';
   const fmtPeso = (n) => `₱${Number(n || 0).toFixed(2)}`;
+
+  // Sync accepted ride to URL for deep linking
+  const syncRideToUrl = useCallback((ride) => {
+    if (ride) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('rideId', ride.id);
+        if (ride.pickup) next.set('pickup', ride.pickup);
+        if (ride.dropoff) next.set('dropoff', ride.dropoff);
+        if (ride.status) next.set('status', ride.status);
+        return next;
+      }, { replace: true });
+    } else {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('rideId');
+        next.delete('pickup');
+        next.delete('dropoff');
+        next.delete('status');
+        return next;
+      }, { replace: true });
+    }
+  }, [setSearchParams]);
 
   const refreshEarnings = () => {
     apiGetEarnings()
@@ -107,15 +133,25 @@ export function DriverApp() {
       // New ride pushed instantly (no need to wait up to 5s for the poll).
       if (!cancelled && online && !accepted && !request) setRequest(ride);
     });
+    const unsubAccepted = onRideEvent(s, 'ride-accepted', (data) => {
+      if (!cancelled && data?.ride) {
+        setAccepted(data.ride);
+        activeRideId.current = data.ride.id;
+        startWatching(data.ride.id);
+        syncRideToUrl(data.ride);
+      }
+    });
     const unsubCompleted = onRideEvent(s, 'ride-completed', (data) => {
       if (!cancelled && accepted && accepted.id === data.rideId) {
         setAccepted(null);
+        syncRideToUrl(null);
         stopWatching();
       }
     });
     const unsubCancelled = onRideEvent(s, 'ride-cancelled', (data) => {
       if (!cancelled && accepted && accepted.id === data.rideId) {
         setAccepted(null);
+        syncRideToUrl(null);
         stopWatching();
       }
     });
@@ -132,6 +168,7 @@ export function DriverApp() {
     return () => {
       cancelled = true;
       unsubRequested();
+      unsubAccepted();
       unsubCompleted();
       unsubCancelled();
       stopWatching();
@@ -140,6 +177,30 @@ export function DriverApp() {
       socketRef.current = null;
     };
   }, []);
+
+  // Restore ride state from URL on mount (deep linking)
+  useEffect(() => {
+    const urlRideId = searchParams.get('rideId');
+    if (urlRideId && !accepted) {
+      // Fetch ride details from backend
+      fetch(`/api/rides/${urlRideId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.ride) {
+            setAccepted(data.ride);
+            activeRideId.current = data.ride.id;
+            startWatching(data.ride.id);
+            setStepIndex(0);
+            setNavSteps(null);
+            setNavLoading(true);
+            fetchSteps(data.ride.pickupCoord, data.ride.dropoffCoord)
+              .then(nav => { setNavSteps(nav); setNavLoading(false); })
+              .catch(() => setNavLoading(false));
+          }
+        })
+        .catch(() => {}); // Silently fail - ride may not exist or user not authorized
+    }
+  }, [searchParams]);
 
   // Poll for pending ride offers while on duty with no active trip.
   useEffect(() => {
@@ -163,6 +224,7 @@ export function DriverApp() {
     try {
       const data = await apiAcceptRide(request.id);
       setAccepted(data.ride);
+      syncRideToUrl(data.ride);
       setRequest(null);
       activeRideId.current = data.ride.id;
       startWatching(data.ride.id);
@@ -187,6 +249,7 @@ export function DriverApp() {
     try {
       await apiCompleteRide(accepted.id);
       setAccepted(null);
+      syncRideToUrl(null);
       stopWatching();
       setNavSteps(null);
       refreshEarnings();

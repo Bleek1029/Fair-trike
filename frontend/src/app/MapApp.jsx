@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { fetchRoute, geocodePlaceFreeText, reverseGeocode, searchPlaces } from '../lib/places.js';
@@ -34,6 +34,7 @@ const RIDE_OPTIONS = [
 export function MapApp() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
 
   const mapRef = useRef(null);
@@ -44,9 +45,13 @@ export function MapApp() {
   const driverRouteLineRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const socketRef = useRef(null);
+  const urlSyncRef = useRef(false); // Prevent circular updates
 
-  const initialPickup = location.state?.pickup || 'East Bajac-Bajac Public Plaza Terminal';
-  const initialDest = location.state?.destination || '';
+  // Deep linking: read from URL query params, fallback to location.state, then defaults
+  const urlPickup = searchParams.get('pickup');
+  const urlDest = searchParams.get('dropoff');
+  const initialPickup = urlPickup || location.state?.pickup || 'East Bajac-Bajac Public Plaza Terminal';
+  const initialDest = urlDest || location.state?.destination || '';
 
   const [startStr, setStartStr] = useState(initialPickup);
   const [destStr, setDestStr] = useState(initialDest);
@@ -120,19 +125,45 @@ export function MapApp() {
     }
   };
 
-  const onStartChange = (value) => {
+  const onStartChange = useCallback((value) => {
     setStartStr(value);
     setRouteResult(null);
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => searchSuggestions(value), SEARCH_DEBOUNCE_MS);
-  };
+    // Sync to URL (debounced to avoid excessive history entries)
+    urlSyncRef.current = true;
+    setTimeout(() => {
+      if (urlSyncRef.current) {
+        setSearchParams(prev => {
+          const next = new URLSearchParams(prev);
+          if (value.trim()) next.set('pickup', value.trim());
+          else next.delete('pickup');
+          return next;
+        }, { replace: true });
+        urlSyncRef.current = false;
+      }
+    }, 300);
+  }, [searchParams, setSearchParams]);
 
-  const onDestChange = (value) => {
+  const onDestChange = useCallback((value) => {
     setDestStr(value);
     setRouteResult(null);
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => searchSuggestions(value), SEARCH_DEBOUNCE_MS);
-  };
+    // Sync to URL (debounced to avoid excessive history entries)
+    urlSyncRef.current = true;
+    setTimeout(() => {
+      if (urlSyncRef.current) {
+        setSearchParams(prev => {
+          const next = new URLSearchParams(prev);
+          if (value.trim()) next.set('dropoff', value.trim());
+          else next.delete('dropoff');
+          return next;
+        }, { replace: true });
+        urlSyncRef.current = false;
+      }
+    }, 300);
+  }, [searchParams, setSearchParams]);
 
   const placeMarker = (which, name, lat, lng, label) => {
     if (!mapRef.current) return;
@@ -162,8 +193,23 @@ export function MapApp() {
       setSuggestions([]); setActiveInput(null); return;
     }
     if (mapRef.current) mapRef.current.setView([s.lat, s.lng], 15);
-    if (activeInput === 'start') placeMarker('start', s.name, s.lat, s.lng, s.full || s.name);
-    else placeMarker('dest', s.name, s.lat, s.lng, s.full || s.name);
+    if (activeInput === 'start') {
+      placeMarker('start', s.name, s.lat, s.lng, s.full || s.name);
+      // Sync to URL immediately on selection
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('pickup', s.name);
+        return next;
+      }, { replace: true });
+    } else {
+      placeMarker('dest', s.name, s.lat, s.lng, s.full || s.name);
+      // Sync to URL immediately on selection
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('dropoff', s.name);
+        return next;
+      }, { replace: true });
+    }
   };
 
   // Resolve the pickup point from given coords: reverse-geocode the label,
@@ -186,6 +232,12 @@ export function MapApp() {
     setStartStr(name);
     setStartCoord({ lat, lng });
     setRouteResult(null);
+    // Sync to URL
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('pickup', name);
+      return next;
+    }, { replace: true });
   };
 
   // Approximate location from the caller's public IP (backend proxies keyless
@@ -301,6 +353,12 @@ export function MapApp() {
       mapRef.current.setView([geo.lat, geo.lng], 14);
       placeMarker('dest', value, geo.lat, geo.lng, 'Destination');
     }
+    // Sync to URL
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('dropoff', value);
+      return next;
+    }, { replace: true });
   };
 
   // Haversine straight-line distance (meters), padded for road routing.
@@ -551,6 +609,40 @@ export function MapApp() {
                 {fmtDist(routeResult.distance)} • {fmtTime(routeResult.duration)} • Trike
               </span>
               <span className="text-label-sm bg-primary-container text-on-primary px-2 py-0.5 rounded-full font-bold">{selectedRide.title}</span>
+            </div>
+          )}
+          {(startStr.trim() || destStr.trim()) && (
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const url = window.location.href;
+                  navigator.share?.({ title: 'Fairtrike Ride', text: `Pickup: ${startStr} → Dropoff: ${destStr}`, url })
+                    .catch(() => navigator.clipboard.writeText(url));
+                }}
+                className="flex-1 h-10 rounded-lg bg-secondary-container text-on-secondary text-label-md font-bold flex items-center justify-center gap-2"
+              >
+                <Icon name="share" size={18} /> Share Ride
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStartStr('');
+                  setDestStr('');
+                  setStartCoord(null);
+                  setDestCoord(null);
+                  setRouteResult(null);
+                  setRouteError('');
+                  setSearchParams({ pickup: '', dropoff: '' }, { replace: true });
+                  if (startMarkerRef.current && mapRef.current) mapRef.current.removeLayer(startMarkerRef.current);
+                  if (endMarkerRef.current && mapRef.current) mapRef.current.removeLayer(endMarkerRef.current);
+                  startMarkerRef.current = null;
+                  endMarkerRef.current = null;
+                }}
+                className="h-10 px-4 rounded-lg bg-surface-container-high text-on-surface-variant text-label-md font-bold flex items-center justify-center gap-2"
+              >
+                <Icon name="clear" size={18} /> Clear
+              </button>
             </div>
           )}
         </div>

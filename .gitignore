@@ -20,3 +20,5 @@ backend/uploads/*
 Thumbs.db
 .idea/
 .vscode/
+.neon
+.env.local

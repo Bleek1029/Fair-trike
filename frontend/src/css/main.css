@@ -219,7 +219,7 @@ body {
   margin-top: 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #565e74;
+  color: var(--on-surface-variant);
   min-height: 18px;
 }
 
@@ -627,7 +627,7 @@ body {
   align-items: stretch;
   gap: 2px;
   min-height: 64px;
-  padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 8px calc(4px + env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(4px + env(safe-area-inset-right, 0px));
   background: rgba(250, 248, 255, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -973,7 +973,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #565e74;
+  color: var(--on-surface-variant);
 }
 .route-option {
   padding: 12px;

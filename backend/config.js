@@ -18,18 +18,22 @@ function requireSecret(name, fallback) {
   return value || fallback;
 }
 
-// Parse DATABASE_URL if provided (Render, Railway, Fly.io, etc.)
-// Format: postgresql://user:pass@host:port/dbname
+// Parse DATABASE_URL if provided (Render, Railway, Fly.io, Neon, etc.)
+// Format: postgresql://user:pass@host:port/dbname?sslmode=require
 function parseDatabaseUrl(url) {
   if (!url) return null;
   try {
     const parsed = new URL(url);
+    const sslMode = parsed.searchParams.get('sslmode');
+    const channelBinding = parsed.searchParams.get('channel_binding');
     return {
       host: parsed.hostname,
       port: parsed.port ? parseInt(parsed.port, 10) : 5432,
       user: parsed.username,
       password: parsed.password,
       database: parsed.pathname.slice(1), // remove leading /
+      ssl: sslMode === 'require' || sslMode === 'verify-full' || channelBinding === 'require',
+      sslMode,
     };
   } catch {
     return null;
@@ -56,6 +60,8 @@ export const env = {
     user: dbFromUrl?.user || process.env.PGUSER || 'postgres',
     password: dbFromUrl?.password || process.env.PGPASSWORD || '',
     database: dbFromUrl?.database || process.env.PGDATABASE || 'appdev',
+    ssl: dbFromUrl?.ssl || false,
+    sslMode: dbFromUrl?.sslMode,
   },
   uploads: {
     dir: process.env.UPLOAD_DIR || 'uploads',

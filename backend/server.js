@@ -17,8 +17,10 @@ import geoRouter from './routes/geo.js';
 import placesRouter from './routes/places.js';
 import ridesRouter from './routes/rides.js';
 import adminRouter from './routes/admin.js';
+import aiRouter from './routes/ai.js';
 import { sendIndex, originFor } from './lib/spa.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
+import { requireAuth } from './middleware/auth.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -68,6 +70,17 @@ app.use('/api/geo', geoRouter);
 app.use('/api/places', placesRouter);
 app.use('/api/rides', ridesRouter);
 app.use('/api/admin', adminRouter);
+
+// AI rate limiter (~10 req/min per user)
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many AI requests — please try again later.', code: 'RATE_LIMITED' },
+});
+
+app.use('/api/ai', requireAuth, aiLimiter, aiRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtrike-backend' }));

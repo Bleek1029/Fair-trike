@@ -102,3 +102,9 @@ export const apiAdminDeleteAllDrivers = () => request('POST', '/admin/drivers/de
 export const apiAdminDeleteAllUsers = () => request('POST', '/admin/users/delete-all');
 export const apiAdminDeleteAllResetRequests = () => request('POST', '/admin/reset-requests/delete-all');
 export const apiAdminDeleteAllDocuments = () => request('POST', '/admin/documents/delete-all');
+
+// ── AI Assistant ───────────────────────────────────────────────
+export const apiAiAssistant = (message) => request('POST', '/ai/assistant', { body: { message } });
+export const apiAiSummary = (type, context) => request('POST', '/ai/summary', { body: { type, context } });
+export const apiAiNotification = (data) => request('POST', '/ai/notification', { body: data });
+export const apiAiParseBooking = (text) => request('POST', '/ai/parse-booking', { body: { text } });

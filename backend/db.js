@@ -11,6 +11,7 @@ export const pool = new Pool({
   password: env.db.password,
   database: env.db.database,
   max: 20,
+  ssl: env.db.ssl ? { rejectUnauthorized: env.db.sslMode === 'verify-full' } : false,
 });
 
 const SCHEMA = `
