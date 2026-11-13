@@ -113,7 +113,7 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
   if (env.singlePort) {
     // ─── Single-port mode (e.g., Render): serve admin on same port ───
     // Admin routes that should serve the admin SPA
-    const ADMIN_PATHS = ['/admin', '/login'];
+    const ADMIN_PATHS = ['/admin', '/admin/login', '/login'];
 
     app.get(ADMIN_PATHS, (req, res) => sendIndex(res, distDir, req));
 
