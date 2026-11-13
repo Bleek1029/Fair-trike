@@ -5,12 +5,18 @@ if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY is not set');
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-const TIMEOUT = Number(process.env.AI_TIMEOUT_MS) || 15000;
-
 // Check if using a test/fake key for development
 const isTestKey = process.env.GEMINI_API_KEY === 'test-key-for-local-dev';
+
+let ai;
+let MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+if (!isTestKey) {
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+} else {
+  // Use a valid model name for test mode (won't actually be used)
+  MODEL = 'gemini-1.5-flash';
+}
+const TIMEOUT = Number(process.env.AI_TIMEOUT_MS) || 15000;
 
 export async function askGemini({ system, prompt, schema }) {
   // Development fallback for test key
