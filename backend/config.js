@@ -1,12 +1,29 @@
 // ── Central configuration: single source of truth for env-derived settings ──
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import dotenv from 'dotenv';
 
 // Load backend/.env relative to THIS file (not the process cwd) so the servers
 // behave identically no matter which directory launched them (npm start from the
 // repo root, `node backend/admin-server.js`, etc.).
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.env') });
+
+// Read DATABASE_URL from Secret File (Render) or env var (local/other platforms)
+function getDatabaseUrl() {
+  // Render Secret File path (when DATABASE_URL is added as Secret File in dashboard)
+  const secretPath = '/etc/secrets/DATABASE_URL';
+  if (existsSync(secretPath)) {
+    try {
+      return readFileSync(secretPath, 'utf-8').trim();
+    } catch {
+      // fall through to env var
+    }
+  }
+  // Fallback to environment variable (local dev, other platforms)
+  return process.env.DATABASE_URL;
+}
 
 function intFromEnv(name, fallback) {
   const n = Number.parseInt(process.env[name], 10);
@@ -40,7 +57,7 @@ function parseDatabaseUrl(url) {
   }
 }
 
-const dbFromUrl = parseDatabaseUrl(process.env.DATABASE_URL);
+const dbFromUrl = parseDatabaseUrl(getDatabaseUrl());
 
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
