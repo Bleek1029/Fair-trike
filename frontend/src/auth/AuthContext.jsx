@@ -7,6 +7,8 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser());
   const [loading, setLoading] = useState(Boolean(getToken()));
+  // Guard to prevent concurrent auth validation runs (React 18 StrictMode, etc.)
+  const validatingRef = React.useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -18,9 +20,17 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // Skip if already validating (prevents double-invoke loop)
+    if (validatingRef.current) {
+      console.log('[AuthProvider] Skipping duplicate validation');
+      return;
+    }
+    validatingRef.current = true;
+
     // Add a safety timeout to prevent permanent loading state
     const safetyTimeout = setTimeout(() => {
       if (!mounted) return;
+      validatingRef.current = false;
       console.warn('[AuthProvider] Safety timeout triggered - clearing auth state');
       setToken(null);
       setStoredUser(null);
@@ -40,26 +50,37 @@ export function AuthProvider({ children }) {
         console.log('[AuthProvider] Backend health check passed');
       } catch (healthErr) {
         clearTimeout(healthTimeout);
-        if (!mounted) return;
+        if (!mounted) {
+          validatingRef.current = false;
+          return;
+        }
         clearTimeout(safetyTimeout);
         console.error('[AuthProvider] Backend unreachable:', healthErr);
         setToken(null);
         setStoredUser(null);
         setUser(null);
         setLoading(false);
+        validatingRef.current = false;
         return;
       }
 
       apiGetMe()
         .then((data) => {
-          if (!mounted) return;
+          if (!mounted) {
+            validatingRef.current = false;
+            return;
+          }
           clearTimeout(safetyTimeout);
           setStoredUser(data.user);
           setUser(data.user);
           setLoading(false);
+          validatingRef.current = false;
         })
         .catch((err) => {
-          if (!mounted) return;
+          if (!mounted) {
+            validatingRef.current = false;
+            return;
+          }
           clearTimeout(safetyTimeout);
           // Token invalid/expired — clear everything.
           console.error('[AuthProvider] Auth validation failed:', err);
@@ -67,6 +88,7 @@ export function AuthProvider({ children }) {
           setStoredUser(null);
           setUser(null);
           setLoading(false);
+          validatingRef.current = false;
         });
     })();
 
