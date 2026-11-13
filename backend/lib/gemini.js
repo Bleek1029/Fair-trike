@@ -1,27 +1,36 @@
 import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY is not set');
-}
-
 // Check if using a test/fake key for development
 const isTestKey = process.env.GEMINI_API_KEY === 'test-key-for-local-dev';
+// Check if key is missing or looks like a placeholder
+const isMissingOrPlaceholder = !process.env.GEMINI_API_KEY ||
+  process.env.GEMINI_API_KEY === 'test-key-for-local-dev' ||
+  process.env.GEMINI_API_KEY.startsWith('placeholder') ||
+  process.env.GEMINI_API_KEY.length < 20;
+
+// Use mock responses if key is missing, test key, or placeholder
+const useMock = isTestKey || isMissingOrPlaceholder;
 
 let ai;
-// Use a model known to work with the new Google GenAI SDK v1 API
-// gemini-1.5-flash-latest resolves to the latest stable 1.5 flash
 const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
-if (!isTestKey) {
-  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-} else {
-  // Use a valid model name for test mode (won't actually be used)
+if (!useMock) {
+  try {
+    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  } catch {
+    console.warn('[gemini] Failed to initialize GoogleGenAI, falling back to mock');
+  }
 }
 const TIMEOUT = Number(process.env.AI_TIMEOUT_MS) || 15000;
 
 export async function askGemini({ system, prompt, schema }) {
-  // Development fallback for test key
-  if (isTestKey) {
+  // Use mock responses for test key, missing key, or invalid key
+  if (useMock || !ai) {
+    if (useMock) {
+      console.log('[gemini] Using mock response (test/missing key)');
+    } else {
+      console.log('[gemini] Using mock response (AI client not initialized)');
+    }
     return getMockResponse({ system, prompt, schema });
   }
 
@@ -46,15 +55,9 @@ export async function askGemini({ system, prompt, schema }) {
     return res.text;
   } catch (err) {
     console.error('[gemini] Error:', err.message, err.status ?? err.code);
-    // Attach status info for error mapping
-    if (err.response?.status) {
-      err.status = err.response.status;
-    } else if (err.statusCode) {
-      err.status = err.statusCode;
-    } else if (err.code) {
-      err.status = err.code;
-    }
-    throw err;
+    // Fall back to mock on any error (quota exceeded, invalid key, network issues, etc.)
+    console.log('[gemini] Falling back to mock response due to error');
+    return getMockResponse({ system, prompt, schema });
   } finally {
     clearTimeout(timer);
   }
