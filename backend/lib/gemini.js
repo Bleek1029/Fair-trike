@@ -13,7 +13,8 @@ const isMissingOrPlaceholder = !process.env.GEMINI_API_KEY ||
 const useMock = isTestKey || isMissingOrPlaceholder;
 
 let ai;
-const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+// Valid model names: gemini-1.5-flash, gemini-1.5-pro, gemini-2.0-flash-exp, gemini-2.0-pro-exp
+const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 if (!useMock) {
   try {
     ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });

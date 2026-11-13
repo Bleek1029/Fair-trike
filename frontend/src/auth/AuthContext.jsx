@@ -9,14 +9,18 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(Boolean(getToken()));
 
   useEffect(() => {
-    // If we have a token, validate it against the server on startup.
-    if (!getToken()) {
-      setLoading(false);
+    let mounted = true;
+    const token = getToken();
+
+    // If we have no token, clear loading immediately
+    if (!token) {
+      if (mounted) setLoading(false);
       return;
     }
 
     // Add a safety timeout to prevent permanent loading state
     const safetyTimeout = setTimeout(() => {
+      if (!mounted) return;
       console.warn('[AuthProvider] Safety timeout triggered - clearing auth state');
       setToken(null);
       setStoredUser(null);
@@ -24,21 +28,52 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }, 10000); // 10 second safety timeout
 
-    apiGetMe()
-      .then((data) => {
+    // Async IIFE for health check + apiGetMe
+    (async () => {
+      // Quick backend health check (3s) to fail fast if backend is down
+      const healthController = new AbortController();
+      const healthTimeout = setTimeout(() => healthController.abort(), 3000);
+      try {
+        const healthRes = await fetch('/api/health', { signal: healthController.signal });
+        clearTimeout(healthTimeout);
+        if (!healthRes.ok) throw new Error('Backend health check failed');
+        console.log('[AuthProvider] Backend health check passed');
+      } catch (healthErr) {
+        clearTimeout(healthTimeout);
+        if (!mounted) return;
         clearTimeout(safetyTimeout);
-        setStoredUser(data.user);
-        setUser(data.user);
-        setLoading(false);
-      })
-      .catch(() => {
-        clearTimeout(safetyTimeout);
-        // Token invalid/expired — clear everything.
+        console.error('[AuthProvider] Backend unreachable:', healthErr);
         setToken(null);
         setStoredUser(null);
         setUser(null);
         setLoading(false);
-      });
+        return;
+      }
+
+      apiGetMe()
+        .then((data) => {
+          if (!mounted) return;
+          clearTimeout(safetyTimeout);
+          setStoredUser(data.user);
+          setUser(data.user);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (!mounted) return;
+          clearTimeout(safetyTimeout);
+          // Token invalid/expired — clear everything.
+          console.error('[AuthProvider] Auth validation failed:', err);
+          setToken(null);
+          setStoredUser(null);
+          setUser(null);
+          setLoading(false);
+        });
+    })();
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimeout);
+    };
   }, []);
 
   // `remember` (from the sign-in "Remember device" checkbox) selects the

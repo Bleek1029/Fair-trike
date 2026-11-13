@@ -97,4 +97,12 @@ export const env = {
   // Single-port mode (e.g., Render): serve admin on same port as app
   // Auto-detect Render: PORT=10000 is Render's default web port
   singlePort: process.env.SINGLE_PORT === 'true' || (process.env.NODE_ENV === 'production' && process.env.PORT === '10000'),
+
+  // CORS allowed origins — falls back to common dev origins, and in production
+  // falls back to allowing same-origin (no cross-origin) if not explicitly set.
+  corsOrigins: (process.env.CORS_ORIGINS ||
+    (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5173,http://localhost:5000'))
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
 };

@@ -34,16 +34,11 @@ if (env.isProd) {
 fs.mkdirSync(uploadDir, { recursive: true });
 
 // ── Middleware ──────────────────────────────────────────
-// Restrict CORS to an explicit allow-list (falls back to same-origin / none
-// when unset, instead of reflecting arbitrary origins).
-const corsOrigins = env.corsOrigins.length
-  ? env.corsOrigins
-  : env.isProd
-    ? []
-    : undefined;
-
+// CORS allow-list comes from config.js (env.corsOrigins).
+// Empty array = no cross-origin allowed (same-origin only).
+// undefined = reflect request origin (dev default, allows any origin).
 app.use(cors({
-  origin: corsOrigins,
+  origin: env.corsOrigins.length ? env.corsOrigins : undefined,
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
