@@ -9,12 +9,13 @@ if (!process.env.GEMINI_API_KEY) {
 const isTestKey = process.env.GEMINI_API_KEY === 'test-key-for-local-dev';
 
 let ai;
-let MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+// Use a model known to work with the new Google GenAI SDK v1 API
+// gemini-1.5-flash-latest resolves to the latest stable 1.5 flash
+const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
 if (!isTestKey) {
   ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 } else {
   // Use a valid model name for test mode (won't actually be used)
-  MODEL = 'gemini-1.5-flash';
 }
 const TIMEOUT = Number(process.env.AI_TIMEOUT_MS) || 15000;
 

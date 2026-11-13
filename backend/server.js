@@ -25,6 +25,12 @@ import { requireAuth } from './middleware/auth.js';
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Trust proxy (required on Render, Fly.io, Heroku, etc.) so express-rate-limit
+// and req.ip work correctly behind the load balancer.
+if (env.isProd) {
+  app.set('trust proxy', 1);
+}
+
 fs.mkdirSync(uploadDir, { recursive: true });
 
 // ── Middleware ──────────────────────────────────────────
