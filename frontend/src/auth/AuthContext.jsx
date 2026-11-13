@@ -10,19 +10,35 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // If we have a token, validate it against the server on startup.
-    if (!getToken()) return;
+    if (!getToken()) {
+      setLoading(false);
+      return;
+    }
+
+    // Add a safety timeout to prevent permanent loading state
+    const safetyTimeout = setTimeout(() => {
+      console.warn('[AuthProvider] Safety timeout triggered - clearing auth state');
+      setToken(null);
+      setStoredUser(null);
+      setUser(null);
+      setLoading(false);
+    }, 10000); // 10 second safety timeout
+
     apiGetMe()
       .then((data) => {
+        clearTimeout(safetyTimeout);
         setStoredUser(data.user);
         setUser(data.user);
+        setLoading(false);
       })
       .catch(() => {
+        clearTimeout(safetyTimeout);
         // Token invalid/expired — clear everything.
         setToken(null);
         setStoredUser(null);
         setUser(null);
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, []);
 
   // `remember` (from the sign-in "Remember device" checkbox) selects the
