@@ -125,6 +125,12 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
       res.redirect(302, '/admin');
     });
 
+    // Fallback: serve the main app index.html for app routes
+    app.get('/{*splat}', (req, res, next) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+      sendIndex(res, distDir, req);
+    });
+
     console.log(`🌐 Serving frontend from ${distDir}`);
     console.log(`🛡️  Single-port mode: admin dashboard at /admin on same port`);
   } else {
