@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     email           VARCHAR(191) NOT NULL UNIQUE,
     password_hash   VARCHAR(255) NOT NULL,
     role            VARCHAR(20) NOT NULL DEFAULT 'passenger' CHECK (role IN ('passenger', 'driver', 'admin')),
+    status          VARCHAR(20) NOT NULL DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected')),
     profile_picture VARCHAR(255) DEFAULT NULL,
     created_at      TIMESTAMPTZ   DEFAULT NOW(),
     updated_at      TIMESTAMPTZ   DEFAULT NOW()
@@ -163,6 +164,23 @@ CREATE TABLE IF NOT EXISTS driver_documents (
                 CHECK (status IN ('pending', 'approved', 'rejected')),
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Password reset requests (for admin approval flow)
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id                  SERIAL PRIMARY KEY,
+    user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email               VARCHAR(191) NOT NULL,
+    new_password_hash   VARCHAR(255) NOT NULL,
+    status              VARCHAR(20) NOT NULL DEFAULT 'pending'
+                        CHECK (status IN ('pending', 'approved', 'rejected')),
+    admin_note          TEXT DEFAULT NULL,
+    reviewed_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at         TIMESTAMPTZ DEFAULT NULL,
+    created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_requests_status ON password_reset_requests(status);
+CREATE INDEX IF NOT EXISTS idx_password_reset_requests_user_id ON password_reset_requests(user_id);
 `;
 
 function quoteIdent(name) {

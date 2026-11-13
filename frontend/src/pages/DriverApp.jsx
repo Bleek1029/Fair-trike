@@ -5,6 +5,7 @@ import {
   apiGetMyDriver, apiGetAvailableRides, apiAcceptRide, apiCompleteRide,
   apiGetEarnings, apiGetDriverDocuments, apiUploadDriverDocument,
 } from '../api.js';
+import { apiAiSummary } from '../api.js';
 import { MobileHeader } from '../components/MobileHeader.jsx';
 import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
@@ -39,6 +40,8 @@ export function DriverApp() {
   const [navLoading, setNavLoading] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [earnings, setEarnings] = useState(null);
+  const [aiEarningsSummary, setAiEarningsSummary] = useState('');
+  const [aiEarningsLoading, setAiEarningsLoading] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -81,8 +84,27 @@ export function DriverApp() {
 
   const refreshEarnings = () => {
     apiGetEarnings()
-      .then((data) => setEarnings(data))
+      .then((data) => {
+        setEarnings(data);
+        // Generate AI earnings summary
+        if (data) {
+          generateAiEarningsSummary(data);
+        }
+      })
       .catch((err) => setError(err.message));
+  };
+
+  const generateAiEarningsSummary = async (earningsData) => {
+    setAiEarningsLoading(true);
+    try {
+      const summary = await apiAiSummary('driver', earningsData);
+      setAiEarningsSummary(summary.summary || '');
+    } catch (e) {
+      console.error('AI earnings summary failed:', e);
+      setAiEarningsSummary('Unable to generate earnings summary at this time.');
+    } finally {
+      setAiEarningsLoading(false);
+    }
   };
 
   // ── Live driver tracking ────────────────────────────────────────────────
@@ -528,6 +550,38 @@ export function DriverApp() {
               </div>
             ))}
           </div>
+
+          {/* AI Earnings Summary */}
+          {(aiEarningsSummary || aiEarningsLoading) && (
+            <div className="mt-4 rounded-xl bg-tertiary-container/20 border border-tertiary-container/30 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="auto_awesome" size={18} className="text-tertiary" />
+                <span className="text-label-md font-bold text-tertiary">AI Earnings Recap</span>
+                {aiEarningsLoading && <span className="text-body-xs text-tertiary ml-auto">Generating…</span>}
+                {!aiEarningsLoading && aiEarningsSummary && (
+                  <button
+                    type="button"
+                    onClick={() => generateAiEarningsSummary(earnings)}
+                    disabled={aiEarningsLoading}
+                    className="ml-auto px-2 py-1 rounded-lg text-body-xs font-bold bg-tertiary text-on-tertiary hover:shadow-sm disabled:opacity-50"
+                  >
+                    Refresh
+                  </button>
+                )}
+              </div>
+              {aiEarningsLoading ? (
+                <div className="h-8 flex items-center justify-center">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 rounded-full bg-tertiary/50 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-tertiary/50 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-tertiary/50 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-body-sm text-on-surface whitespace-pre-wrap">{aiEarningsSummary}</p>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Document upload */}

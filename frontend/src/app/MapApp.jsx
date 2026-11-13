@@ -8,8 +8,10 @@ import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { RideOptionCard } from '../components/RideOptionCard.jsx';
 import { FareEstimator } from '../components/FareEstimator.jsx';
+import { AiAssistant } from '../components/AiAssistant.jsx';
+import { useToast } from '../components/Toast.jsx';
 import { FARE, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL } from '../config.js';
-import { apiCreateRide, getToken } from '../api.js';
+import { apiCreateRide, apiAiParseBooking, getToken } from '../api.js';
 import {
   connectSocket, joinRide, leaveRide, onDriverLocation, onRideEvent,
 } from '../lib/socket.js';
@@ -18,6 +20,8 @@ import { fmtDist, fmtTime, formatPeso } from '../lib/format.js';
 
 const BASE_FARE = FARE.base;
 const PER_KM = FARE.perKm;
+
+const NL_PLACEHOLDER = 'e.g., "Rizal Triangle to Gordon College as student" or "SM Olongapo to Robinson\'s Place, PWD"';
 
 export function getInitials(fullname) {
   return initialsOf(fullname);
@@ -36,6 +40,7 @@ export function MapApp() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const { success, info, warning } = useToast();
 
   const mapRef = useRef(null);
   const startMarkerRef = useRef(null);
@@ -75,6 +80,11 @@ export function MapApp() {
   const [driverAvatar, setDriverAvatar] = useState(null);
   const [rideCompleted, setRideCompleted] = useState(false);
   const [rideStatus, setRideStatus] = useState(booked ? booked.status : null);
+  const [showAssistant, setShowAssistant] = useState(false);
+  const [nlBookingText, setNlBookingText] = useState('');
+  const [nlBookingLoading, setNlBookingLoading] = useState(false);
+  const [nlBookingResult, setNlBookingResult] = useState(null);
+  const [showNlBooking, setShowNlBooking] = useState(false);
 
   useEffect(() => {
     const container = document.getElementById('mobile-map-container');
@@ -318,13 +328,19 @@ export function MapApp() {
       if (data?.pickupCoord) {
         drawDriverLine(data.pickupCoord.lat, data.pickupCoord.lng);
       }
+      // Toast notification
+      const driver = data?.driverName || 'Your driver';
+      const trike = data?.trikeNumber ? ` (Trike #${data.trikeNumber})` : '';
+      success(`${driver}${trike} accepted your ride! They're on the way.`, { duration: 6000 });
     });
     const unsubCompleted = onRideEvent(s, 'ride-completed', () => {
       setRideCompleted(true);
       setRideStatus('completed');
+      success('Your ride is complete. Thank you for choosing Fairtrike!', { duration: 6000 });
     });
     const unsubCancelled = onRideEvent(s, 'ride-cancelled', () => {
       setRideStatus('cancelled');
+      warning('Your ride was cancelled. You can book a new one anytime.', { duration: 6000 });
     });
     const unsubLocation = onDriverLocation(s, (data) => {
       setDriverLocation({ lat: data.lat, lng: data.lng, at: data.at });
@@ -461,6 +477,43 @@ export function MapApp() {
   // (backend/lib/fares.js), so we only send distance, coordinates, and the
   // selected fare tier (regular / pwd / discounted — the statutory 20%
   // discount for PWD, student, and senior fares is applied server-side).
+  // Handle natural language booking parse
+  const handleNlBooking = async () => {
+    const text = nlBookingText.trim();
+    if (!text || nlBookingLoading) return;
+
+    setNlBookingLoading(true);
+    setNlBookingResult(null);
+    try {
+      const parsed = await apiAiParseBooking(text);
+      setNlBookingResult(parsed);
+
+      if (!parsed.needs_clarification && parsed.pickup && parsed.dropoff) {
+        // Auto-fill the parsed values
+        const a = await geocodePlaceFreeText(parsed.pickup);
+        const b = await geocodePlaceFreeText(parsed.dropoff);
+        if (a && b) {
+          setStartStr(parsed.pickup);
+          setDestStr(parsed.dropoff);
+          setStartCoord(a);
+          setDestCoord(b);
+          placeMarker('start', parsed.pickup, a.lat, a.lng, parsed.pickup);
+          placeMarker('dest', parsed.dropoff, b.lat, b.lng, parsed.dropoff);
+          // Trigger route calculation
+          calculateRoute();
+          // Update ride type based on parsed tier
+          if (parsed.tier && parsed.tier !== 'regular') {
+            setRideId(parsed.tier);
+          }
+        }
+      }
+    } catch (err) {
+      setRouteError('Failed to parse booking. Please try again or fill manually.');
+    } finally {
+      setNlBookingLoading(false);
+    }
+  };
+
   const requestRide = async () => {
     if (!user) {
       navigate('/login');
@@ -576,6 +629,65 @@ export function MapApp() {
               </div>
             </div>
           </div>
+
+          {/* Natural Language Booking */}
+          <button
+            type="button"
+            onClick={() => setShowNlBooking(!showNlBooking)}
+            className="w-full flex items-center justify-between p-2 rounded-lg bg-surface-container-high/50 hover:bg-surface-container-high transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Icon name="auto_awesome" size={20} className="text-primary" />
+              <span className="text-label-md font-medium">Book with AI (natural language)</span>
+            </div>
+            <Icon name={showNlBooking ? 'expand_less' : 'expand_more'} size={20} className="text-on-surface-variant" />
+          </button>
+
+          {showNlBooking && (
+            <div className="space-y-3 animate-slide-down">
+              <div>
+                <label className="block text-label-sm text-secondary mb-1">Describe your ride</label>
+                <textarea
+                  value={nlBookingText}
+                  onChange={(e) => setNlBookingText(e.target.value)}
+                  placeholder={NL_PLACEHOLDER}
+                  rows={2}
+                  className="w-full bg-surface-container-low rounded-lg px-3 py-2.5 text-label-md text-on-surface focus:outline-none resize-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleNlBooking}
+                disabled={nlBookingLoading || !nlBookingText.trim()}
+                className="w-full h-11 rounded-lg bg-primary text-on-primary text-label-md font-bold disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {nlBookingLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
+                    Parsing…
+                  </>
+                ) : (
+                  <>
+                    <Icon name="auto_awesome" size={18} />
+                    Parse & Fill Booking
+                  </>
+                )}
+              </button>
+              {nlBookingResult?.needs_clarification && (
+                <p className="text-body-sm text-warning bg-warning-container/20 rounded-lg p-2 flex items-center gap-1">
+                  <Icon name="help_outline" size={14} />
+                  {nlBookingResult.clarification_question}
+                </p>
+              )}
+              {nlBookingResult && !nlBookingResult.needs_clarification && (
+                <p className="text-body-sm text-tertiary bg-tertiary-container/20 rounded-lg p-2 flex items-center gap-1">
+                  <Icon name="check_circle" size={14} />
+                  Parsed: {nlBookingResult.pickup} → {nlBookingResult.dropoff} ({nlBookingResult.tier})
+                </p>
+              )}
+            </div>
+          )}
+
           {suggestions.length > 0 && (
             <div className="suggestions">
               {suggestions.map((s, i) => (
@@ -765,6 +877,21 @@ export function MapApp() {
 
       </main>
       <BottomNav />
+
+      {/* AI Assistant FAB — positioned above bottom nav with safe-area inset */}
+      <button
+        type="button"
+        onClick={() => setShowAssistant(true)}
+        className="fixed right-4 z-40 w-14 h-14 rounded-full bg-primary text-on-primary shadow-xl flex items-center justify-center hover:shadow-2xl active:scale-[0.95] transition-all"
+        style={{
+          bottom: `calc(64px + 16px + env(safe-area-inset-bottom, 0px))`
+        }}
+        aria-label="Open Fairtrike Assistant"
+      >
+        <Icon name="smart_toy" size={28} />
+      </button>
+
+      <AiAssistant isOpen={showAssistant} onClose={() => setShowAssistant(false)} />
     </div>
   );
 }

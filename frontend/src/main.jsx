@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './App.jsx';
 import { AuthProvider } from './auth/AuthContext.jsx';
 import { LoadingProvider } from './loading/LoadingContext.jsx';
+import { ToastProvider } from './components/Toast.jsx';
 import { IS_NATIVE_APP } from './config.js';
 import 'leaflet/dist/leaflet.css';
 import './css/main.css';
@@ -54,7 +55,9 @@ root.render(
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <LoadingProvider>
         <AuthProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </AuthProvider>
       </LoadingProvider>
     </BrowserRouter>

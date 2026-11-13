@@ -1,7 +1,7 @@
-const CACHE = 'fairtrike-v5';
+// Auto-generated at build time — see build script
+const CACHE = 'fairtrike-v<%= version %>-<%= Date.now() %>';
 const PRECACHE = [
   '/',
-  '/index.html',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/icons/icon-192.png',
@@ -35,20 +35,15 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/')) return;
 
   if (request.mode === 'navigate') {
-    // Network-first for pages so refreshes stay fresh, cache as offline fallback.
+    // Network-only for HTML navigations — always fresh, never cached.
+    // This prevents stale index.html from being served after deploy.
     event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('/index.html', copy));
-          return res;
-        })
-        .catch(() => caches.match('/index.html'))
+      fetch(request).catch(() => caches.match('/index.html'))
     );
     return;
   }
 
-  // Cache-first for static assets.
+  // Cache-first for static assets (JS, CSS, images, fonts).
   event.respondWith(
     caches.match(request).then((hit) => {
       if (hit) return hit;
@@ -61,4 +56,11 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+// Listen for version check messages from the app
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'VERSION_CHECK') {
+    event.ports[0]?.postMessage({ version: CACHE });
+  }
 });
