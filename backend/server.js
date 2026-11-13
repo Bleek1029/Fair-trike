@@ -176,14 +176,18 @@ if (!isVercel) {
   // Attach Socket.io first (must be before Express becomes the sole listener)
   initSocket(appServer);
 
-  // Attach raw WebSocket server (ws) to the same HTTP server
-  initWebSocketServer(appServer);
+  // Attach raw WebSocket server (ws) — only in dev; Render proxy breaks raw WS upgrades
+  if (!env.isProd) {
+    initWebSocketServer(appServer);
+  }
 
   const server = appServer.listen(env.port, async () => {
     console.log(`🚀 Fairtrike backend running at http://localhost:${env.port}`);
     console.log(`📡 API base: http://localhost:${env.port}/api`);
     console.log(`🔌 Socket.io on http://localhost:${env.port}/socket.io`);
-    console.log(`💬 Raw WebSocket on ws://localhost:${env.port}`);
+    if (!env.isProd) {
+      console.log(`💬 Raw WebSocket on ws://localhost:${env.port}`);
+    }
     try {
       await testConnection();
       await ensureDatabase();
