@@ -95,5 +95,6 @@ export const env = {
     max: intFromEnv('AUTH_RATE_MAX', 100),
   },
   // Single-port mode (e.g., Render): serve admin on same port as app
-  singlePort: process.env.SINGLE_PORT === 'true',
+  // Auto-detect Render: PORT=10000 is Render's default web port
+  singlePort: process.env.SINGLE_PORT === 'true' || (process.env.NODE_ENV === 'production' && process.env.PORT === '10000'),
 };
