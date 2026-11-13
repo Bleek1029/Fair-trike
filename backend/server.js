@@ -114,6 +114,12 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
     /^\/login-driver(\/|$)/,
     /^\/register(\/|$)/,
     /^\/register-driver(\/|$)/,
+    /^\/assets(\/|$)/,
+    /^\/favicon/,
+    /^\/manifest/,
+    /^\/icons/,
+    /^\/seal/,
+    /^\/fairtrike-logo/,
   ];
 
   if (env.singlePort) {
