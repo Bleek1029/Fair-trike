@@ -6,6 +6,7 @@ import { AuthProvider } from './auth/AuthContext.jsx';
 import { LoadingProvider } from './loading/LoadingContext.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import { IS_NATIVE_APP } from './config.js';
+import { useVersionCheck, injectAppVersion } from './hooks/useVersionCheck.js';
 import 'leaflet/dist/leaflet.css';
 import './css/main.css';
 import './css/design-update.css';
@@ -50,16 +51,25 @@ if (document.readyState === 'complete') {
   window.addEventListener('load', dismissBootWhenReady, { once: true });
 }
 
+// Inject version meta tag for SW version comparison
+injectAppVersion();
+
 root.render(
   <React.StrictMode>
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <LoadingProvider>
         <AuthProvider>
           <ToastProvider>
+            {/* Version check: auto-reload on new deploy */}
+            <VersionChecker />
             <App />
           </ToastProvider>
         </AuthProvider>
-      </LoadingProvider>
-    </BrowserRouter>
+      </LoadingProvider    </BrowserRouter>
   </React.StrictMode>
 );
+
+function VersionChecker() {
+  useVersionCheck({ intervalMs: 30000, enabled: !IS_NATIVE_APP });
+  return null;
+}

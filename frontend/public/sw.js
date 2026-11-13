@@ -64,3 +64,10 @@ self.addEventListener('message', (event) => {
     event.ports[0]?.postMessage({ version: CACHE });
   }
 });
+
+// Notify clients when a new SW is ready (skipWaiting was called)
+self.addEventListener('controllerchange', () => {
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
+  });
+});

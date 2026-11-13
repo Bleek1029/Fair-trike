@@ -8,6 +8,15 @@ export function useVersionCheck({ intervalMs = 30000, enabled = true } = {}) {
 
     let checkTimer;
 
+    // Listen for SW update notification
+    const handleSWUpdate = () => {
+      console.log('[VersionCheck] SW updated, reloading...');
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      if (e.data?.type === 'SW_UPDATED') handleSWUpdate();
+    });
+
     async function checkVersion() {
       try {
         const reg = await navigator.serviceWorker.ready;
@@ -45,6 +54,7 @@ export function useVersionCheck({ intervalMs = 30000, enabled = true } = {}) {
     return () => {
       clearTimeout(initialTimer);
       clearInterval(checkTimer);
+      navigator.serviceWorker.removeEventListener('message', handleSWUpdate);
     };
   }, [intervalMs, enabled]);
 }
