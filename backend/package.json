@@ -6,7 +6,7 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "prestart": "npm install --no-fund --no-audit",
+    "prestart": "npm ci --no-fund --no-audit 2>&1 | tail -20",
     "start": "node start.mjs",
     "start:app": "node server.js",
     "start:admin": "node admin-server.js",
