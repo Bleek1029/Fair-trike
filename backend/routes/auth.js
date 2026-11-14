@@ -89,8 +89,9 @@ const client = await pool.connect();
 // Commuter (passenger) sign-in. Driver accounts are rejected here so each
 // portal stays role-specific; drivers use /api/auth/login-driver instead.
 router.post('/login', asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const password = req.body.password || '';
+  const body = req.body ?? {};
+  const email = normalizeEmail(body.email);
+  const password = body.password || '';
   if (!email || !password) throw badRequest('Please fill in all fields.');
 
   const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -116,8 +117,9 @@ router.post('/login', asyncHandler(async (req, res) => {
 // Driver-portal sign-in. Passenger accounts are rejected so the portals
 // remain separate. Driver approval status is still handled elsewhere.
 router.post('/login-driver', asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const password = req.body.password || '';
+  const body = req.body ?? {};
+  const email = normalizeEmail(body.email);
+  const password = body.password || '';
   if (!email || !password) throw badRequest('Please fill in all fields.');
 
   const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -138,8 +140,10 @@ router.post('/login-driver', asyncHandler(async (req, res) => {
 // ── POST /api/auth/login-admin ───────────────────────────
 // Admin-dashboard sign-in. Only admin accounts are accepted.
 router.post('/login-admin', asyncHandler(async (req, res) => {
-  const email = normalizeEmail(req.body.email);
-  const password = req.body.password || '';
+  // Handle cases where body parser hasn't run or body is undefined
+  const body = req.body ?? {};
+  const email = normalizeEmail(body.email);
+  const password = body.password || '';
   if (!email || !password) throw badRequest('Please fill in all fields.');
 
   const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
