@@ -5,14 +5,30 @@
 //
 //   node start.mjs           → single server (dual-port locally, single-port on Render)
 //   node start.mjs --dev     → with --watch (auto-restart)
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import { env } from './config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = process.argv.includes('--dev');
 const watch = isDev ? ['--watch'] : [];
+
+// ── Ensure deps exist (Render free tier: build-phase node_modules don't persist) ──
+if (!fs.existsSync(path.join(__dirname, 'node_modules'))) {
+  console.log('📦 Installing backend dependencies (deploy-time fallback)…');
+  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const result = spawnSync(npmCmd, ['ci', '--no-fund', '--no-audit'], {
+    cwd: __dirname,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+  if (result.status !== 0) {
+    console.error('❌ Failed to install backend dependencies.');
+    process.exit(1);
+  }
+}
 
 // Shared spawn options: run in backend/, pipe output to this console.
 const spawnOpts = {
