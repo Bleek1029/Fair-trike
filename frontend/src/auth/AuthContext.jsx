@@ -96,6 +96,7 @@ export function AuthProvider({ children }) {
     return () => {
       mounted = false;
       clearTimeout(safetyTimeout);
+      validatingRef.current = false; // Reset for StrictMode remount
     };
   }, []);
 

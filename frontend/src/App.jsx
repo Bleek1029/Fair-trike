@@ -89,9 +89,9 @@ export function AdminOnly({ children }) {
     return <Navigate to="/admin/login" replace />;
   }
   if (!isAdmin(user)) {
-    // Served by the admin dashboard's own port: bounce non-admins back to the
-    // app, where they can sign in with the right credentials.
-    if (onAdminPort()) {
+    // In single-port mode (e.g., Render), app and admin share the same origin.
+    // Don't do cross-port redirect — just navigate within the same app.
+    if (separateAdminPort() && onAdminPort()) {
       goToAppPort('/login');
       return null;
     }
