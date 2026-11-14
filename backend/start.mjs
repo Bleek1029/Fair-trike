@@ -16,7 +16,11 @@ const isDev = process.argv.includes('--dev');
 const watch = isDev ? ['--watch'] : [];
 
 // ── Ensure deps exist (Render free tier: build-phase node_modules don't persist) ──
-if (!fs.existsSync(path.join(__dirname, 'node_modules'))) {
+const nodeModulesPath = path.join(__dirname, 'node_modules');
+console.log(`🔍 Checking for node_modules at: ${nodeModulesPath}`);
+console.log(`🔍 Exists: ${fs.existsSync(nodeModulesPath)}`);
+
+if (!fs.existsSync(nodeModulesPath)) {
   console.log('📦 Installing backend dependencies (deploy-time fallback)…');
   const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const result = spawnSync(npmCmd, ['ci', '--no-fund', '--no-audit'], {
@@ -24,10 +28,14 @@ if (!fs.existsSync(path.join(__dirname, 'node_modules'))) {
     stdio: 'inherit',
     shell: process.platform === 'win32',
   });
+  console.log(`🔍 npm ci exit code: ${result.status}`);
   if (result.status !== 0) {
     console.error('❌ Failed to install backend dependencies.');
     process.exit(1);
   }
+  console.log(`🔍 node_modules exists after install: ${fs.existsSync(nodeModulesPath)}`);
+} else {
+  console.log('✅ node_modules already present, skipping install');
 }
 
 // Shared spawn options: run in backend/, pipe output to this console.
