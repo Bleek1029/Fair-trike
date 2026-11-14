@@ -66,13 +66,12 @@ if (!fs.existsSync(backendNodeModules)) {
 }
 
 // ── Start the servers ──
-// Both processes (app + admin dashboard) are owned by backend/start.mjs so that
-// `npm start` inside backend/ behaves identically. This root script only adds
-// the frontend build check above (the child prints its own startup banner).
-const launcherArgs = ['start.mjs', ...(isDev ? ['--dev'] : [])];
-const launcher = spawn(process.execPath, launcherArgs, {
+// Use `npm start` in backend/ so `prestart` hook runs (installs deps on Render free tier).
+const launcherArgs = ['start', ...(isDev ? ['--dev'] : [])];
+const launcher = spawn(npmCmd, launcherArgs, {
   cwd: backendDir,
   stdio: 'inherit',
+  shell: process.platform === 'win32',
   env: { ...process.env, FORCE_COLOR: '1' },
 });
 
