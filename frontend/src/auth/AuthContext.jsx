@@ -36,13 +36,14 @@ export function AuthProvider({ children }) {
       setStoredUser(null);
       setUser(null);
       setLoading(false);
-    }, 10000); // 10 second safety timeout
+    }, 60000); // 60 second safety timeout (accounts for Render free tier cold starts)
 
     // Async IIFE for health check + apiGetMe
     (async () => {
-      // Quick backend health check (3s) to fail fast if backend is down
+      // Backend health check with longer timeout for Render cold starts (free tier spins down after 15min)
+      // Cold start can take 30-60s on Render free tier
       const healthController = new AbortController();
-      const healthTimeout = setTimeout(() => healthController.abort(), 3000);
+      const healthTimeout = setTimeout(() => healthController.abort(), 45000);
       try {
         const healthRes = await fetch('/api/health', { signal: healthController.signal });
         clearTimeout(healthTimeout);
