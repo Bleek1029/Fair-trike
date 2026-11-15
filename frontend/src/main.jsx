@@ -9,6 +9,7 @@ import { useVersionCheck, injectAppVersion } from './hooks/useVersionCheck.js';
 import 'leaflet/dist/leaflet.css';
 import './css/main.css';
 import './css/design-update.css';
+import './css/mobile-map.css';
 
 // ── Error Boundary: catches render errors so the loading screen doesn't stick ──
 class ErrorBoundary extends Component {
