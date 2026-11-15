@@ -179,8 +179,19 @@ export function MapApp() {
     if (!mapRef.current) return;
     const ref = which === 'start' ? startMarkerRef : endMarkerRef;
     if (ref.current) mapRef.current.removeLayer(ref.current);
-    ref.current = L.marker([lat, lng], { draggable: false }).addTo(mapRef.current);
-    ref.current.bindPopup(label || name);
+
+    // Google Maps style red pin markers
+    const isPickup = which === 'start';
+    const pinClass = isPickup ? 'green-pin-marker' : 'red-pin-marker';
+    const pinLabel = isPickup ? 'Pickup' : 'Drop-off';
+    const icon = L.divIcon({
+      className: pinClass,
+      html: `<div class="${pinClass}"><div class="pin"><div class="pin-label">${pinLabel}</div></div></div>`,
+      iconSize: [28, 44], iconAnchor: [14, 44],
+    });
+
+    ref.current = L.marker([lat, lng], { icon, draggable: false }).addTo(mapRef.current);
+    ref.current.bindPopup(`${pinLabel}: ${label || name}`);
     if (which === 'start') { setStartStr(name); setStartCoord({ lat, lng }); }
     else { setDestStr(name); setDestCoord({ lat, lng }); }
     setSuggestions([]);
@@ -223,7 +234,7 @@ export function MapApp() {
   };
 
   // Resolve the pickup point from given coords: reverse-geocode the label,
-  // move the map, and place the pulsing pickup marker.
+  // move the map, and place the pulsing pickup marker (Google Maps style red dot).
   const applyCurrentPickup = async (lat, lng) => {
     let name = 'Current Location';
     try { name = await reverseGeocode(lat, lng); } catch { /* keep default */ }
@@ -231,13 +242,14 @@ export function MapApp() {
       mapRef.current.setView([lat, lng], 15);
       const ref = startMarkerRef.current;
       if (ref) mapRef.current.removeLayer(ref);
+      // Google Maps style current location - red pulsing dot
       const icon = L.divIcon({
         className: 'user-location-marker',
         html: '<div class="user-location-marker"><div class="pulse-ring"></div><div class="dot"></div></div>',
         iconSize: [28, 28], iconAnchor: [14, 14],
       });
       startMarkerRef.current = L.marker([lat, lng], { icon }).addTo(mapRef.current);
-      startMarkerRef.current.bindPopup(`Pickup: ${name}`);
+      startMarkerRef.current.bindPopup(`Your location: ${name}`);
     }
     setStartStr(name);
     setStartCoord({ lat, lng });

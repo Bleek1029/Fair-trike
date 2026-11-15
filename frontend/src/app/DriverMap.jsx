@@ -8,15 +8,16 @@ import { haversine } from '../lib/utils.js';
 const MAP_DEFAULT_CENTER = [14.830, 120.285];
 const MAP_DEFAULT_ZOOM = 13;
 
+/* Google Maps style red pin markers for pickup/dropoff */
 const PASSENGER_ICON = L.divIcon({
-  className: 'passenger-marker',
-  html: '<div style="font-size:22px; line-height:1;">👤</div>',
-  iconSize: [24, 24], iconAnchor: [12, 12],
+  className: 'green-pin-marker',
+  html: `<div class="green-pin-marker"><div class="pin"><div class="pin-label">Pickup</div></div></div>`,
+  iconSize: [28, 44], iconAnchor: [14, 44],
 });
 const DESTINATION_ICON = L.divIcon({
-  className: 'destination-marker',
-  html: '<div style="font-size:22px; line-height:1;">🏁</div>',
-  iconSize: [24, 24], iconAnchor: [12, 12],
+  className: 'red-pin-marker',
+  html: `<div class="red-pin-marker"><div class="pin"><div class="pin-label">Drop-off</div></div></div>`,
+  iconSize: [28, 44], iconAnchor: [14, 44],
 });
 const DRIVER_ICON = L.divIcon({
   className: 'driver-marker',

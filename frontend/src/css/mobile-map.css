@@ -79,6 +79,7 @@
   flex-shrink: 0;
 }
 
+/* Google Maps style current location marker (red) */
 .user-location-marker {
   position: relative;
   display: inline-flex;
@@ -86,22 +87,96 @@
 
 .user-location-marker .pulse-ring {
   position: absolute;
-  inset: -5px;
+  inset: -6px;
   border-radius: 50%;
-  background: rgba(13,92,58,0.35);
+  background: rgba(220,38,38,0.35);  /* red pulse */
   animation: pulse-ring 2s ease-in-out infinite;
   pointer-events: none;
 }
 
 .user-location-marker .dot {
-  width: 14px;
-  height: 14px;
-  background: #0d5c3a;
+  width: 18px;
+  height: 18px;
+  background: #dc2626;  /* red dot */
   border-radius: 50%;
-  border: 2.5px solid #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   z-index: 1;
   pointer-events: none;
+}
+
+/* Google Maps style red pin markers for pickup/dropoff */
+.red-pin-marker {
+  position: relative;
+  display: inline-flex;
+}
+
+.red-pin-marker .pin {
+  width: 28px;
+  height: 40px;
+  background: #dc2626;
+  border-radius: 14px 14px 14px 0;
+  transform: rotate(-45deg);
+  border: 3px solid #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.red-pin-marker .pin::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  transform: rotate(45deg) translate(2px, -2px);
+  position: absolute;
+}
+
+.red-pin-marker .pin-label {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  background: #dc2626;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+
+/* Pickup pin (green variant) */
+.green-pin-marker .pin {
+  background: #0d5c3a;
+}
+.green-pin-marker .pin::after {
+  background: #fff;
+}
+.green-pin-marker .pin-label {
+  background: #0d5c3a;
+}
+
+/* Destination pin (red variant) */
+.red-pin-marker .pin {
+  background: #dc2626;
+}
+.red-pin-marker .pin::after {
+  background: #fff;
+}
+.red-pin-marker .pin-label {
+  background: #dc2626;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 0.2; }
+  100% { transform: scale(0.8); opacity: 0.6; }
 }
 
 .user-location-label {
