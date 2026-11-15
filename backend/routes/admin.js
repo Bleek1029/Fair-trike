@@ -1,25 +1,24 @@
+// Admin API Routes
+// Clean, minimal admin API for Fairtrike
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { requireAuth, requireRole, publicDriver, publicUser } from '../middleware/auth.js';
+import { requireAuth, requireRole, publicUser, publicDriver } from '../middleware/auth.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { ok } from '../lib/http.js';
 import { badRequest, notFound } from '../lib/AppError.js';
-import { emitAdminUserStatusChanged, emitAdminDriverStatusChanged, emitAdminResetStatusChanged, emitAdminDocumentStatusChanged } from '../socket.js';
+import { emitAdminUserStatusChanged, emitAdminDriverStatusChanged, emitAdminDocumentStatusChanged, emitAdminResetStatusChanged } from '../socket.js';
 
 const router = Router();
 
-const DRIVER_STATUSES = ['pending', 'approved', 'rejected'];
-const DOC_STATUSES = ['pending', 'approved', 'rejected'];
-const RESET_STATUSES = ['pending', 'approved', 'rejected'];
-const USER_STATUSES = ['pending', 'approved', 'rejected'];
+const STATUSES = ['pending', 'approved', 'rejected'];
 
-// ── GET /api/admin/stats — dashboard overview ────────────
+// GET /api/admin/stats - dashboard overview
 router.get('/stats', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
   const [users, drivers, rides, docs] = await Promise.all([
-    pool.query(`SELECT role, COUNT(*) AS n FROM users GROUP BY role`),
-    pool.query(`SELECT status, COUNT(*) AS n FROM drivers GROUP BY status`),
-    pool.query(`SELECT status, COUNT(*) AS n FROM rides GROUP BY status`),
-    pool.query(`SELECT status, COUNT(*) AS n FROM driver_documents GROUP BY status`),
+    pool.query('SELECT role, COUNT(*) AS n FROM users GROUP BY role'),
+    pool.query('SELECT status, COUNT(*) AS n FROM drivers GROUP BY status'),
+    pool.query('SELECT status, COUNT(*) AS n FROM rides GROUP BY status'),
+    pool.query('SELECT status, COUNT(*) AS n FROM driver_documents GROUP BY status'),
   ]);
   const toMap = (rows) => Object.fromEntries(rows.rows.map((r) => [r.status || r.role, Number(r.n)]));
   ok(res, {
@@ -30,7 +29,7 @@ router.get('/stats', requireAuth, requireRole(pool, 'admin'), asyncHandler(async
   });
 }));
 
-// ── GET /api/admin/drivers — all driver applications ─────
+// GET /api/admin/drivers - all driver applications
 router.get('/drivers', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
   const result = await pool.query(
     `SELECT d.*, u.fullname, u.email, u.profile_picture,
@@ -49,76 +48,90 @@ router.get('/drivers', requireAuth, requireRole(pool, 'admin'), asyncHandler(asy
   });
 }));
 
-// ── POST /api/admin/drivers/:userId/status — approve/reject ──
+// POST /api/admin/drivers/:userId/status - approve/reject
 router.post('/drivers/:userId/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
   const userId = Number.parseInt(req.params.userId, 10);
   const status = req.body?.status;
   if (!Number.isFinite(userId)) throw badRequest('Invalid driver id.');
-  if (!DRIVER_STATUSES.includes(status)) throw badRequest(`status must be one of: ${DRIVER_STATUSES.join(', ')}.`);
+  if (!STATUSES.includes(status)) throw badRequest('Invalid status.');
 
-  const result = await pool.query(
-    `UPDATE drivers SET status = $1 WHERE user_id = $2 RETURNING *`,
-    [status, userId]
-  );
-  if (result.rows.length === 0) throw notFound('No driver profile for that user.');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  // Fetch user info for the socket event
-  const userResult = await pool.query(`SELECT * FROM users WHERE id = $1`, [userId]);
-  const driver = result.rows[0];
-  if (userResult.rows.length > 0) {
-    driver.user = userResult.rows[0];
+    // Update driver status
+    const result = await client.query(
+      'UPDATE drivers SET status = $1 WHERE user_id = $2 RETURNING *',
+      [status, userId]
+    );
+    if (result.rows.length === 0) throw notFound('No driver profile for that user.');
+
+    // Also update user status so login works
+    await client.query('UPDATE users SET status = $1 WHERE id = $2', [status, userId]);
+
+    await client.query('COMMIT');
+
+    const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const driver = result.rows[0];
+    if (userResult.rows.length > 0) driver.user = userResult.rows[0];
+
+    // Emit real-time events
+    if (driver.user) emitAdminUserStatusChanged({ id: driver.user.id, status });
+    emitAdminDriverStatusChanged({ id: driver.id, userId, status });
+
+    ok(res, { message: `Driver marked as ${status}.`, driver });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
   }
-
-  ok(res, { message: `Driver marked as ${status}.`, driver: publicDriver(driver) });
-  emitAdminDriverStatusChanged(driver);
 }));
 
-// ── GET /api/admin/documents — document review queue ─────
-router.get('/documents', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
-  const status = req.query.status && DOC_STATUSES.includes(req.query.status) ? req.query.status : null;
-  const result = await pool.query(
-    `SELECT dd.*, u.fullname, u.email
-     FROM driver_documents dd JOIN users u ON u.id = dd.user_id
-     ${status ? 'WHERE dd.status = $1' : ''}
-     ORDER BY CASE dd.status WHEN 'pending' THEN 0 ELSE 1 END, dd.created_at DESC
-     ${status ? 'LIMIT 200' : 'LIMIT 200'}`,
-    status ? [status] : []
-  );
-  ok(res, {
-    documents: result.rows.map((d) => ({
-      id: d.id, userId: d.user_id, docType: d.doc_type, filePath: d.file_path,
-      status: d.status, createdAt: d.created_at, fullname: d.fullname, email: d.email,
-    })),
-  });
-}));
-
-// ── POST /api/admin/documents/:id/status — approve/reject doc ──
-router.post('/documents/:id/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
-  const id = Number.parseInt(req.params.id, 10);
-  const status = req.body?.status;
-  if (!Number.isFinite(id)) throw badRequest('Invalid document id.');
-  if (!DOC_STATUSES.includes(status)) throw badRequest(`status must be one of: ${DOC_STATUSES.join(', ')}.`);
-
-  const result = await pool.query(
-    `UPDATE driver_documents SET status = $1 WHERE id = $2 RETURNING *`,
-    [status, id]
-  );
-  if (result.rows.length === 0) throw notFound('Document not found.');
-  const d = result.rows[0];
-  ok(res, {
-    message: `Document marked as ${status}.`,
-    document: { id: d.id, docType: d.doc_type, status: d.status },
-  });
-  emitAdminDocumentStatusChanged(d);
-}));
-
-// ── GET /api/admin/users — all accounts ──────────────────
+// GET /api/admin/users - all accounts
 router.get('/users', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
-  const result = await pool.query(`SELECT * FROM users ORDER BY created_at DESC LIMIT 500`);
-  ok(res, { users: result.rows.map(publicUser) });
+  const result = await pool.query('SELECT * FROM users ORDER BY created_at DESC LIMIT 500');
+  ok(res, { users: result.rows.map((u) => ({ id: u.id, fullname: u.fullname, email: u.email, role: u.role, status: u.status, profilePicture: u.profile_picture, createdAt: u.created_at })) });
 }));
 
-// ── GET /api/admin/rides — all rides ─────────────────────
+// GET /api/admin/users/pending - pending users only
+router.get('/users/pending', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+  const result = await pool.query('SELECT * FROM users WHERE status = \'pending\' AND role != \'admin\' ORDER BY created_at DESC LIMIT 500');
+  ok(res, { users: result.rows.map((u) => ({ id: u.id, fullname: u.fullname, email: u.email, role: u.role, status: u.status, profilePicture: u.profile_picture, createdAt: u.created_at })) });
+}));
+
+// POST /api/admin/users/:id/status - approve/reject user
+router.post('/users/:id/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const userId = Number.parseInt(req.params.id, 10);
+  const status = req.body?.status;
+  if (!Number.isFinite(userId)) throw badRequest('Invalid user id.');
+  if (!STATUSES.includes(status)) throw badRequest('Invalid status.');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const reqRes = await client.query('SELECT * FROM users WHERE id = $1 FOR UPDATE', [userId]);
+    const user = reqRes.rows[0];
+    if (!user) throw notFound('User not found.');
+    if (user.status !== 'pending') throw badRequest(`User account already ${user.status}.`);
+
+    await client.query('UPDATE users SET status = $1 WHERE id = $2', [status, userId]);
+    await client.query('COMMIT');
+    const updatedUser = { ...user, status };
+
+    // Emit real-time event
+    emitAdminUserStatusChanged({ id: userId, status, role: user.role });
+
+    ok(res, { message: `User account ${status}.`, user: { id: updatedUser.id, fullname: updatedUser.fullname, email: updatedUser.email, role: updatedUser.role, status: updatedUser.status, profilePicture: updatedUser.profile_picture, createdAt: updatedUser.created_at } });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// GET /api/admin/rides - all rides
 router.get('/rides', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
   const result = await pool.query(
     `SELECT r.*, du.fullname AS driver_fullname, pu.fullname AS passenger_fullname
@@ -138,122 +151,73 @@ router.get('/rides', requireAuth, requireRole(pool, 'admin'), asyncHandler(async
   });
 }));
 
-// ── GET /api/admin/users/pending — pending user approvals ──
-router.get('/users/pending', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
+// GET /api/admin/documents - document review queue
+router.get('/documents', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const status = req.query.status && STATUSES.includes(req.query.status) ? req.query.status : null;
   const result = await pool.query(
-    `SELECT id, fullname, email, role, status, created_at
-     FROM users
-     WHERE status = 'pending'
-     ORDER BY created_at DESC`
+    `SELECT dd.*, u.fullname, u.email
+     FROM driver_documents dd JOIN users u ON u.id = dd.user_id
+     ${status ? 'WHERE dd.status = $1' : ''}
+     ORDER BY CASE dd.status WHEN 'pending' THEN 0 ELSE 1 END, dd.created_at DESC
+     LIMIT 200`,
+    status ? [status] : []
   );
-  ok(res, { users: result.rows.map((u) => ({ ...publicUser(u), status: u.status })) });
+  ok(res, {
+    documents: result.rows.map((d) => ({
+      id: d.id, userId: d.user_id, docType: d.doc_type, filePath: d.file_path,
+      status: d.status, createdAt: d.created_at, fullname: d.fullname, email: d.email,
+    })),
+  });
 }));
 
-// ── POST /api/admin/users/:id/status — approve/reject user account ──
-router.post('/users/:id/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
-  const userId = Number.parseInt(req.params.id, 10);
+// POST /api/admin/documents/:id/status - approve/reject doc
+router.post('/documents/:id/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
   const status = req.body?.status;
-  const adminUserId = req.user?.id;
-  const { admin_note } = req.body || {};
-  if (!Number.isFinite(userId)) throw badRequest('Invalid user id.');
-  if (!USER_STATUSES.includes(status)) throw badRequest(`status must be one of: ${USER_STATUSES.join(', ')}.`);
+  if (!Number.isFinite(id)) throw badRequest('Invalid document id.');
+  if (!STATUSES.includes(status)) throw badRequest('Invalid status.');
 
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const reqRes = await client.query(
-      `SELECT * FROM users WHERE id = $1 FOR UPDATE`,
-      [userId]
-    );
-    const user = reqRes.rows[0];
-    if (!user) throw notFound('User not found.');
-    if (user.status !== 'pending') throw badRequest(`User account already ${user.status}.`);
+  const result = await pool.query('UPDATE driver_documents SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
+  if (result.rows.length === 0) throw notFound('Document not found.');
 
-    await client.query(
-      `UPDATE users SET status = $1 WHERE id = $2`,
-      [status, userId]
-    );
-    await client.query('COMMIT');
-    const updatedUser = { ...user, status };
-    ok(res, { message: `User account ${status}.`, user: publicUser(updatedUser) });
-    emitAdminUserStatusChanged(updatedUser);
-  } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
-    throw err;
-  } finally {
-    client.release();
-  }
+  // Emit real-time event
+  emitAdminDocumentStatusChanged({ id, status, userId: result.rows[0].user_id });
+
+  ok(res, { message: `Document marked as ${status}.`, document: { id: result.rows[0].id, docType: result.rows[0].doc_type, status: result.rows[0].status } });
 }));
 
-// ── POST /api/admin/drivers/delete-all — delete ALL drivers ──
-router.post('/drivers/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
-  const result = await pool.query(`DELETE FROM drivers`);
-  ok(res, { message: `Deleted ${result.rowCount} driver(s).`, count: result.rowCount });
-}));
-
-// ── POST /api/admin/users/delete-all — delete ALL non-admin users ──
-router.post('/users/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
-  const adminUserId = req.user?.id;
-  const result = await pool.query(`DELETE FROM users WHERE role != 'admin' AND id != $1`, [adminUserId]);
-  ok(res, { message: `Deleted ${result.rowCount} user(s).`, count: result.rowCount });
-}));
-
-// ── POST /api/admin/reset-requests/delete-all — delete ALL reset requests ──
-router.post('/reset-requests/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
-  const result = await pool.query(`DELETE FROM password_reset_requests`);
-  ok(res, { message: `Deleted ${result.rowCount} reset request(s).`, count: result.rowCount });
-}));
-
-// ── POST /api/admin/documents/delete-all — delete ALL documents ──
-router.post('/documents/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
-  const result = await pool.query(`DELETE FROM driver_documents`);
-  ok(res, { message: `Deleted ${result.rowCount} document(s).`, count: result.rowCount });
-}));
-
-// ── GET /api/admin/reset-requests — password reset approval queue ──
+// GET /api/admin/reset-requests - password reset queue
 router.get('/reset-requests', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (_req, res) => {
   const result = await pool.query(
-    `SELECT rr.id, rr.email, rr.status, rr.admin_note, rr.created_at, rr.reviewed_at,
-            u.fullname, u.role
-     FROM password_reset_requests rr
-     JOIN users u ON u.id = rr.user_id
-     ORDER BY rr.created_at DESC`
+    `SELECT prr.*, u.fullname, u.email, u.role
+     FROM password_reset_requests prr JOIN users u ON u.id = prr.user_id
+     ORDER BY CASE prr.status WHEN 'pending' THEN 0 ELSE 1 END, prr.created_at DESC
+     LIMIT 200`
   );
   ok(res, { requests: result.rows });
 }));
 
-// ── POST /api/admin/reset-requests/:id/approve ──
+// POST /api/admin/reset-requests/:id/approve - approve password reset
 router.post('/reset-requests/:id/approve', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
-  const adminUserId = req.user?.id;
-  const { admin_note } = req.body || {};
+  const admin_note = req.body?.admin_note || 'Approved by admin';
   if (!Number.isFinite(id)) throw badRequest('Invalid request id.');
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const reqRes = await client.query(
-      `SELECT * FROM password_reset_requests WHERE id = $1 FOR UPDATE`,
-      [id]
-    );
-    const resetReq = reqRes.rows[0];
-    if (!resetReq) throw notFound('Reset request not found.');
-    if (resetReq.status !== 'pending') throw badRequest(`Request already ${resetReq.status}.`);
+    const reqRes = await client.query('SELECT * FROM password_reset_requests WHERE id = $1 FOR UPDATE', [id]);
+    const request = reqRes.rows[0];
+    if (!request) throw notFound('Reset request not found.');
+    if (request.status !== 'pending') throw badRequest(`Reset request already ${request.status}.`);
 
-    // Apply the new password to the user account.
-    await client.query(
-      `UPDATE users SET password_hash = $1 WHERE id = $2`,
-      [resetReq.new_password_hash, resetReq.user_id]
-    );
-    await client.query(
-      `UPDATE password_reset_requests
-       SET status = 'approved', admin_note = $1, reviewed_by = $2, reviewed_at = NOW()
-       WHERE id = $3`,
-      [admin_note ?? null, adminUserId, id]
-    );
+    await client.query('UPDATE password_reset_requests SET status = \'approved\', admin_note = $1, reviewed_by = $2, reviewed_at = NOW() WHERE id = $3', [admin_note, req.user.id, id]);
     await client.query('COMMIT');
-    ok(res, { message: 'Password reset approved and applied.' });
-    emitAdminResetStatusChanged({ ...resetReq, status: 'approved' });
+
+    // Emit real-time event
+    emitAdminResetStatusChanged({ id, status: 'approved', userId: request.user_id });
+
+    ok(res, { message: 'Password reset request approved. User can now use the reset link.', request: { id: request.id, status: 'approved', admin_note, reviewedAt: new Date() } });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;
@@ -262,23 +226,139 @@ router.post('/reset-requests/:id/approve', requireAuth, requireRole(pool, 'admin
   }
 }));
 
-// ── POST /api/admin/reset-requests/:id/reject ──
+// POST /api/admin/reset-requests/:id/reject - reject password reset
 router.post('/reset-requests/:id/reject', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
-  const adminUserId = req.user?.id;
-  const { admin_note } = req.body || {};
+  const admin_note = req.body?.admin_note || 'Rejected by admin';
   if (!Number.isFinite(id)) throw badRequest('Invalid request id.');
 
-  const result = await pool.query(
-    `UPDATE password_reset_requests
-       SET status = 'rejected', admin_note = $1, reviewed_by = $2, reviewed_at = NOW()
-       WHERE id = $3 AND status = 'pending'
-       RETURNING *`,
-    [admin_note ?? null, adminUserId, id]
-  );
-  if (result.rows.length === 0) throw notFound('Reset request not found or already processed.');
-  ok(res, { message: 'Password reset request rejected.' });
-  emitAdminResetStatusChanged(result.rows[0]);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const reqRes = await client.query('SELECT * FROM password_reset_requests WHERE id = $1 FOR UPDATE', [id]);
+    const request = reqRes.rows[0];
+    if (!request) throw notFound('Reset request not found.');
+    if (request.status !== 'pending') throw badRequest(`Reset request already ${request.status}.`);
+
+    await client.query('UPDATE password_reset_requests SET status = \'rejected\', admin_note = $1, reviewed_by = $2, reviewed_at = NOW() WHERE id = $3', [admin_note, req.user.id, id]);
+    await client.query('COMMIT');
+
+    // Emit real-time event
+    emitAdminResetStatusChanged({ id, status: 'rejected', userId: request.user_id });
+
+    ok(res, { message: 'Password reset request rejected.', request: { id: request.id, status: 'rejected', admin_note, reviewedAt: new Date() } });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// ── DANGEROUS: Bulk delete endpoints ──
+// These require explicit confirmation and are disabled in production by default.
+// Enable only with ADMIN_ALLOW_BULK_DELETE=true and provide the exact confirmation token.
+
+function requireBulkDeleteConfirmation(req, expectedToken) {
+  const provided = req.body?.confirmation;
+  if (provided !== expectedToken) {
+    throw badRequest(`Invalid confirmation. This operation requires confirmation token: "${expectedToken}"`);
+  }
+  if (process.env.NODE_ENV === 'production' && process.env.ADMIN_ALLOW_BULK_DELETE !== 'true') {
+    throw badRequest('Bulk delete operations are disabled in production. Set ADMIN_ALLOW_BULK_DELETE=true to enable (not recommended).');
+  }
+}
+
+// POST /api/admin/drivers/delete-all
+router.post('/drivers/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  requireBulkDeleteConfirmation(req, 'CONFIRM_DELETE_ALL_DRIVERS');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const driverCount = await client.query('SELECT COUNT(*) FROM drivers');
+    const docCount = await client.query('SELECT COUNT(*) FROM driver_documents WHERE user_id IN (SELECT user_id FROM drivers)');
+
+    await client.query('DELETE FROM driver_documents WHERE user_id IN (SELECT user_id FROM drivers)');
+    await client.query('DELETE FROM drivers');
+    await client.query('COMMIT');
+
+    console.warn(`[AUDIT] Admin ${req.user.id} deleted ALL drivers (${driverCount.rows[0].count} drivers, ${docCount.rows[0].count} documents)`);
+    ok(res, { message: `Deleted ${driverCount.rows[0].count} drivers and ${docCount.rows[0].count} associated documents.` });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// POST /api/admin/users/delete-all
+router.post('/users/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  requireBulkDeleteConfirmation(req, 'CONFIRM_DELETE_ALL_USERS');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const userCount = await client.query('SELECT COUNT(*) FROM users WHERE role != \'admin\'');
+    const rideCount = await client.query('SELECT COUNT(*) FROM rides WHERE passenger_user_id IN (SELECT id FROM users WHERE role != \'admin\') OR driver_user_id IN (SELECT id FROM users WHERE role != \'admin\')');
+
+    await client.query('DELETE FROM rides WHERE passenger_user_id IN (SELECT id FROM users WHERE role != \'admin\') OR driver_user_id IN (SELECT id FROM users WHERE role != \'admin\')');
+    await client.query('DELETE FROM driver_documents WHERE user_id IN (SELECT id FROM users WHERE role != \'admin\')');
+    await client.query('DELETE FROM drivers WHERE user_id IN (SELECT id FROM users WHERE role != \'admin\')');
+    await client.query('DELETE FROM users WHERE role != \'admin\'');
+    await client.query('COMMIT');
+
+    console.warn(`[AUDIT] Admin ${req.user.id} deleted ALL non-admin users (${userCount.rows[0].count} users, ${rideCount.rows[0].count} rides)`);
+    ok(res, { message: `Deleted ${userCount.rows[0].count} users and ${rideCount.rows[0].count} associated rides.` });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// POST /api/admin/reset-requests/delete-all
+router.post('/reset-requests/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  requireBulkDeleteConfirmation(req, 'CONFIRM_DELETE_ALL_RESET_REQUESTS');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const count = await client.query('SELECT COUNT(*) FROM password_reset_requests');
+    await client.query('DELETE FROM password_reset_requests');
+    await client.query('COMMIT');
+
+    console.warn(`[AUDIT] Admin ${req.user.id} deleted ALL password reset requests (${count.rows[0].count} requests)`);
+    ok(res, { message: `Deleted ${count.rows[0].count} password reset requests.` });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}));
+
+// POST /api/admin/documents/delete-all
+router.post('/documents/delete-all', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
+  requireBulkDeleteConfirmation(req, 'CONFIRM_DELETE_ALL_DOCUMENTS');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const count = await client.query('SELECT COUNT(*) FROM driver_documents');
+    await client.query('DELETE FROM driver_documents');
+    await client.query('COMMIT');
+
+    console.warn(`[AUDIT] Admin ${req.user.id} deleted ALL driver documents (${count.rows[0].count} documents)`);
+    ok(res, { message: `Deleted ${count.rows[0].count} driver documents.` });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
 }));
 
 export default router;

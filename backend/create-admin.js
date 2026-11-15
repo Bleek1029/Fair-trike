@@ -1,56 +1,56 @@
-#!/usr/bin/env node
 // Create admin user for Fairtrike
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { env } from './config.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '.env') });
+const BCRYPT_ROUNDS = 12;
 
-const { Pool } = pg;
+const client = new pg.Client({ ...env.db });
 
-const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  port: Number.parseInt(process.env.PGPORT, 10) || 5432,
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || '',
-  database: process.env.PGDATABASE || 'appdev',
-  max: 3,
-});
+async function main() {
+  await client.connect();
 
-async function createAdmin() {
-  const email = process.argv[2] || 'admin@fairtrike.test';
-  const password = process.argv[3] || 'admin123';
-  const fullname = process.argv[4] || 'Administrator';
+  // Check if admin already exists
+  const existing = await client.query(
+    "SELECT id, email FROM users WHERE role = 'admin'"
+  );
 
-  try {
-    // Check if admin already exists
-    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existing.rows.length > 0) {
-      console.log(`✅ Admin user already exists: ${email}`);
-      return;
-    }
-
-    const hash = await bcrypt.hash(password, 12);
-    const result = await pool.query(
-      `INSERT INTO users (fullname, email, password_hash, role)
-       VALUES ($1, $2, $3, 'admin')
-       RETURNING id, email, fullname, role`,
-      [fullname, email, hash]
-    );
-
-    console.log(`✅ Admin user created:`);
-    console.log(`   Email:    ${result.rows[0].email}`);
-    console.log(`   Password: ${password}`);
-    console.log(`   Name:     ${result.rows[0].fullname}`);
-    console.log(`   Role:     ${result.rows[0].role}`);
-  } catch (err) {
-    console.error('❌ Failed to create admin:', err.message);
-  } finally {
-    await pool.end();
+  if (existing.rows.length > 0) {
+    console.log('✅ Admin user already exists:');
+    existing.rows.forEach((u) => console.log(`   - ${u.email} (id: ${u.id})`));
+    await client.end();
+    return;
   }
+
+  const email = 'admin@fairtrike.test';
+  const password = 'admin123456';
+  const fullname = 'Fairtrike Admin';
+
+  console.log('🔐 Creating admin user...');
+
+  const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+  const result = await client.query(
+    `INSERT INTO users (fullname, email, password_hash, role, status)
+     VALUES ($1, $2, $3, 'admin', 'approved')
+     RETURNING id, email, role, status`,
+    [fullname, email, hash]
+  );
+
+  const admin = result.rows[0];
+  console.log('✅ Admin user created successfully:');
+  console.log(`   Email: ${admin.email}`);
+  console.log(`   Password: ${password}`);
+  console.log(`   Role: ${admin.role}`);
+  console.log(`   Status: ${admin.status}`);
+  console.log('');
+  console.log('🔗 Login at: http://localhost:5001/admin/login');
+
+  await client.end();
 }
 
-createAdmin();
+main().catch((err) => {
+  console.error('❌ Error:', err.message);
+  client.end().catch(() => {});
+  process.exit(1);
+});

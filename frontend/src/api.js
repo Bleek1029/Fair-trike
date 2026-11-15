@@ -2,30 +2,28 @@
 import { rawRequest } from './api/http.js';
 import { API_BASE } from './config.js';
 
-// ── Storage (single source of truth for the session token + user) ──
+// ── Storage (single source of truth for the session tokens + user) ──
 // "Remember device" picks the backing store:
 //   remember  → localStorage   (survives browser restarts)
 //   !remember → sessionStorage (cleared when the browser/tab closes)
-// The token chooses the session's store; the user record always follows it so
-// the pair can't split across stores, and every write clears the other store.
-const TOKEN_KEY = 'fairtrike_token';
+// Access token is short-lived (15m), refresh token is long-lived (30d, HttpOnly cookie).
+// We store only the access token in web storage; refresh token lives in HttpOnly cookie.
+const ACCESS_TOKEN_KEY = 'fairtrike_access_token';
 const USER_KEY = 'fairtrike_user';
 
-export function getToken() {
-  // localStorage first (remembered sessions), then sessionStorage.
-  return globalThis.localStorage?.getItem(TOKEN_KEY)
-    ?? globalThis.sessionStorage?.getItem(TOKEN_KEY)
+export function getAccessToken() {
+  return globalThis.localStorage?.getItem(ACCESS_TOKEN_KEY)
+    ?? globalThis.sessionStorage?.getItem(ACCESS_TOKEN_KEY)
     ?? null;
 }
-export function setToken(token, { remember = true } = {}) {
+export function setAccessToken(token, { remember = true } = {}) {
   if (token) {
     const other = remember ? globalThis.sessionStorage : globalThis.localStorage;
-    other?.removeItem(TOKEN_KEY);
-    (remember ? globalThis.localStorage : globalThis.sessionStorage)?.setItem(TOKEN_KEY, token);
+    other?.removeItem(ACCESS_TOKEN_KEY);
+    (remember ? globalThis.localStorage : globalThis.sessionStorage)?.setItem(ACCESS_TOKEN_KEY, token);
   } else {
-    // Logout / invalid token: end the session in both stores.
-    globalThis.localStorage?.removeItem(TOKEN_KEY);
-    globalThis.sessionStorage?.removeItem(TOKEN_KEY);
+    globalThis.localStorage?.removeItem(ACCESS_TOKEN_KEY);
+    globalThis.sessionStorage?.removeItem(ACCESS_TOKEN_KEY);
   }
 }
 export function getStoredUser() {
@@ -43,24 +41,39 @@ export function setStoredUser(user) {
     globalThis.sessionStorage?.removeItem(USER_KEY);
     return;
   }
-  // Mirror the token's store: a session-only login keeps its user session-only.
-  const remembered = Boolean(globalThis.localStorage?.getItem(TOKEN_KEY));
+  const remembered = Boolean(globalThis.localStorage?.getItem(ACCESS_TOKEN_KEY));
   const other = remembered ? globalThis.sessionStorage : globalThis.localStorage;
   other?.removeItem(USER_KEY);
   (remembered ? globalThis.localStorage : globalThis.sessionStorage)
     ?.setItem(USER_KEY, JSON.stringify(user));
 }
 
+// Clear all auth state (logout)
+export function clearAuth() {
+  setAccessToken(null);
+  globalThis.localStorage?.removeItem(USER_KEY);
+  globalThis.sessionStorage?.removeItem(USER_KEY);
+}
+
 const request = (method, path, opts = {}) =>
-  rawRequest(method, `${API_BASE}${path}`, { ...opts, token: opts.token ?? getToken() });
+  rawRequest(method, `${API_BASE}${path}`, { ...opts, token: opts.token ?? getAccessToken() });
 
 // ── Auth ──
 export const apiRegister = (payload) => request('POST', '/auth/register', { body: payload });
 export const apiRegisterDriver = (payload) => request('POST', '/auth/register-driver', { body: payload });
+
+// Login returns { accessToken, refreshToken, user }
 export const apiLogin = (payload) => request('POST', '/auth/login', { body: payload });
 export const apiLoginDriver = (payload) => request('POST', '/auth/login-driver', { body: payload });
-export const apiLoginAdmin = (payload) => request('POST', '/auth/login-admin', { body: payload });
+
+export const apiChangePassword = (payload) => request('POST', '/auth/change-password', { body: payload });
+export const apiForgotPassword = (payload) => request('POST', '/auth/forgot-password', { body: payload });
 export const apiResetPassword = (payload) => request('POST', '/auth/reset-password', { body: payload });
+
+// Token management
+export const apiRefreshToken = (refreshToken) => request('POST', '/auth/refresh', { body: { refresh_token: refreshToken } });
+export const apiLogout = () => request('POST', '/auth/logout');
+export const apiLogoutAll = () => request('POST', '/auth/logout-all');
 
 // ── User ──
 export const apiGetMe = () => request('GET', '/users/me');
@@ -98,10 +111,11 @@ export const apiAdminPendingUsers = () => request('GET', '/admin/users/pending')
 export const apiSetUserStatus = (userId, status, admin_note) => request('POST', `/admin/users/${userId}/status`, { body: { status, admin_note } });
 export const apiApproveResetRequest = (id, body = {}) => request('POST', `/admin/reset-requests/${id}/approve`, { body });
 export const apiRejectResetRequest = (id, body = {}) => request('POST', `/admin/reset-requests/${id}/reject`, { body });
-export const apiAdminDeleteAllDrivers = () => request('POST', '/admin/drivers/delete-all');
-export const apiAdminDeleteAllUsers = () => request('POST', '/admin/users/delete-all');
-export const apiAdminDeleteAllResetRequests = () => request('POST', '/admin/reset-requests/delete-all');
-export const apiAdminDeleteAllDocuments = () => request('POST', '/admin/documents/delete-all');
+export const apiAdminDeleteAllDrivers = () => request('POST', '/admin/drivers/delete-all', { body: { confirmation: 'CONFIRM_DELETE_ALL_DRIVERS' } });
+export const apiAdminDeleteAllUsers = () => request('POST', '/admin/users/delete-all', { body: { confirmation: 'CONFIRM_DELETE_ALL_USERS' } });
+export const apiAdminDeleteAllResetRequests = () => request('POST', '/admin/reset-requests/delete-all', { body: { confirmation: 'CONFIRM_DELETE_ALL_RESET_REQUESTS' } });
+export const apiAdminDeleteAllDocuments = () => request('POST', '/admin/documents/delete-all', { body: { confirmation: 'CONFIRM_DELETE_ALL_DOCUMENTS' } });
+export const apiLoginAdmin = (payload) => request('POST', '/auth/login-admin', { body: payload });
 
 // ── AI Assistant ───────────────────────────────────────────────
 export const apiAiAssistant = (message) => request('POST', '/ai/assistant', { body: { message } });

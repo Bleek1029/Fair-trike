@@ -29,194 +29,40 @@ export function Brand({ to = '/dashboard', compact = false }) {
 
 export function Header() {
   const { user, logout } = useAuth();
-  const { pathname } = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+  const isHome = location.pathname === '/';
   const [signOutOpen, setSignOutOpen] = useState(false);
-  const loggedIn = Boolean(user);
 
   const confirmSignOut = () => {
     setSignOutOpen(false);
-    setMenuOpen(false);
     logout();
-  };
-
-  return (
-    <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="h-16 md:h-20 w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop flex items-center justify-between gap-space-sm md:gap-space-md">
-        <div className="flex items-center gap-space-md min-w-0">
-          <Brand />
-          <nav className="hidden lg:flex items-center gap-space-xs p-space-xs bg-surface-container-low rounded-xl">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.to;
-              return (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  aria-current={active ? 'page' : undefined}
-                  className={
-                    active
-                      ? 'px-space-md py-space-sm rounded-lg transition-colors bg-surface-container-high text-on-surface font-bold'
-                      : 'px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface transition-colors text-label-lg'
-                  }
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-space-sm md:gap-space-md shrink-0">
-          <div className="hidden md:flex items-center bg-surface-container-low px-space-md py-space-xs rounded-full gap-space-sm">
-            <span className="material-symbols-outlined text-secondary text-[20px]">radar</span>
-            <span className="text-label-md text-on-surface-variant">Transit Live:</span>
-            <span className="text-label-md text-tertiary flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
-              Active
-            </span>
-          </div>
-
-          {loggedIn ? (
-            <div className="flex items-center gap-space-sm">
-              <Link
-                to="/dashboard"
-                className="hidden sm:inline-block px-space-md py-2.5 rounded-xl bg-surface-container-high text-on-surface text-label-lg font-bold hover:bg-surface-container transition-all"
-              >
-                My Account
-              </Link>
-              <button
-                type="button"
-                onClick={() => setSignOutOpen(true)}
-                className="hidden sm:inline-block px-space-md py-2.5 rounded-xl bg-surface-container-low text-on-surface text-label-lg hover:bg-surface-container-high transition-all"
-              >
-                Sign Out
-              </button>
-              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary text-label-sm font-bold overflow-hidden">
-                {user.profilePicture ? (
-                  <img
-                    src={avatarUrl(user.profilePicture)}
-                    alt={user.fullname || 'profile'}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  initialsOf(user.fullname)
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-space-xs sm:gap-space-sm">
-              <Link
-                to="/login"
-                className="hidden sm:inline-block px-space-md py-2.5 rounded-xl text-label-lg text-on-surface hover:bg-surface-container-high transition-all"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="px-space-md sm:px-space-lg py-2.5 rounded-xl bg-primary-container text-on-primary-container text-label-lg hover:bg-inverse-primary hover:text-on-primary-fixed-variant transition-all shadow-sm whitespace-nowrap"
-              >
-                Create Account
-              </Link>
-              <button
-                type="button"
-                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((v) => !v)}
-                className="lg:hidden w-10 h-10 rounded-xl bg-surface-container-low text-on-surface flex items-center justify-center hover:bg-surface-container-high transition-colors shrink-0"
-              >
-                <span className="material-symbols-outlined text-[22px]">{menuOpen ? 'close' : 'menu'}</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      {menuOpen && (
-        <div className="lg:hidden border-t border-surface-container-high bg-surface/95 backdrop-blur-xl">
-          <nav className="w-full max-w-[1280px] mx-auto px-margin py-space-sm flex flex-col gap-1" aria-label="Mobile">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.to;
-              return (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  onClick={() => setMenuOpen(false)}
-                  aria-current={active ? 'page' : undefined}
-                  className={`px-space-md py-3 rounded-xl text-label-lg transition-colors ${
-                    active ? 'bg-surface-container-high text-on-surface font-bold' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-            {loggedIn ? (
-              <div className="flex sm:hidden gap-space-sm pt-space-xs">
-                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="flex-1 text-center px-space-md py-3 rounded-xl bg-surface-container-high text-on-surface text-label-lg font-bold">
-                  My Account
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setSignOutOpen(true)}
-                  className="flex-1 px-space-md py-3 rounded-xl bg-surface-container-low text-on-surface text-label-lg"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <Link to="/login" onClick={() => setMenuOpen(false)} className="sm:hidden px-space-md py-3 rounded-xl text-label-lg text-center text-on-surface bg-surface-container-low">
-                Sign In
-              </Link>
-            )}
-          </nav>
-        </div>
-      )}
-      <SignOutModal
-        open={signOutOpen}
-        onConfirm={confirmSignOut}
-        onClose={() => setSignOutOpen(false)}
-        name={user?.fullname}
-      />
-    </header>
-  );
-}
-
-// ── Admin-specific header (replaces the shared Header on /admin surfaces) ──
-export function AdminHeader({ user, onLogout }) {
-  const [signOutOpen, setSignOutOpen] = useState(false);
-
-  const confirmSignOut = () => {
-    setSignOutOpen(false);
-    onLogout();
   };
 
   return (
     <header className="w-full bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] sticky top-0 z-40">
       <div className="h-16 md:h-20 w-full max-w-[1280px] mx-auto px-margin lg:px-margin-desktop flex items-center justify-between gap-space-sm md:gap-space-md">
         <div className="flex items-center gap-space-sm min-w-0">
-          <div className="flex items-center gap-2 group">
-            <img
-              src="/fairtrike-logo.png"
-              alt="Fairtrike logo"
-              className="w-10 h-10 object-contain shrink-0"
-            />
-            <div className="flex flex-col min-w-0">
-              <span className="text-[16px] md:text-headline-sm text-on-surface font-bold tracking-tight leading-tight truncate">
-                Fairtrike
-              </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-highest/20 backdrop-blur text-primary-fixed text-[10px] uppercase tracking-wider">
-                Transit Utility
-              </span>
-            </div>
-          </div>
-          <div className="hidden md:block ml-2">
-            <span className="text-[10px] font-bold tracking-wider uppercase text-secondary">Admin Access</span>
-            <h1 className="text-headline-sm font-bold text-on-surface">Operations Console</h1>
-          </div>
+          <Brand />
+          <nav className="hidden md:flex items-center gap-space-xs" aria-label="Main navigation">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`px-3 py-1.5 rounded-xl font-medium transition-colors ${
+                  location.pathname === link.to
+                    ? 'bg-primary text-on-primary shadow-lg'
+                    : 'text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div className="flex items-center gap-space-sm shrink-0">
-          <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl text-label-sm">
-            <span className="material-symbols-outlined text-secondary text-[16px]">shield_person</span>
+          <div className="hidden md:flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl text-label-sm">
+            <span className="material-symbols-outlined text-secondary text-[16px]">person</span>
             <span className="text-on-surface font-medium">{user?.fullname ?? user?.email}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse" />
           </div>
@@ -236,5 +82,26 @@ export function AdminHeader({ user, onLogout }) {
         name={user?.fullname}
       />
     </header>
+  );
+}
+
+export function Footer() {
+  return (
+    <footer className="w-full py-space-md px-margin lg:px-margin-desktop border-t border-surface-container-high">
+      <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-space-sm">
+        <p className="text-body-sm text-secondary">© 2025 Fairtrike Olongapo. All rights reserved.</p>
+        <div className="flex items-center gap-space-md">
+          <a href="https://www.facebook.com/FairtrikeOlongapo" target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-[24px]">facebook</span>
+          </a>
+          <a href="mailto:support@fairtrike.ph" className="text-secondary hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-[24px]">mail</span>
+          </a>
+          <a href="https://maps.app.goo.gl/fairtrike" target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-[24px]">location_on</span>
+          </a>
+        </div>
+      </div>
+    </footer>
   );
 }

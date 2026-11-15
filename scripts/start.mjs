@@ -68,18 +68,81 @@ if (!fs.existsSync(backendNodeModules)) {
 // ── Start the servers ──
 // Use `npm start` in backend/ so `prestart` hook runs (installs deps on Render free tier).
 const launcherArgs = ['start', ...(isDev ? ['--dev'] : [])];
+// On Windows we can't use process groups, so we track PIDs and kill them all on exit.
+// On Unix, we use a negative PID (process group) to kill the entire tree.
+const isWindows = process.platform === 'win32';
 const launcher = spawn(npmCmd, launcherArgs, {
   cwd: backendDir,
   stdio: 'inherit',
-  shell: process.platform === 'win32',
+  shell: isWindows,
   env: { ...process.env, FORCE_COLOR: '1' },
+  // On Unix, create a new process group so we can kill the whole tree
+  detached: !isWindows,
 });
 
-function shutdown() {
-  console.log('\n🛑 Stopping Fairtrike…');
-  launcher.kill();
+let shutdownInProgress = false;
+async function shutdown(signal) {
+  if (shutdownInProgress) return;
+  shutdownInProgress = true;
+  console.log(`\n🛑 Stopping Fairtrike (${signal})…`);
+
+  if (!isWindows && launcher.pid) {
+    // Kill the entire process group (negative PID = process group)
+    try {
+      process.kill(-launcher.pid, 'SIGTERM');
+      // Give it a moment, then force kill
+      setTimeout(() => {
+        try { process.kill(-launcher.pid, 'SIGKILL'); } catch {}
+      }, 2000);
+    } catch {}
+  } else if (launcher.pid) {
+    // Windows: use taskkill /T to kill the entire process tree
+    try {
+      const { execSync } = await import('node:child_process');
+      execSync(`taskkill /PID ${launcher.pid} /T /F`, { stdio: 'ignore' });
+    } catch {}
+  }
+
+  // Also free ports directly (same logic as stop.mjs) to ensure cleanup
+  try {
+    const { execSync } = await import('node:child_process');
+    const { env: backendEnv } = await import('../backend/config.js');
+    const ports = [backendEnv.port, backendEnv.adminPort];
+    for (const port of ports) {
+      if (isWindows) {
+        try {
+          const out = execSync(
+            `powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess"`,
+            { encoding: 'utf8' },
+          ).trim();
+          if (out) {
+            for (const pid of out.split(/\r?\n/).map(s => s.trim()).filter(Boolean)) {
+              execSync(`taskkill /PID ${pid} /T /F`, { stdio: 'ignore' });
+            }
+          }
+        } catch {}
+      } else {
+        try {
+          const out = execSync(`lsof -ti tcp:${port} -sTCP:LISTEN`, { encoding: 'utf8' }).trim();
+          if (out) {
+            for (const pid of out.split(/\r?\n/).map(s => s.trim()).filter(Boolean)) {
+              process.kill(Number(pid), 'SIGKILL');
+            }
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+
   process.exit(0);
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-launcher.on('exit', (code) => process.exit(code ?? 0));
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+// If launcher exits on its own, exit with its code
+launcher.on('exit', (code) => {
+  if (!shutdownInProgress) {
+    process.exit(code ?? 0);
+  }
+});

@@ -1,3 +1,4 @@
+
 # Fairtrike on Render — Deployment Guide
 
 ## Option 1: Single Web Service (Easiest) — $14/mo

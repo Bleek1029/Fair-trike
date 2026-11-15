@@ -1,8 +1,23 @@
-/* ═══════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════════
    Fairtrike — Urban Transit Modern (Design Update)
    Applied: 2026-11-08
-   ═══════════════════════════════════════════════════════════════ */
+   ════════════════════════════════════════════════════════════════ */
 
+/* ── Font Imports ─────────────────────────────────────── */
+/* Fira Code (monospace) + Fira Sans (UI) for Admin Dashboard */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
+.font-mono {
+  font-family: 'Fira Code', 'JetBrains Mono', 'Fira Mono', monospace;
+}
+
+.font-sans {
+  font-family: 'Fira Sans', 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Light Theme (Default Fairtrike)
+   ───────────────────────────────────────────────────────────── */
 :root {
   --surface: #f8f9ff;
   --surface-container-lowest: #ffffff;
@@ -28,6 +43,67 @@
   --background: #f8f9ff;
   --on-background: #0b1c30;
   --font-family: 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif;
+
+  /* Semantic color aliases for components */
+  --card: var(--surface-container-lowest);
+  --card-foreground: var(--on-surface);
+  --muted: var(--surface-container-high);
+  --muted-foreground: var(--on-surface-variant);
+  --border: var(--surface-container-highest);
+  --ring: var(--primary);
+  --accent: var(--tertiary);
+  --accent-foreground: var(--on-tertiary);
+  --success: var(--tertiary);
+  --success-foreground: var(--on-tertiary);
+  --warning: #f59e0b;
+  --warning-foreground: #3d2a00;
+  --destructive: var(--error);
+  --destructive-foreground: var(--on-surface);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Dark Theme (Brutalism - Admin Dashboard)
+   ───────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1b2336;
+  --card-foreground: #f8fafc;
+  --muted: #272f42;
+  --muted-foreground: #94a3b8;
+  --border: #475569;
+  --ring: #ffffff;
+
+  --primary: #1e293b;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #ffffff;
+  --accent: #22c55e;
+  --accent-foreground: #0f172a;
+  --success: #22c55e;
+  --success-foreground: #0f172a;
+  --warning: #f59e0b;
+  --warning-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #000000;
+  --error: #ef4444;
+  --error-foreground: #000000;
+
+  /* Legacy aliases */
+  --surface: #1b2336;
+  --surface-container-lowest: #111827;
+  --surface-container-low: #1b2336;
+  --surface-container: #272f42;
+  --surface-container-high: #334155;
+  --surface-container-highest: #475569;
+  --on-surface: #f8fafc;
+  --on-surface-variant: #94a3b8;
+  --on-primary: #ffffff;
+  --on-tertiary: #0f172a;
+  --on-background: #f8fafc;
+  --tertiary: #22c55e;
+  --tertiary-container: #166534;
+  --on-tertiary-container: #dcfce7;
 }
 
 * { box-sizing: border-box; }
@@ -621,6 +697,7 @@ main > :last-child  { margin-bottom: 0; }
   justify-content: center;
 }
 
+
 /* ── Animations ─────────────────────────────────────────────── */
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-10px); }
@@ -756,43 +833,12 @@ main > :last-child  { margin-bottom: 0; }
   border-color: color-mix(in srgb, var(--primary-container) 30%, transparent);
 }
 
-.admin-nav-item {
-  transition: all 0.2s ease;
-}
-
-.admin-nav-item:hover {
-  background: var(--surface-container-high);
-  color: var(--on-surface);
-}
-
-.admin-nav-item.active {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary-container) 20%, transparent), color-mix(in srgb, var(--tertiary-container) 20%, transparent));
-  color: var(--primary);
-  box-shadow: 0 4px 16px rgba(133, 83, 0, 0.15);
-}
-
-.admin-nav-icon {
-  transition: transform 0.2s ease;
-}
-
-.admin-nav-item:hover .admin-nav-icon {
-  transform: scale(1.1);
-}
-
 .sidebar-toggle-icon {
   transition: transform 0.3s ease;
 }
 
 .sidebar-toggle.collapsed .sidebar-toggle-icon {
   transform: rotate(180deg);
-}
-
-.admin-sidebar {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.admin-main {
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobile-sidebar-overlay {
@@ -834,5 +880,3 @@ main > :last-child  { margin-bottom: 0; }
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
-
-

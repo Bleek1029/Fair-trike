@@ -1,5 +1,4 @@
 // ── Frontend app constants & configuration ──
-import { isNativeApp, DEFAULT_NATIVE_API_ORIGIN } from './lib/native.js';
 
 // Fare policy (PHP). Single source of truth for the fare engine.
 // Philippine law: students, senior citizens, and PWDs get a mandatory
@@ -27,25 +26,10 @@ export const EMERGENCY_TEL = '911';
 // the Vite dev proxy, the Node server that serves this bundle, the Vercel
 // rewrite (vercel.json), and LAN access.
 //
-// Native Capacitor builds can't use a relative path — the WebView serves the
-// bundle from its own origin (https://localhost), so /api would resolve to the
-// asset loader. They target a real backend origin instead (see lib/native.js),
-// overridable with VITE_NATIVE_API_ORIGIN at build time.
-//
 // `import.meta.env` is undefined outside Vite (e.g. `node --test`), hence the guard.
 const viteEnv = import.meta.env || {};
 
-const nativeApiOrigin = (viteEnv.VITE_NATIVE_API_ORIGIN || DEFAULT_NATIVE_API_ORIGIN)
-  .trim()
-  .replace(/\/+$/, '');
-
-export const IS_NATIVE_APP = isNativeApp();
-
-// Origin of the backend when running natively — '' in the browser, where every
-// URL is relative to whatever server handed out the bundle.
-export const API_ORIGIN = IS_NATIVE_APP ? nativeApiOrigin : '';
-
-export const API_BASE = viteEnv.VITE_API_URL || (IS_NATIVE_APP ? `${API_ORIGIN}/api` : '/api');
+export const API_BASE = viteEnv.VITE_API_URL || '/api';
 
 // Profile pictures are served by the backend too (/uploads/<file>).
-export const UPLOADS_BASE = IS_NATIVE_APP ? `${API_ORIGIN}/uploads` : '/uploads';
+export const UPLOADS_BASE = '/uploads';

@@ -36,12 +36,11 @@ export function initSocket(server) {
   });
 
   // ── Authentication (same JWT as the REST API) ──────────────────────────
+  // Token MUST be sent via `auth: { token }` in socket.io client options.
+  // Query string tokens are NOT accepted (security: tokens in URLs can be logged).
   io.use((socket, next) => {
-    const token =
-      socket.handshake.auth?.token ||
-      socket.handshake.query?.token ||
-      '';
-    if (!token) return next(new Error('Authentication required'));
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error('Authentication required: provide token in auth object'));
 
     try {
       const payload = jwt.verify(token, env.jwt.secret);

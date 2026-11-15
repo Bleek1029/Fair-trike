@@ -11,11 +11,11 @@ import { FareEstimator } from '../components/FareEstimator.jsx';
 import { AiAssistant } from '../components/AiAssistant.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { FARE, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL } from '../config.js';
-import { apiCreateRide, apiAiParseBooking, getToken } from '../api.js';
+import { apiCreateRide, apiAiParseBooking, getAccessToken } from '../api.js';
 import {
   connectSocket, joinRide, leaveRide, onDriverLocation, onRideEvent,
 } from '../lib/socket.js';
-import { initialsOf, avatarUrl } from '../lib/utils.js';
+import { initialsOf, avatarUrl, haversine } from '../lib/utils.js';
 import { fmtDist, fmtTime, formatPeso } from '../lib/format.js';
 
 const BASE_FARE = FARE.base;
@@ -309,7 +309,7 @@ export function MapApp() {
   // accepting the trip, live location updates, and completion/cancellation.
   useEffect(() => {
     if (!booked || !user) return;
-    const token = getToken();
+    const token = getAccessToken();
     if (!token) return;
 
     const s = connectSocket(token);
@@ -377,16 +377,7 @@ export function MapApp() {
     }, { replace: true });
   };
 
-  // Haversine straight-line distance (meters), padded for road routing.
-  const haversine = (a, b) => {
-    const toRad = (d) => (d * Math.PI) / 180;
-    const R = 6371000;
-    const dLat = toRad(b.lat - a.lat);
-    const dLng = toRad(b.lng - a.lng);
-    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
-    return Math.max(600, 1.25 * 2 * R * Math.asin(Math.sqrt(h)));
-  };
-
+  
   const drawRoute = (coords) => {
     if (!mapRef.current) return;
     if (routeLineRef.current) mapRef.current.removeLayer(routeLineRef.current);
@@ -443,24 +434,13 @@ export function MapApp() {
         distance = routed.distanceM;
         duration = routed.durationS;
         line = routed.line;
-      } catch { /* try direct OSRM */ }
-      if (distance == null) {
-        try {
-          const url = `https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson`;
-          const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-          if (r.ok) {
-            const d = await r.json();
-            const route = d?.routes?.[0];
-            if (route) {
-              distance = route.distance;
-              duration = route.duration;
-              line = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-            }
-          }
-        } catch { /* fall back to estimate */ }
+      } catch (err) {
+        console.warn('[MapApp] Backend route proxy failed, falling back to estimate:', err.message);
       }
       if (distance == null) {
-        distance = haversine(a, b);
+        const directM = haversine(a, b);
+        // Pad by 25% for road routing, minimum 600m (flag-down covers ~2km)
+        distance = Math.max(600, Math.round(directM * 1.25));
         duration = ((distance / 1000) / 22) * 3600;
         line = [[a.lat, a.lng], [b.lat, b.lng]];
       }
@@ -472,8 +452,8 @@ export function MapApp() {
   };
 
   // ── Request a ride ──────────────────────────────────────
-  // POSTs the booking to /api/rides so the driver console queue and the admin
-  // ride log actually receive it. The server recomputes the fare authoritatively
+  // POSTs the booking to /api/rides so the driver console queue receives it.
+  // The server recomputes the fare authoritatively
   // (backend/lib/fares.js), so we only send distance, coordinates, and the
   // selected fare tier (regular / pwd / discounted — the statutory 20%
   // discount for PWD, student, and senior fares is applied server-side).

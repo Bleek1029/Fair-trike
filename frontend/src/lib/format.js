@@ -17,3 +17,20 @@ export function formatPeso(amount, digits = 2) {
   const n = Number(amount);
   return Number.isFinite(n) ? `₱${n.toFixed(digits)}` : '₱0.00';
 }
+
+export function formatCurrency(amount, digits = 2) {
+  return formatPeso(amount, digits);
+}
+
+export function formatDateTime(isoString) {
+  if (!isoString) return '—';
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('en-PH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}

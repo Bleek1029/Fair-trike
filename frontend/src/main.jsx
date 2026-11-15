@@ -5,7 +5,6 @@ import { App } from './App.jsx';
 import { AuthProvider } from './auth/AuthContext.jsx';
 import { LoadingProvider } from './loading/LoadingContext.jsx';
 import { ToastProvider } from './components/Toast.jsx';
-import { IS_NATIVE_APP } from './config.js';
 import { useVersionCheck, injectAppVersion } from './hooks/useVersionCheck.js';
 import 'leaflet/dist/leaflet.css';
 import './css/main.css';
@@ -57,15 +56,11 @@ class ErrorBoundary extends Component {
 }
 
 // ── PWA service worker (app-like install + offline shell) ──
-// TEMPORARILY DISABLED FOR DEBUGGING — re-enable after fixing loading issue
-// Skipped inside the native shell: Capacitor already ships the bundle locally on
-// every install, and a worker would start caching cross-origin API/uploads
-// responses on the WebView's own origin for no benefit.
-// if (!IS_NATIVE_APP && 'serviceWorker' in navigator) {
-//   window.addEventListener('load', () => {
-//     navigator.serviceWorker.register('/sw.js').catch(() => { /* non-fatal */ });
-//   });
-// }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* non-fatal */ });
+  });
+}
 
 function dismissBootSplash() {
   const el = document.getElementById('boot-splash');
@@ -119,6 +114,6 @@ root.render(
 );
 
 function VersionChecker() {
-  useVersionCheck({ intervalMs: 30000, enabled: !IS_NATIVE_APP });
+  useVersionCheck({ intervalMs: 30000, enabled: true });
   return null;
 }

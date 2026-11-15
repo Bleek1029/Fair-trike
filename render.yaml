@@ -10,9 +10,9 @@ services:
     region: singapore
     repo: https://github.com/Bleek1029/Fair-trike
     branch: main
-    rootDir: backend
-    buildCommand: npm ci --prefix backend && npm ci --prefix frontend && npm run build --prefix frontend && echo "BUILD_COMPLETE"
-    startCommand: npm start
+    rootDir: .
+    buildCommand: npm ci && npm ci --prefix frontend && npm run build --prefix frontend && echo "BUILD_COMPLETE"
+    startCommand: node backend/start.mjs
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION

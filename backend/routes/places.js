@@ -116,9 +116,37 @@ router.get('/route', asyncHandler(async (req, res) => {
   const toLat = Number(req.query.toLat);
   const toLng = Number(req.query.toLng);
   const mode = ['driving', 'walking', 'cycling'].includes(req.query.mode) ? req.query.mode : 'driving';
+
+  // Validate coordinates are finite
   if (![fromLat, fromLng, toLat, toLng].every(Number.isFinite)) {
     return res.status(400).json({ success: false, message: 'Invalid coordinates.' });
   }
+
+  // Validate coordinates are within reasonable Olongapo bounds (with small buffer)
+  // Olongapo City: ~14.79-14.88 lat, 120.25-120.33 lng
+  // Allow ~10km buffer for nearby areas (Subic, SBMA, etc.)
+  const MIN_LAT = 14.7, MAX_LAT = 14.95;
+  const MIN_LNG = 120.15, MAX_LNG = 120.45;
+  const coords = [fromLat, fromLng, toLat, toLng];
+  const latCoords = [fromLat, toLat];
+  const lngCoords = [fromLng, toLng];
+
+  for (const lat of latCoords) {
+    if (lat < MIN_LAT || lat > MAX_LAT) {
+      return res.status(400).json({ success: false, message: `Latitude out of bounds (${MIN_LAT}–${MAX_LAT}).` });
+    }
+  }
+  for (const lng of lngCoords) {
+    if (lng < MIN_LNG || lng > MAX_LNG) {
+      return res.status(400).json({ success: false, message: `Longitude out of bounds (${MIN_LNG}–${MAX_LNG}).` });
+    }
+  }
+
+  // Prevent zero-distance routes
+  if (fromLat === toLat && fromLng === toLng) {
+    return res.status(400).json({ success: false, message: 'Origin and destination cannot be identical.' });
+  }
+
   const url =
     `https://router.project-osrm.org/route/v1/${mode}/${fromLng},${fromLat};${toLng},${toLat}` +
     `?overview=full&geometries=geojson&steps=false`;

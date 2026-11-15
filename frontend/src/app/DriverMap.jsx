@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { fmtDist } from '../lib/format.js';
+import { haversine } from '../lib/utils.js';
 
 const MAP_DEFAULT_CENTER = [14.830, 120.285];
 const MAP_DEFAULT_ZOOM = 13;
@@ -118,12 +119,7 @@ export function DriverMap({
   }, []);
 
   const distanceKm = pickupCoord && dropoffCoord
-    ? Math.round(
-        Math.sqrt(
-          Math.pow(dropoffCoord.lat - pickupCoord.lat, 2) +
-            Math.pow(dropoffCoord.lng - pickupCoord.lng, 2)
-        ) * 111
-      )
+    ? Math.round(haversine(pickupCoord, dropoffCoord) / 1000)
     : 0;
 
   return (

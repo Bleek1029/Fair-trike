@@ -9,14 +9,14 @@ Two role-specific portals over one PostgreSQL database + one Express/Socket.io b
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 + Vite + Tailwind CSS + Leaflet (map) + react-router-dom + Socket.io-client + Capacitor (Android native shell) |
+| Frontend | React 18 + Vite + Tailwind CSS + Leaflet (map) + react-router-dom + Socket.io-client |
 | Backend | Node.js (ESM) + Express + Socket.io + pg (PostgreSQL client) |
 | Database | PostgreSQL (`appdev` on localhost:5432). Self-hosted only — no managed DB documented. |
 | Maps/Routing | Leaflet + OpenStreetMap tiles · server-side OSRM driving proxy (`/api/places/route`) · Photon + Nominatim geocoding (server-side, Olongapo-biased) |
 | Real-time | Socket.io (`ride:<id>` per-ride rooms + `drivers` room) |
 | Auth | JWT (jsonwebtoken), bcryptjs passwords, express-rate-limit on `/api/auth` |
 | Uploads | Multer (profile pictures + driver documents, stored in `backend/uploads/`) |
-| Mobile | Capacitor 8 + Gradle (JDK 21+ required), pwa.webmanifest for PWA shell |
+| Mobile | PWA (pwa.webmanifest for installable web app) |
 | Hosting | Dev: Vite `:5173` proxies `/api`, `/uploads`, `/socket.io` → backend `app :5000` + `admin :5001`. Prod: `node scripts/start.mjs` runs `server.js` (API + built SPA on 5000) and `admin-server.js` (admin on 5001). Vercel serverless supported (`backend/vercel.json` rewrites `/api` → `/api`); app exported as default on Vercel. |
 
 **Fare engine (server-authoritative):** base ₱30 flag-down + ₱3/km, 20% statutory discount for PWD / student / senior tiers. Tiers: `regular`, `pwd`, `discounted`. Client fare estimates in the UI are only previews; actual fare is computed server-side at booking.
@@ -27,15 +27,14 @@ Two role-specific portals over one PostgreSQL database + one Express/Socket.io b
 
 ```
 fairtrike-modern/
-├── package.json                 # root scripts: setup / start / dev / stop / start:admin / android
+├── package.json                 # root scripts: setup / start / dev / stop / start:admin
 ├── README.md
 ├── .gitignore
 ├── scripts/
 │   ├── setup.mjs                # installs deps in backend/ + frontend/, builds frontend
 │   ├── start.mjs                # builds frontend (unless --dev), spawns backend/start.mjs
-│   ├── stop.mjs                 # frees :5000 and :5001 ports
-│   └── android.mjs              # builds web bundle, syncs Capacitor android, assembles APK
-├── frontend/                    # React + Vite SPA (PWA + Capacitor)
+│   └── stop.mjs                 # frees :5000 and :5001 ports
+├── frontend/                    # React + Vite SPA (PWA)
 │   ├── vite.config.js           # dev: proxies /api, /uploads, /socket.io → localhost:5000
 │   ├── tailwind.config.js
 │   ├── postcss.config.js
@@ -43,12 +42,12 @@ fairtrike-modern/
 │   └── src/
 │       ├── main.jsx             # entry: BrowserRouter → AuthProvider → App
 │       ├── App.jsx              # route table + role guards (PassengerOnly / DriverOnly / AdminOnly)
-│       ├── config.js            # FARE constants, MAP DEFAULT center, API_BASE, IS_NATIVE_APP
+│       ├── config.js            # FARE constants, MAP DEFAULT center, API_BASE
 │       ├── api.js / api/http.js # typed fetch client + JWT handling + ApiError class
 │       ├── auth/AuthContext.jsx # global auth state, token store (localStorage/sessionStorage)
 │       ├── context/             # BackgroundTaskContext.js (non-critical)
 │       ├── css/                 # main.css + mobile-map.css
-│       ├── lib/                 # ports.js (app/admin routing), roles.js, socket.js (client), native.js
+│       ├── lib/                 # ports.js (app/admin routing), roles.js, socket.js (client)
 │       │                        # places.js (geocode/route client), format.js, utils.js, navigation.js, Helpers.js
 │       ├── components/          # Chrome.jsx (Header), BottomNav.jsx, Footer.jsx, RideOptionCard.jsx,
 │       │                        # FareEstimator.jsx, AuthSplit.jsx, InstallPrompt.jsx, SignOutModal.jsx, etc.

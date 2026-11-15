@@ -1,29 +1,96 @@
 // ── Socket.io client: real-time push + live driver tracking ────────────────
 //
 // Connects to the same origin as the app (Vite dev proxies /socket.io to the
-// backend on :5000; production is served by the backend directly; native
-// builds target API_ORIGIN). Authentication is the same JWT as the REST API.
+// backend on :5000; production is served by the backend directly).
+// Authentication is the same JWT as the REST API.
 import { io } from 'socket.io-client';
-import { getToken } from '../api.js';
-import { API_ORIGIN, IS_NATIVE_APP } from '../config.js';
+import { getAccessToken } from '../api.js';
 
 // Socket.io endpoint path (must match backend/socket.js).
 const SOCKET_PATH = '/socket.io';
 
-// Resolve the connection origin: native builds target the backend origin;
-// browser builds stay same-origin (Vite proxy handles dev mode).
-const SOCKET_URL = IS_NATIVE_APP && API_ORIGIN ? API_ORIGIN : '/';
+// Connect to same origin (relative URL works for browser builds)
+const SOCKET_URL = '/';
 
 let socket = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const BASE_RECONNECT_DELAY = 1000; // 1 second
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds
+
+function scheduleReconnect() {
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.warn('[Socket] Max reconnection attempts reached. Giving up.');
+    return;
+  }
+  const delay = Math.min(BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY);
+  const jitter = Math.random() * 1000; // Add jitter to prevent thundering herd
+  console.log(`[Socket] Reconnecting in ${Math.round((delay + jitter) / 1000)}s (attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+  setTimeout(() => {
+    reconnectAttempts++;
+    // Get fresh token on each reconnect attempt
+    const freshToken = getAccessToken();
+    if (freshToken) {
+      connectSocket(freshToken);
+    } else {
+      console.warn('[Socket] No auth token available for reconnection');
+    }
+  }, delay + jitter);
+}
 
 /** Open an authenticated Socket.io connection (reuses a single instance). */
 export function connectSocket(token) {
-  if (socket) return socket;
+  const authToken = token || getAccessToken();
+  if (!authToken) {
+    console.warn('[Socket] No auth token available, cannot connect');
+    return null;
+  }
+
+  // If socket exists and is connected, reuse it (update auth if token changed)
+  if (socket && socket.connected) {
+    if (socket.io.opts.auth?.token !== authToken) {
+      socket.auth = { token: authToken };
+    }
+    return socket;
+  }
+
+  // Clean up old socket if disconnected
+  if (socket) {
+    socket.removeAllListeners();
+    socket.disconnect();
+  }
+
   socket = io(SOCKET_URL, {
     path: SOCKET_PATH,
     transports: ['polling', 'websocket'],
-    auth: { token: token || getToken() },
+    auth: { token: authToken },
+    reconnection: false, // We handle reconnection manually
   });
+
+  socket.on('connect', () => {
+    console.log('[Socket] Connected');
+    reconnectAttempts = 0; // Reset on successful connection
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('[Socket] Disconnected:', reason);
+    if (reason === 'io server disconnect') {
+      // Server explicitly disconnected us, don't reconnect automatically
+      socket = null;
+    } else if (reason === 'io client disconnect') {
+      // We called disconnect(), don't reconnect
+      socket = null;
+    } else {
+      // Unexpected disconnect (network issue, etc.) - schedule reconnect
+      scheduleReconnect();
+    }
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('[Socket] Connection error:', err.message);
+    scheduleReconnect();
+  });
+
   return socket;
 }
 
@@ -38,6 +105,7 @@ export function disconnectSocket() {
     socket.disconnect();
     socket = null;
   }
+  reconnectAttempts = 0; // Reset reconnection state on manual disconnect
 }
 
 /** Join a ride's room so you receive its live location + lifecycle events. */
@@ -155,3 +223,4 @@ export function onAdminDocumentStatusChanged(socket, callback) {
   socket.on('admin:document-status-changed', callback);
   return () => socket.off('admin:document-status-changed', callback);
 }
+

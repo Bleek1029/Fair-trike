@@ -28,7 +28,7 @@ export function ResetPassword() {
       await withPageLoading(showLoading, hideLoading, 'Submitting reset request…', () =>
         apiResetPasswordRequest({ email: email.trim().toLowerCase(), new_password: newPassword })
       );
-      setSuccess('Reset request submitted! An admin will approve it shortly.');
+      setSuccess('Reset request submitted! You will receive a reset link shortly.');
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       setError(err.message);
@@ -43,10 +43,10 @@ export function ResetPassword() {
     <AuthSplit
       heroEyebrow='Password Reset'
       heroTitle='Reset Your Password'
-      heroSubtitle='Enter your email and new password. An admin will review and approve the change before it takes effect.'
+      heroSubtitle='Enter your email and new password. We will send you a reset link.'
       formBadge='Password Reset'
       formTitle='Request Password Reset'
-      formSubtitle='We will verify your identity and update your password once an admin approves the request.'
+      formSubtitle='We will verify your identity and send a password reset link to your email.'
       bottom={
         <div className='pt-0.5 text-center space-y-1'>
           <p className='text-[12px] leading-5 text-secondary'>

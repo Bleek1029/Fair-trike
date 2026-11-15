@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { getToken, setToken, getStoredUser, setStoredUser } from '../../src/api.js';
+import { getAccessToken, setAccessToken, getStoredUser, setStoredUser } from '../../src/api.js';
 
 // Minimal in-memory Web Storage stand-in for Node (no localStorage there).
 class FakeStorage {
@@ -12,7 +12,7 @@ class FakeStorage {
   get length() { return this.map.size; }
 }
 
-const TOKEN_KEY = 'fairtrike_token';
+const TOKEN_KEY = 'fairtrike_access_token';
 const USER_KEY = 'fairtrike_user';
 
 describe('session storage (Remember device)', () => {
@@ -31,71 +31,71 @@ describe('session storage (Remember device)', () => {
     delete globalThis.sessionStorage;
   });
 
-  describe('getToken', () => {
+  describe('getAccessToken', () => {
     it('returns null when no token is stored anywhere', () => {
-      assert.equal(getToken(), null);
+      assert.equal(getAccessToken(), null);
     });
 
     it('prefers the remembered (localStorage) token', () => {
       ls.setItem(TOKEN_KEY, 'remembered');
       ss.setItem(TOKEN_KEY, 'session');
-      assert.equal(getToken(), 'remembered');
+      assert.equal(getAccessToken(), 'remembered');
     });
 
     it('falls back to the session-only (sessionStorage) token', () => {
       ss.setItem(TOKEN_KEY, 'session');
-      assert.equal(getToken(), 'session');
+      assert.equal(getAccessToken(), 'session');
     });
   });
 
-  describe('setToken', () => {
+  describe('setAccessToken', () => {
     it('remember:true writes only to localStorage', () => {
-      setToken('tok', { remember: true });
+      setAccessToken('tok', { remember: true });
       assert.equal(ls.getItem(TOKEN_KEY), 'tok');
       assert.equal(ss.getItem(TOKEN_KEY), null);
-      assert.equal(getToken(), 'tok');
+      assert.equal(getAccessToken(), 'tok');
     });
 
     it('remember:false writes only to sessionStorage', () => {
-      setToken('tok', { remember: false });
+      setAccessToken('tok', { remember: false });
       assert.equal(ss.getItem(TOKEN_KEY), 'tok');
       assert.equal(ls.getItem(TOKEN_KEY), null);
-      assert.equal(getToken(), 'tok');
+      assert.equal(getAccessToken(), 'tok');
     });
 
     it('defaults to remembered when no option is given (auto-login flows)', () => {
-      setToken('tok');
+      setAccessToken('tok');
       assert.equal(ls.getItem(TOKEN_KEY), 'tok');
       assert.equal(ss.getItem(TOKEN_KEY), null);
     });
 
     it('re-login without remember clears a stale remembered token', () => {
-      setToken('old', { remember: true });
-      setToken('new', { remember: false });
+      setAccessToken('old', { remember: true });
+      setAccessToken('new', { remember: false });
       assert.equal(ls.getItem(TOKEN_KEY), null);
       assert.equal(ss.getItem(TOKEN_KEY), 'new');
     });
 
     it('re-login with remember clears a stale session-only token', () => {
-      setToken('old', { remember: false });
-      setToken('new', { remember: true });
+      setAccessToken('old', { remember: false });
+      setAccessToken('new', { remember: true });
       assert.equal(ls.getItem(TOKEN_KEY), 'new');
       assert.equal(ss.getItem(TOKEN_KEY), null);
     });
 
-    it('setToken(null) ends the session in both stores (logout)', () => {
+    it('setAccessToken(null) ends the session in both stores (logout)', () => {
       ls.setItem(TOKEN_KEY, 'remembered');
       ss.setItem(TOKEN_KEY, 'session');
-      setToken(null);
+      setAccessToken(null);
       assert.equal(ls.getItem(TOKEN_KEY), null);
       assert.equal(ss.getItem(TOKEN_KEY), null);
-      assert.equal(getToken(), null);
+      assert.equal(getAccessToken(), null);
     });
   });
 
   describe('stored user', () => {
     it('setStoredUser mirrors the remembered token into localStorage', () => {
-      setToken('tok', { remember: true });
+      setAccessToken('tok', { remember: true });
       setStoredUser({ id: 1, fullname: 'Ana' });
       assert.deepEqual(JSON.parse(ls.getItem(USER_KEY)), { id: 1, fullname: 'Ana' });
       assert.equal(ss.getItem(USER_KEY), null);
@@ -103,7 +103,7 @@ describe('session storage (Remember device)', () => {
     });
 
     it('setStoredUser mirrors a session-only token into sessionStorage', () => {
-      setToken('tok', { remember: false });
+      setAccessToken('tok', { remember: false });
       setStoredUser({ id: 2, fullname: 'Ben' });
       assert.equal(ls.getItem(USER_KEY), null);
       assert.deepEqual(JSON.parse(ss.getItem(USER_KEY)), { id: 2, fullname: 'Ben' });
@@ -111,9 +111,9 @@ describe('session storage (Remember device)', () => {
     });
 
     it('a later remembered login moves the user out of sessionStorage', () => {
-      setToken('a', { remember: false });
+      setAccessToken('a', { remember: false });
       setStoredUser({ id: 3 });
-      setToken('b', { remember: true });
+      setAccessToken('b', { remember: true });
       setStoredUser({ id: 3 });
       assert.equal(ss.getItem(USER_KEY), null);
       assert.deepEqual(JSON.parse(ls.getItem(USER_KEY)), { id: 3 });

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'node:path';
 import { createServer } from 'node:http';
 import fs from 'node:fs';
@@ -21,6 +22,10 @@ import aiRouter from './routes/ai.js';
 import { sendIndex, originFor } from './lib/spa.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 import { requireAuth } from './middleware/auth.js';
+import { rateLimiters } from './lib/rateLimiter.js';
+import { initEmail } from './lib/email.js';
+import { logger, requestLogger } from './lib/logger.js';
+import { metricsMiddleware, getMetrics, getMetricsContentType } from './lib/metrics.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,29 +48,51 @@ app.use(cors({
   origin: corsOrigin,
   credentials: true,
 }));
+
+// ── Security headers (helmet) ─────────────────────────────
+// CSP tuned for: Vite (inline scripts in dev), Leaflet (CDN tiles), Socket.io (WS)
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vite needs inline + eval in dev
+  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+  imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+  connectSrc: ["'self'", 'https:', 'wss:', 'ws:'], // Leaflet tiles, Socket.io, OSRM
+  frameSrc: ["'none'"],
+  objectSrc: ["'none'"],
+  baseUri: ["'self'"],
+  formAction: ["'self'"],
+  frameAncestors: ["'none'"],
+  upgradeInsecureRequests: env.isProd ? [] : null,
+};
+
+app.use(helmet({
+  contentSecurityPolicy: env.isProd ? { directives: cspDirectives } : false,
+  crossOriginEmbedderPolicy: false, // Leaflet tiles need this
+  hsts: env.isProd ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  noSniff: true,
+  xssFilter: true,
+  frameguard: { action: 'deny' },
+}));
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(cookieParser());
 
 // Serve uploaded profile pictures statically
 app.use('/uploads', express.static(uploadDir));
 
-// ── Request logger ──────────────────────────────────────
-app.use((req, _res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
+// ── Structured request logging (pino) ─────────────────────
+app.use(requestLogger);
+
+// ── Prometheus metrics ────────────────────────────────────
+app.use(metricsMiddleware);
 
 // ── API Routes ──────────────────────────────────────────
-// Rate-limit credential endpoints to blunt brute-force/password spraying.
-const authLimiter = rateLimit({
-  windowMs: env.authRateLimit.windowMs,
-  max: env.authRateLimit.max,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many requests — please try again later.', code: 'RATE_LIMITED' },
-});
-
-app.use('/api/auth', authLimiter, authRouter);
+// Rate-limit credential endpoints using sliding window algorithm.
+// Uses Redis in production (if REDIS_URL set), in-memory in development.
+app.use('/api/auth', rateLimiters.auth, authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/drivers', driversRouter);
 app.use('/api/route', routingRouter);
@@ -74,19 +101,23 @@ app.use('/api/places', placesRouter);
 app.use('/api/rides', ridesRouter);
 app.use('/api/admin', adminRouter);
 
-// AI rate limiter (~10 req/min per user)
-const aiLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many AI requests — please try again later.', code: 'RATE_LIMITED' },
-});
-
-app.use('/api/ai', requireAuth, aiLimiter, aiRouter);
+// AI rate limiter (~10 req/min per user) - using sliding window
+app.use('/api/ai', requireAuth, rateLimiters.ai, aiRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtrike-backend' }));
+
+// Prometheus metrics
+app.get('/metrics', async (_req, res) => {
+  try {
+    const metrics = await getMetrics();
+    res.set('Content-Type', getMetricsContentType());
+    res.send(metrics);
+  } catch (err) {
+    logger.error({ err }, 'Failed to generate metrics');
+    res.status(500).send('Failed to generate metrics');
+  }
+});
 
 // 404 for unknown API routes
 app.use('/api', notFoundHandler);
@@ -197,6 +228,10 @@ if (!isVercel) {
     if (!env.isProd) {
       console.log(`💬 Raw WebSocket on ws://localhost:${env.port}`);
     }
+
+    // Initialize email service
+    await initEmail();
+
     try {
       await testConnection();
       await ensureDatabase();

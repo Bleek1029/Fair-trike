@@ -26,6 +26,7 @@ export async function rawRequest(method, url, { body, isForm, token, timeoutMs =
       headers,
       body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
       signal: controller.signal,
+      credentials: 'include',
     });
   } catch (err) {
     const aborted = err.name === 'AbortError';

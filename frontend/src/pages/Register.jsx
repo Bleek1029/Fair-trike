@@ -35,7 +35,7 @@ export function Register() {
       const data = await withPageLoading(showLoading, hideLoading, 'Creating your account...', () =>
         apiRegister({ fullname: fullname.trim(), email: email.trim().toLowerCase(), password })
       );
-      setSuccess(data.message || 'Account created! Your account is pending admin approval. You will be able to sign in once approved.');
+      setSuccess(data.message || 'Account created! You can now sign in.');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       setError(err.message);

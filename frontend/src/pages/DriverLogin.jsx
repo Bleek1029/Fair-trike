@@ -38,7 +38,7 @@ export function DriverLogin() {
         setLoading(false);
         return;
       }
-      login(data.token, data.user);
+      login(data.accessToken, data.user);
       setSuccess('Welcome back! Opening your duty console...');
       setTimeout(() => navigate('/driver'), 900);
     } catch (err) {

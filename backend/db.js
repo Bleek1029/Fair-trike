@@ -48,6 +48,9 @@ BEGIN
     END IF;
 END $$;
 
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+
 CREATE TABLE IF NOT EXISTS drivers (
     id               SERIAL PRIMARY KEY,
     user_id          INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -137,6 +140,7 @@ CREATE TABLE IF NOT EXISTS rides (
 
 CREATE INDEX IF NOT EXISTS idx_rides_status ON rides(status);
 CREATE INDEX IF NOT EXISTS idx_rides_driver ON rides(driver_user_id, status);
+CREATE INDEX IF NOT EXISTS idx_rides_passenger ON rides(passenger_user_id, status);
 
 -- Backfill for databases created before passenger_user_id existed.
 DO $$
@@ -165,6 +169,9 @@ CREATE TABLE IF NOT EXISTS driver_documents (
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_driver_documents_user_id ON driver_documents(user_id);
+CREATE INDEX IF NOT EXISTS idx_driver_documents_status ON driver_documents(status);
+
 -- Password reset requests (for admin approval flow)
 CREATE TABLE IF NOT EXISTS password_reset_requests (
     id                  SERIAL PRIMARY KEY,
@@ -181,6 +188,22 @@ CREATE TABLE IF NOT EXISTS password_reset_requests (
 
 CREATE INDEX IF NOT EXISTS idx_password_reset_requests_status ON password_reset_requests(status);
 CREATE INDEX IF NOT EXISTS idx_password_reset_requests_user_id ON password_reset_requests(user_id);
+
+-- Refresh tokens for token rotation (short-lived access + long-lived refresh)
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash      VARCHAR(64) NOT NULL,  -- SHA-256 hex
+    user_agent      TEXT,
+    ip_address      INET,
+    expires_at      TIMESTAMPTZ NOT NULL,
+    revoked_at      TIMESTAMPTZ DEFAULT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 `;
 
 function quoteIdent(name) {

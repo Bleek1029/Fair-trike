@@ -23,8 +23,6 @@ fairtrike-modern/
 │  └─ uploads/              uploaded profile pictures (auto-created)
 └─ frontend/                React (Vite) single-page app
    ├─ vite.config.js        dev server + /api & /uploads proxy to :5000
-   ├─ capacitor.config.json native Android shell (webDir: dist)
-   ├─ android/              Capacitor Android project (`npm run android`)
    └─ src/
       ├─ main.jsx           entrypoint
       ├─ App.jsx            routes + protected/guest wrappers
@@ -114,7 +112,6 @@ npm start -- --rebuild     # rebuild frontend/dist, then serve everything
 | `npm run start:admin` | either | admin dashboard only — needs the app server running too |
 | `npm run start:app` | `backend/` | app server only (API + frontend), no admin dashboard |
 | `npm run dev:app` | `backend/` | app server only, with `--watch` |
-| `npm run android` | project root or `backend/` | builds + installs the Capacitor Android app (see [Android app](#android-app-capacitor)) |
 
 To run the servers on different ports without editing files, override the env vars:
 
@@ -168,70 +165,6 @@ node --env-file=.env make-admin.mjs you@example.com
 
 `npm run dev` keeps `--watch` on both servers, so backend and admin-server edits
 restart automatically.
-
-## Android app (Capacitor)
-
-The same React bundle also ships as a native Android app: Capacitor wraps
-`frontend/dist` in a WebView shell (`frontend/android`, app id `com.fairtrike.app`),
-so it launches from the launcher instead of a browser tab.
-
-```bash
-npm start                        # 1. backend + frontend on :5000 (the app needs it)
-npm run android                  # 2. build web bundle → sync → APK → install + launch
-npm run android -- --apk         # just produce the APK, don't install
-npm run android -- --api http://192.168.0.121:5000    # physical phone on your Wi-Fi
-```
-
-| Piece | Purpose |
-|---|---|
-| `frontend/capacitor.config.json` | app id/name, `webDir: dist` (what gets packaged) |
-| `frontend/android/` | native Gradle project — open with `npm --prefix frontend run android:open` |
-| `frontend/src/lib/native.js` | native detection + the backend origin a native build talks to |
-| `scripts/android.mjs` | the launcher behind `npm run android` |
-| `frontend/android/app/build/outputs/apk/debug/app-debug.apk` | the debug APK |
-
-### How the native app reaches the backend
-
-Inside the WebView the bundle is served from Capacitor's own origin
-(`https://localhost`), so origin-relative URLs (`/api`, `/uploads/…`) would hit the
-asset loader instead of Node. Native builds use an absolute backend origin:
-
-| Situation | Origin | How |
-|---|---|---|
-| Phone on your Wi-Fi/USB | `http://<your-lan-ip>:5000` | `npm run android -- --api http://192.168.0.121:5000` |
-| Hosted backend | `https://your.api` | `VITE_NATIVE_API_ORIGIN=…` at build time |
-
-The backend already listens on every interface (`app.listen(PORT)`), so a
-physical phone can reach it over your LAN — verify from the host with
-`http://<your-lan-ip>:5000/api/health`. `/uploads` is rewritten the
-same way (`avatarUrl()` in `src/lib/utils.js`), and the browser/desktop behaviour
-is unchanged: those builds keep the relative paths.
-
-### Requirements and gotchas
-
-- **Gradle needs JDK 21+.** Capacitor 8 compiles its Android module with
-  `--release 21`; a JDK 17 `JAVA_HOME` fails with `error: invalid source release: 21`.
-  `scripts/android.mjs` picks a usable JDK automatically (your `JAVA_HOME`, then
-  Android Studio's bundled JBR) and prints install instructions if none is found.
-- **A stale `ANDROID_HOME` is tolerated.** Gradle takes the SDK from
-  `frontend/android/local.properties` (git-ignored, machine-specific) and the
-  launcher pins the detected SDK for its children; `cap`/`native-run` fall back to
-  `%LOCALAPPDATA%\Android\Sdk`, so no PATH edits are needed.
-- **First build downloads a lot** (Gradle 8.14.3, AGP 8.13, API 36 platform) — a
-  few minutes; later builds are incremental.
-- **Location is declared** (`ACCESS_FINE/COARSE_LOCATION`) because the map asks for
-  GPS. On a physical phone this uses the real fix; grant the permission when prompted.
-- **Cleartext HTTP is allowed in the debug shell** (`usesCleartextTraffic` in the
-  manifest + Capacitor's `android.allowMixedContent`) so the app can call
-  `http://<your-lan-ip>`. Before shipping, drop both and point
-  `VITE_NATIVE_API_ORIGIN` at an `https://` origin.
-- **The PWA service worker is skipped natively** (`src/main.jsx`): Capacitor already
-  ships the bundle on the device.
-- **The device must be authorised** — `adb devices` has to show `device`, not
-  `unauthorized`. Install then fails with `adb: device unauthorized`. Fix: accept
-  the "Allow USB debugging?" prompt on the phone.
-- Use a physical phone over USB — there is no virtual-device workflow in this
-  project.
 
 ## API reference
 

@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { pool } from '../db.js';
-import { signToken, publicUser, publicDriver } from '../middleware/auth.js';
+import { signAccessToken, createRefreshToken, rotateRefreshToken, revokeAllRefreshTokens, requireAuth, publicUser, publicDriver } from '../middleware/auth.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/AppError.js';
 import { ok, created } from '../lib/http.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
 import { emitAdminUserCreated, emitAdminDriverCreated } from '../socket.js';
+import { sendPasswordResetEmail } from '../lib/email.js';
 
 const BCRYPT_ROUNDS = 12;
 const router = Router();
@@ -105,12 +106,31 @@ router.post('/login', asyncHandler(async (req, res) => {
     throw forbidden('This is a driver account. Please sign in through the Driver Portal.');
   }
 
+  // Require admin approval for passenger accounts
+  if (user.status !== 'approved') {
+    throw forbidden('Your account is pending admin approval. Please wait for verification.');
+  }
+
   // NOTE: admins are NOT rejected here. A single-port deployment (Vercel) has
   // only this login page, so blocking admins would lock them out; the SPA hides
   // it on the app port when a separate admin port exists, and /login-admin
   // enforces the admin role server-side.
-  const token = signToken(user.id);
-  ok(res, { token, user: publicUser(user) });
+  const accessToken = signAccessToken(user.id, user.role);
+  const { token: refreshToken } = await createRefreshToken(user.id, {
+    userAgent: req.get('user-agent'),
+    ipAddress: req.ip,
+  });
+
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
+  });
+
+  ok(res, { accessToken, refreshToken, user: publicUser(user) });
 }));
 
 // ── POST /api/auth/login-driver ──────────────────────────
@@ -133,8 +153,27 @@ router.post('/login-driver', asyncHandler(async (req, res) => {
     throw forbidden('This is a commuter account. Please sign in as a passenger.');
   }
 
-  const token = signToken(user.id);
-  ok(res, { token, user: publicUser(user) });
+  // Require admin approval for driver accounts
+  if (user.status !== 'approved') {
+    throw forbidden('Your driver account is pending admin approval. Please wait for verification.');
+  }
+
+  const accessToken = signAccessToken(user.id, user.role);
+  const { token: refreshToken } = await createRefreshToken(user.id, {
+    userAgent: req.get('user-agent'),
+    ipAddress: req.ip,
+  });
+
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
+  });
+
+  ok(res, { accessToken, refreshToken, user: publicUser(user) });
 }));
 
 // ── POST /api/auth/login-admin ───────────────────────────
@@ -157,14 +196,27 @@ router.post('/login-admin', asyncHandler(async (req, res) => {
     throw forbidden('This account does not have admin access.');
   }
 
-  const token = signToken(user.id);
-  ok(res, { token, user: publicUser(user) });
+  const accessToken = signAccessToken(user.id, user.role);
+  const { token: refreshToken } = await createRefreshToken(user.id, {
+    userAgent: req.get('user-agent'),
+    ipAddress: req.ip,
+  });
+
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
+  });
+
+  ok(res, { accessToken, refreshToken, user: publicUser(user) });
 }));
 
-// ── POST /api/auth/reset-password ─────────────────────────
-// Safe flow: verifies the current password before allowing a change, instead of
-// a remotely exploitable "set any password for this email" endpoint.
-router.post('/reset-password', asyncHandler(async (req, res) => {
+// ── POST /api/auth/change-password ─────────────────────────
+// Safe flow: verifies the current password before allowing a change.
+router.post('/change-password', asyncHandler(async (req, res) => {
   const email = normalizeEmail(req.body.email);
   const currentPassword = req.body.current_password || '';
   const newPassword = req.body.new_password || '';
@@ -184,6 +236,141 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
   const hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, user.id]);
   ok(res, { message: 'Password updated successfully.' });
+}));
+
+// ── POST /api/auth/forgot-password ─────────────────────────
+// Initiates a password reset by email. Generates a secure token, stores it
+// in password_reset_requests (pending admin approval), and sends reset email.
+router.post('/forgot-password', asyncHandler(async (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  if (!email) throw badRequest('Email is required.');
+
+  const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+  if (result.rows.length === 0) {
+    // Don't reveal whether email exists — always return success for security.
+    return ok(res, { message: 'If an account exists, a reset link has been sent.' });
+  }
+  const userId = result.rows[0].id;
+
+  // Generate a secure random token (32 bytes = 256 bits)
+  const crypto = await import('node:crypto');
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  // Store hashed token with 1-hour expiry
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+  await pool.query(
+    `INSERT INTO password_reset_requests (user_id, email, new_password_hash, status, admin_note, reviewed_by, reviewed_at, created_at)
+     VALUES ($1, $2, $3, 'pending', 'Auto-generated via forgot-password flow', NULL, NULL, NOW())`,
+    [userId, email, tokenHash]
+  );
+
+  // Send password reset email (async, don't block response)
+  sendPasswordResetEmail(email, token).catch((err) => {
+    console.error('[Auth] Failed to send password reset email:', err.message);
+  });
+
+  ok(res, { message: 'If an account exists, a reset link has been sent.' });
+}));
+
+// ── POST /api/auth/reset-password ──────────────────────────
+// Completes password reset using token from email. No current password required.
+router.post('/reset-password', asyncHandler(async (req, res) => {
+  const token = req.body.token || '';
+  const newPassword = req.body.new_password || '';
+
+  if (!token || !newPassword) {
+    throw badRequest('Reset token and new password are required.');
+  }
+  assertPassword(newPassword);
+
+  const crypto = await import('node:crypto');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const result = await pool.query(
+    `SELECT * FROM password_reset_requests
+     WHERE new_password_hash = $1 AND status = 'pending' AND created_at > NOW() - INTERVAL '1 hour'`,
+    [tokenHash]
+  );
+  if (result.rows.length === 0) {
+    throw badRequest('Invalid or expired reset token.');
+  }
+  const resetRequest = result.rows[0];
+
+  // Verify the user still exists
+  const userResult = await pool.query('SELECT id FROM users WHERE id = $1', [resetRequest.user_id]);
+  if (userResult.rows.length === 0) {
+    throw notFound('User account no longer exists.');
+  }
+
+  const hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, resetRequest.user_id]);
+    await client.query('UPDATE password_reset_requests SET status = \'approved\', reviewed_at = NOW() WHERE id = $1', [resetRequest.id]);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  ok(res, { message: 'Password has been reset successfully. You can now sign in.' });
+}));
+
+// ── POST /api/auth/refresh ──────────────────────────────────
+// Rotate refresh token: revoke old, issue new access + refresh token pair.
+router.post('/refresh', asyncHandler(async (req, res) => {
+  const refreshToken = req.body.refresh_token || req.cookies?.refresh_token;
+  if (!refreshToken) throw badRequest('Refresh token required.');
+
+  const userAgent = req.get('user-agent');
+  const ipAddress = req.ip;
+
+  const result = await rotateRefreshToken(refreshToken, { userAgent, ipAddress });
+  if (!result) throw unauthorized('Invalid or expired refresh token.');
+
+  // Set refresh token as HttpOnly cookie (secure in production)
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('refresh_token', result.refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: '/',
+  });
+
+  ok(res, {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken, // Also return in body for non-browser clients
+  });
+}));
+
+// ── POST /api/auth/logout ───────────────────────────────────
+// Revoke current refresh token (single device logout).
+router.post('/logout', asyncHandler(async (req, res) => {
+  const refreshToken = req.body.refresh_token || req.cookies?.refresh_token;
+  if (refreshToken) {
+    const { createHash } = await import('node:crypto');
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+    await pool.query(
+      `UPDATE refresh_tokens SET revoked_at = NOW() WHERE token_hash = $1`,
+      [tokenHash]
+    );
+  }
+  // Clear cookie
+  res.clearCookie('refresh_token', { path: '/' });
+  ok(res, { message: 'Logged out successfully.' });
+}));
+
+// ── POST /api/auth/logout-all ───────────────────────────────
+// Revoke all refresh tokens for the authenticated user (logout everywhere).
+router.post('/logout-all', requireAuth, asyncHandler(async (req, res) => {
+  await revokeAllRefreshTokens(req.user.id);
+  res.clearCookie('refresh_token', { path: '/' });
+  ok(res, { message: 'Logged out from all devices.' });
 }));
 
 export default router;

@@ -1,14 +1,10 @@
-// ── Dedicated admin server: serves ONLY the admin dashboard on its own port ──
-// The SPA's API calls (/api) and uploads (/uploads) are proxied to the main
-// backend on env.port, so the admin UI is reachable separately (e.g. :5001)
-// without exposing anything beyond what the main server already serves.
-//
-// SPA shell: served from frontend/dist by default. Set ADMIN_SPA_ORIGIN (e.g.
-// http://localhost:5173) to proxy the shell from the Vite dev server instead,
-// which keeps hot-reload while developing the admin UI.
+// ── Admin Server ──────────────────────────────────────
+// Serves admin SPA on port 5001, proxies /api and /uploads to main backend
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
+import { WebSocketServer } from 'ws';
 import { env } from './config.js';
 import { testConnection } from './db.js';
 import { sendIndex, originFor } from './lib/spa.js';
@@ -20,146 +16,159 @@ const API_ORIGIN = `http://localhost:${env.port}`;
 const app = express();
 app.disable('x-powered-by');
 
-// Hop-by-hop headers must not be forwarded when re-issuing a request. `expect`
-// is also dropped because fetch() rejects it ("expect header not supported") —
-// some clients (e.g. PowerShell, curl with large bodies) send `Expect: 100-continue`.
-const STRIPPED_REQUEST_HEADERS = new Set([
-  'host',
-  'connection',
-  'content-length',
-  'transfer-encoding',
-  'keep-alive',
-  'upgrade',
-  'expect',
-  'accept-encoding',
-  'te',
-  'trailer',
-  'proxy-connection',
-  'proxy-authorization',
-]);
+// Create HTTP server to handle WebSocket upgrades
+const server = createServer(app);
 
-// Headers we never copy onto our own response: hop-by-hop ones, plus the ones
-// this proxy sets itself (`content-length`). `content-encoding` is excluded
-// because we always ask the backend for an already-decoded (`identity`) body.
-const STRIPPED_RESPONSE_HEADERS = new Set([
-  'connection',
-  'content-length',
-  'content-encoding',
-  'keep-alive',
-  'transfer-encoding',
-  'upgrade',
-]);
+// CORS for admin origin
+const corsOrigin = env.adminSpaOrigin ? env.adminSpaOrigin : originFor({ headers: { host: `localhost:${env.adminPort}` } }, env.adminPort);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigin = corsOrigin || origin || `http://localhost:${env.adminPort}`;
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
-// Forward a request to the target backend and return the response verbatim.
-function makeProxy(targetOrigin) {
-  return async function proxy(req, res) {
-    const url = `${targetOrigin}${req.originalUrl}`;
-    const headers = {};
-    for (const [key, value] of Object.entries(req.headers)) {
-      if (!STRIPPED_REQUEST_HEADERS.has(key.toLowerCase())) headers[key] = value;
-    }
-    // Ask for an uncompressed body so it can be relayed byte-for-byte.
-    headers['accept-encoding'] = 'identity';
+// Proxy /api and /uploads to main backend
+async function proxyRequest(req, res) {
+  const url = `${API_ORIGIN}${req.originalUrl}`;
+  const headers = { ...req.headers };
+  delete headers.host;
+  delete headers.connection;
+  delete headers['content-length'];
+  delete headers['transfer-encoding'];
+  headers['accept-encoding'] = 'identity';
 
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
-
-    try {
-      const upstream = await fetch(url, {
-        method: req.method,
-        headers,
-        body,
-        redirect: 'manual',
-        signal: AbortSignal.timeout(20000),
-        // duplex stays off — the body is a fully buffered Buffer, not a stream.
-      });
-
-      const buf = Buffer.from(await upstream.arrayBuffer());
-      res.status(upstream.status);
-      upstream.headers.forEach((value, key) => {
-        if (!STRIPPED_RESPONSE_HEADERS.has(key.toLowerCase())) res.setHeader(key, value);
-      });
-      // set-cookie must be forwarded as separate headers, never comma-joined.
-      const cookies = typeof upstream.headers.getSetCookie === 'function' ? upstream.headers.getSetCookie() : [];
-      if (cookies.length > 0) res.setHeader('Set-Cookie', cookies);
-      res.setHeader('Content-Length', buf.length);
-      res.end(buf);
-    } catch (err) {
-      const cause = err?.cause?.message || err?.cause || err?.message || err;
-      console.error(`   ⚠️  Proxy error for ${req.method} ${req.originalUrl}: ${cause}`);
-      res.status(502).json({
-        success: false,
-        code: 'UPSTREAM_ERROR',
-        message: 'Main backend is not reachable.',
-        ...(env.isProd ? {} : { debug: String(cause) }),
-      });
-    }
-  };
-}
-
-const proxyToApi = makeProxy(API_ORIGIN);
-app.use('/api', proxyToApi);
-app.use('/uploads', proxyToApi);
-
-// Routes that belong to the commuter/driver app — on the admin port they are
-// bounced to the app's own port so each surface stays on its own port.
-const APP_ONLY_PATHS = [
-  /^\/app(\/|$)/,
-  /^\/dashboard(\/|$)/,
-  /^\/driver(\/|$)/,
-  /^\/driver-info(\/|$)/,
-  /^\/history(\/|$)/,
-  /^\/login-driver(\/|$)/,
-  /^\/register(\/|$)/,
-  /^\/register-driver(\/|$)/,
-];
-
-function redirectAppSurfaces(req, res, next) {
-  if (APP_ONLY_PATHS.some((re) => re.test(req.path))) {
-    return res.redirect(302, `${originFor(req, env.port)}${req.originalUrl}`);
+  // Forward cookie header for authentication
+  if (req.headers.cookie) {
+    headers.cookie = req.headers.cookie;
   }
-  return next();
+
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+
+  try {
+    const upstream = await fetch(url, {
+      method: req.method,
+      headers,
+      body,
+      redirect: 'manual',
+      signal: AbortSignal.timeout(20000),
+      credentials: 'include',
+    });
+
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    res.status(upstream.status);
+    upstream.headers.forEach((value, key) => {
+      if (!['connection', 'content-length', 'content-encoding', 'keep-alive', 'transfer-encoding', 'upgrade'].includes(key.toLowerCase())) {
+        res.setHeader(key, value);
+      }
+    });
+    const cookies = typeof upstream.headers.getSetCookie === 'function' ? upstream.headers.getSetCookie() : [];
+    if (cookies.length > 0) res.setHeader('Set-Cookie', cookies);
+    res.setHeader('Content-Length', buf.length);
+    res.end(buf);
+  } catch (err) {
+    console.error(`   ⚠️  Proxy error for ${req.method} ${req.originalUrl}:`, err.message);
+    res.status(502).json({ success: false, code: 'UPSTREAM_ERROR', message: 'Main backend unreachable.' });
+  }
 }
 
-// Admin entry point.
-app.get('/', (_req, res) => res.redirect('/admin'));
+app.use('/api', proxyRequest);
+app.use('/uploads', proxyRequest);
+app.use('/socket.io', proxyRequest);
 
-if (env.adminSpaOrigin) {
-  // Dev mode: let the Vite dev server serve the shell so the admin UI hot-reloads.
-  const proxyToSpa = makeProxy(env.adminSpaOrigin);
-  app.use(redirectAppSurfaces);
-  app.get('/admin', proxyToSpa);
-  app.use(proxyToSpa);
-  console.log(`🔁 Serving the SPA shell from ${env.adminSpaOrigin}`);
-} else {
-  app.use(redirectAppSurfaces);
-  // Serve static files FIRST (favicon, sw.js, manifest, assets, etc.)
-  app.use(express.static(distDir, { index: false, maxAge: '1h' }));
-  // Admin-only pages. Anything else redirects to /admin below, so this port
-  // never renders the commuter/driver app.
-  app.get(['/admin', '/login'], (req, res) => sendIndex(res, distDir, req));
-  app.use((_req, res) => res.redirect('/admin'));
-}
+// Serve static files
+app.use(express.static(distDir, { index: false, maxAge: '1h' }));
+
+// Admin SPA routes
+app.get(['/admin', '/admin/login'], (req, res) => sendIndex(res, distDir, req, true));
+app.use((_req, res) => res.redirect('/admin'));
+
+// Health check
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtrike-admin' }));
+
+// Handle WebSocket upgrade for Socket.io proxy
+server.on('upgrade', (req, socket, head) => {
+  if (req.url.startsWith('/socket.io')) {
+    const url = `ws://localhost:${env.port}${req.url}`;
+
+    const ws = new WebSocket(url, {
+      headers: {
+        ...req.headers,
+        host: `localhost:${env.port}`,
+      },
+    });
+
+    ws.on('open', () => {
+      ws.write(head);
+      socket.pipe(ws).pipe(socket);
+    });
+
+    ws.on('error', (err) => {
+      console.error('WebSocket proxy error:', err.message);
+      socket.destroy();
+    });
+
+    ws.on('close', () => {
+      socket.destroy();
+    });
+
+    socket.on('error', (err) => {
+      console.error('Client socket error:', err.message);
+      ws.close();
+    });
+
+    socket.on('close', () => {
+      ws.close();
+    });
+  }
+});
 
 async function booting() {
   console.log('🛠️  Admin server: checking database…');
   await testConnection();
 }
 
-const server = app.listen(env.adminPort, () => {
-  console.log(`🛡️  Fairtrike admin dashboard running at http://localhost:${env.adminPort}/admin`);
-  console.log(`📡 Proxying /api and /uploads to http://localhost:${env.port}`);
-  booting();
-});
+function startServer(port) {
+  return new Promise((resolve, reject) => {
+    const server = createServer(app);
+    server.listen(port, () => {
+      console.log(`🛡️  Fairtrike admin dashboard running at http://localhost:${port}/admin`);
+      console.log(`📡 Proxying /api, /uploads, and /socket.io to http://localhost:${env.port}`);
+      booting();
+      resolve(server);
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        reject(err);
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
 
-// A clear message beats an unhandled EADDRINUSE stack trace.
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Admin port ${env.adminPort} is already in use.`);
-    console.error('   Free the Fairtrike ports with `npm run stop` (project root),');
-    console.error('   or set ADMIN_PORT in backend/.env to a different free port.');
-    process.exit(1);
+async function startAdminServer() {
+  const port = env.adminPort;
+  try {
+    return await startServer(port);
+  } catch (err) {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${port} is already in use.`);
+      console.error(`   Run \`npm run stop\` to free the port, then try again.`);
+      console.error(`   Or set a different ADMIN_PORT in backend/.env`);
+      process.exit(1);
+    }
+    throw err;
   }
-  throw err;
+}
+
+startAdminServer().catch((err) => {
+  console.error('❌ Failed to start admin server:', err.message);
+  process.exit(1);
 });

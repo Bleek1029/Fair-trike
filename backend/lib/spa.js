@@ -1,18 +1,13 @@
 // ── Shared SPA index serving ─────────────────────────────────────────────
-// Two servers hand out the same built React bundle:
+// Single server hands out the built React bundle on env.port (default 5000)
 //
-//   • the Fairtrike app      → env.port      (default 5000)
-//   • the admin dashboard    → env.adminPort (default 5001)
-//
-// So the bundle needs to know *where* it is running. This module injects a tiny
+// The bundle needs to know where it is running. This module injects a tiny
 // runtime-config global into index.html right before </head>:
 //
-//   window.__FAIRTRIKE__ = { appPort, adminPort, appOrigin, adminOrigin }
+//   window.__FAIRTRIKE__ = { appPort, appOrigin }
 //
-// The SPA reads it (frontend/src/lib/ports.js) to keep each surface on its own
-// port. If the global is missing (e.g. a static host like Vercel), the SPA falls
-// back to treating the current origin as both — i.e. the old single-port
-// behaviour, so nothing breaks.
+// If the global is missing (e.g. a static host like Vercel), the SPA falls
+// back to treating the current origin as the app origin.
 import fs from 'node:fs';
 import path from 'node:path';
 import { env } from '../config.js';
@@ -40,17 +35,15 @@ export function originFor(req, port) {
 }
 
 // Send index.html with the runtime config injected.
-export function sendIndex(res, distDir, req) {
-  // In single-port mode, both app and admin share the same origin
-  const isSinglePort = env.singlePort;
+// If isAdmin is true, inject dark theme configuration.
+export function sendIndex(res, distDir, req, isAdmin = false) {
   const appOrigin = originFor(req, env.port);
-  const adminOrigin = isSinglePort ? appOrigin : originFor(req, env.adminPort);
 
   const config = JSON.stringify({
     appPort: env.port,
-    adminPort: env.adminPort,
     appOrigin,
-    adminOrigin,
+    isAdmin,
+    theme: isAdmin ? 'dark' : 'light',
   });
 
   const html = readIndex(distDir).replace(

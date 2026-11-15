@@ -33,7 +33,7 @@ export function Login() {
       const data = await withPageLoading(showLoading, hideLoading, 'Signing you in...', () =>
         apiLogin({ email: email.trim().toLowerCase(), password })
       );
-      login(data.token, data.user);
+      login(data.accessToken, data.user);
       setSuccess('Welcome back! Opening your booking hub...');
       setTimeout(() => navigate('/app'), 900);
     } catch (err) {

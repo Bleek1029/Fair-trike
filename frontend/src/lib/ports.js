@@ -10,6 +10,7 @@
 // behaviour.
 const injected = (typeof window !== 'undefined' && window.__FAIRTRIKE__) || {};
 const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+const currentPort = typeof window !== 'undefined' ? (window.location.port || (window.location.protocol === 'https:' ? '443' : '80')) : '';
 
 // When the server injects no config (e.g. static hosting like Vercel, where one
 // origin serves everything) both surfaces fall back to the current origin — the
@@ -20,12 +21,37 @@ export const APP_PORT = injected.appPort ?? null;
 export const ADMIN_PORT = injected.adminPort ?? null;
 
 // Are we currently being served by the admin dashboard's own port?
-export const onAdminPort = () =>
-  Boolean(injected.adminOrigin) && window.location.origin === injected.adminOrigin;
+// Check multiple ways for compatibility with port forwarding (VS Code, ngrok, etc.)
+export const onAdminPort = () => {
+  if (!injected.adminOrigin) return false;
+
+  // 1. Exact origin match (normal case)
+  if (window.location.origin === injected.adminOrigin) return true;
+
+  // 2. Port match (for port forwarding: VS Code, ngrok, Cloudflare tunnels, etc.)
+  if (ADMIN_PORT && currentPort === String(ADMIN_PORT)) return true;
+
+  // 3. Path-based detection (fallback)
+  if (window.location.pathname.startsWith('/admin')) return true;
+
+  return false;
+};
 
 // Are we currently being served by the app's port?
-export const onAppPort = () =>
-  Boolean(injected.appOrigin) && window.location.origin === injected.appOrigin;
+export const onAppPort = () => {
+  if (!injected.appOrigin) return false;
+
+  // 1. Exact origin match (normal case)
+  if (window.location.origin === injected.appOrigin) return true;
+
+  // 2. Port match (for port forwarding)
+  if (APP_PORT && currentPort === String(APP_PORT)) return true;
+
+  // 3. Not on admin port = on app port (in dual-port mode)
+  if (separateAdminPort() && !onAdminPort()) return true;
+
+  return false;
+};
 
 // Is the admin dashboard on a *different* origin than the app? False in
 // single-port mode, where /admin is just another route of the same SPA.

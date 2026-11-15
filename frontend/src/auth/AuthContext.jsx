@@ -1,18 +1,31 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getToken, setToken, getStoredUser, setStoredUser, apiGetMe } from '../api.js';
+import { getAccessToken, setAccessToken, getStoredUser, setStoredUser, clearAuth, apiGetMe, apiRefreshToken } from '../api.js';
 
 // ── Global auth state shared by every page ──────────────
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser());
-  const [loading, setLoading] = useState(Boolean(getToken()));
+  const [loading, setLoading] = useState(Boolean(getAccessToken()));
   // Guard to prevent concurrent auth validation runs (React 18 StrictMode, etc.)
   const validatingRef = React.useRef(false);
 
+  // Try to refresh access token using refresh token (HttpOnly cookie)
+  const tryRefreshToken = async () => {
+    try {
+      const data = await apiRefreshToken();
+      setAccessToken(data.accessToken);
+      setStoredUser(data.user);
+      setUser(data.user);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
-    const token = getToken();
+    const token = getAccessToken();
 
     // If we have no token, clear loading immediately
     if (!token) {
@@ -27,16 +40,15 @@ export function AuthProvider({ children }) {
     }
     validatingRef.current = true;
 
-    // Add a safety timeout to prevent permanent loading state
+    // Add a safety timeout to prevent permanent loading state (5s for good UX)
     const safetyTimeout = setTimeout(() => {
       if (!mounted) return;
       validatingRef.current = false;
       console.warn('[AuthProvider] Safety timeout triggered - clearing auth state');
-      setToken(null);
-      setStoredUser(null);
+      clearAuth();
       setUser(null);
       setLoading(false);
-    }, 60000); // 60 second safety timeout (accounts for Render free tier cold starts)
+    }, 5000); // 5 second safety timeout (was 60s)
 
     // Async IIFE for health check + apiGetMe
     (async () => {
@@ -57,40 +69,56 @@ export function AuthProvider({ children }) {
         }
         clearTimeout(safetyTimeout);
         console.error('[AuthProvider] Backend unreachable:', healthErr);
-        setToken(null);
-        setStoredUser(null);
+        clearAuth();
         setUser(null);
         setLoading(false);
         validatingRef.current = false;
         return;
       }
 
-      apiGetMe()
-        .then((data) => {
-          if (!mounted) {
-            validatingRef.current = false;
-            return;
+      // Try apiGetMe first
+      const tryGetMe = async () => {
+        try {
+          const data = await apiGetMe();
+          return data;
+        } catch (err) {
+          // If 401, try to refresh token
+          if (err.status === 401) {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+              // Retry apiGetMe with new token
+              return await apiGetMe();
+            }
           }
+          throw err;
+        }
+      };
+
+      try {
+        const data = await tryGetMe();
+        if (!mounted) {
+          validatingRef.current = false;
+          return;
+        }
+        clearTimeout(safetyTimeout);
+        setStoredUser(data.user);
+        setUser(data.user);
+      } catch (err) {
+        if (!mounted) {
+          validatingRef.current = false;
+          return;
+        }
+        // Token invalid/expired and refresh failed — clear everything.
+        console.error('[AuthProvider] Auth validation failed:', err);
+        clearAuth();
+        setUser(null);
+      } finally {
+        if (mounted) {
           clearTimeout(safetyTimeout);
-          setStoredUser(data.user);
-          setUser(data.user);
           setLoading(false);
           validatingRef.current = false;
-        })
-        .catch((err) => {
-          if (!mounted) {
-            validatingRef.current = false;
-            return;
-          }
-          clearTimeout(safetyTimeout);
-          // Token invalid/expired — clear everything.
-          console.error('[AuthProvider] Auth validation failed:', err);
-          setToken(null);
-          setStoredUser(null);
-          setUser(null);
-          setLoading(false);
-          validatingRef.current = false;
-        });
+        }
+      }
     })();
 
     return () => {
@@ -104,16 +132,31 @@ export function AuthProvider({ children }) {
   // backing store: true → localStorage (survives restarts), false →
   // sessionStorage (signed out when the browser closes). Default true keeps
   // auto-login flows (driver register, passenger register) persistent.
-  const login = (token, userData, { remember = true } = {}) => {
-    setToken(token, { remember });
+  const login = (accessToken, userData, { remember = true } = {}) => {
+    setAccessToken(accessToken, { remember });
     setStoredUser(userData);
     setUser(userData);
     setLoading(false);
   };
 
-  const logout = () => {
-    setToken(null);
-    setStoredUser(null);
+  const logout = async () => {
+    try {
+      await apiLogout();
+    } catch {
+      // Ignore logout errors
+    }
+    clearAuth();
+    setUser(null);
+    setLoading(false);
+  };
+
+  const logoutAll = async () => {
+    try {
+      await apiLogoutAll();
+    } catch {
+      // Ignore logout errors
+    }
+    clearAuth();
     setUser(null);
     setLoading(false);
   };
@@ -125,7 +168,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, logoutAll, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

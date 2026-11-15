@@ -30,3 +30,14 @@ export function avatarUrl(profilePicture) {
   const filename = String(profilePicture).split(/[\\/]/).pop();
   return filename ? `${UPLOADS_BASE}/${filename}` : null;
 }
+
+// Haversine formula: great-circle distance between two lat/lng points in meters.
+// Used for fallback distance estimates when routed distance is unavailable.
+export function haversine(a, b) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const R = 6371000; // Earth radius in meters
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}

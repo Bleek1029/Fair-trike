@@ -37,6 +37,8 @@ export default {
         'tertiary': '#1b4031',
         'on-surface': '#131b2e',
         'error': '#ba1a1a',
+        'warning-container': '#fff3cd',
+        'on-warning-container': '#856404',
         'tertiary-fixed': '#c3ecd7',
         'on-tertiary-fixed': '#002115',
         'inverse-on-surface': '#eef0ff',
@@ -51,6 +53,7 @@ export default {
         'on-tertiary-container': '#a4cbb8',
         'secondary-container': '#6cf8bb',
         'surface-container': '#eaedff',
+        'surface': '#faf8ff',
         'outline-variant': '#bfc9c0',
       },
       borderRadius: {

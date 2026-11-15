@@ -32,7 +32,14 @@ function intFromEnv(name, fallback) {
 
 function requireSecret(name, fallback) {
   const value = (process.env[name] || '').trim();
-  return value || fallback;
+  if (!value) {
+    if (fallback !== undefined) return fallback;
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`Missing required secret: ${name}. Set ${name} environment variable in production.`);
+    }
+    throw new Error(`Missing required secret: ${name}. Set ${name} in backend/.env for local development.`);
+  }
+  return value;
 }
 
 // Parse DATABASE_URL if provided (Render, Railway, Fly.io, Neon, etc.)
@@ -63,13 +70,14 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
   port: intFromEnv('PORT', 5000),
-  adminPort: intFromEnv('ADMIN_PORT', 5001),
+  adminPort: intFromEnv('ADMIN_PORT', 5002),
   // Optional: serve the admin SPA shell from the Vite dev server (e.g.
   // http://localhost:5173) instead of frontend/dist — keeps HMR in dev.
   adminSpaOrigin: (process.env.ADMIN_SPA_ORIGIN || '').trim().replace(/\/+$/, ''),
   jwt: {
-    secret: requireSecret('JWT_SECRET', 'dev-insecure-secret-change-me'),
-    expiresIn: (process.env.JWT_EXPIRES_IN || '7d').trim(),
+    secret: requireSecret('JWT_SECRET'),
+    expiresIn: (process.env.JWT_EXPIRES_IN || '15m').trim(),        // Short-lived access token
+    refreshExpiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '30d').trim(), // Long-lived refresh token
   },
   db: {
     host: dbFromUrl?.host || process.env.PGHOST || 'localhost',
@@ -98,10 +106,11 @@ export const env = {
   // Auto-detect Render: PORT=10000 is Render's default web port
   singlePort: process.env.SINGLE_PORT === 'true' || (process.env.NODE_ENV === 'production' && process.env.PORT === '10000'),
 
-  // CORS allowed origins — falls back to common dev origins, and in production
-  // falls back to allowing same-origin (no cross-origin) if not explicitly set.
+  // CORS allowed origins — explicit allowlist required. In development, defaults to
+  // Vite dev server (5173) and backend (5000). In production, MUST be set via
+  // CORS_ORIGINS env var (comma-separated). Empty = same-origin only.
   corsOrigins: (process.env.CORS_ORIGINS ||
-    (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5173,http://localhost:5000'))
+    (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5173,http://localhost:5000,http://localhost:5001'))
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),

@@ -48,7 +48,7 @@ body {
   align-items: center;
   min-height: 100vh;
   width: 100%;
-  overflow: hidden;
+  /* overflow: hidden; -- removed to prevent clipping "Fairtrike" text */
   background:
     radial-gradient(600px 300px at 50% 18%, rgba(13, 92, 58, 0.16), transparent 70%),
     radial-gradient(500px 260px at 50% 85%, rgba(0, 108, 73, 0.10), transparent 70%),

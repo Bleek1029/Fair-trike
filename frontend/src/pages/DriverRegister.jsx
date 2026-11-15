@@ -43,7 +43,7 @@ export function DriverRegister() {
       const data = await withPageLoading(showLoading, hideLoading, 'Registering your driver franchise...', () =>
         apiRegisterDriver({ fullname, email, password, license_number: license, toda_association: toda, trike_number: trike, vehicle_plate: plate, contact_number: contact })
       );
-      setSuccess(data.message || 'Driver account created! Your application is pending admin approval. You will be able to sign in once approved.');
+      setSuccess(data.message || 'Driver account created! You can now sign in once your application is approved.');
       setTimeout(() => navigate('/login-driver'), 3000);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
