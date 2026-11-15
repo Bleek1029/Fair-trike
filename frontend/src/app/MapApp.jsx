@@ -436,8 +436,8 @@ export function MapApp() {
     setRouteError('');
     setCalculating(true);
     try {
-      // Backend OSRM proxy (driving profile — the trike follows roads) ->
-      // real street route. Falls back to direct OSRM, then haversine estimate.
+      // Backend OSRM proxy with 'cycling' mode (better for tricycles/small vehicles)
+      // Falls back to direct estimate if routing service unavailable.
       let distance = null;
       let duration = null;
       let line = null;
@@ -451,9 +451,10 @@ export function MapApp() {
       }
       if (distance == null) {
         const directM = haversine(a, b);
-        // Pad by 25% for road routing, minimum 600m (flag-down covers ~2km)
-        distance = Math.max(600, Math.round(directM * 1.25));
-        duration = ((distance / 1000) / 22) * 3600;
+        // Pad by 30% for road routing (tricycles often take smaller roads), minimum 600m
+        distance = Math.max(600, Math.round(directM * 1.3));
+        // Tricycle avg speed ~15-20 km/h in city traffic
+        duration = ((distance / 1000) / 18) * 3600;
         line = [[a.lat, a.lng], [b.lat, b.lng]];
       }
       setRouteResult({ distance, duration });

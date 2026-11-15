@@ -153,7 +153,28 @@ router.get('/route', asyncHandler(async (req, res) => {
   const r = await fetch(url, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   const d = await r.json();
   const route = d?.routes?.[0];
-  if (!route) return res.status(502).json({ success: false, message: 'Routing service error.' });
+  if (!route) {
+    // Fallback: return direct distance with 30% padding for tricycle road routing
+    const haversine = (a, b) => {
+      const R = 6371000;
+      const toRad = (x) => (x * Math.PI) / 180;
+      const dLat = toRad(b.lat - a.lat);
+      const dLon = toRad(b.lng - a.lng);
+      const lat1 = toRad(a.lat);
+      const lat2 = toRad(b.lat);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(a));
+    };
+    const directM = haversine({ lat: fromLat, lng: fromLng }, { lat: toLat, lng: toLng });
+    const distanceM = Math.max(600, Math.round(directM * 1.3));
+    const durationS = Math.round((distanceM / 1000) / 18 * 3600); // 18 km/h avg tricycle speed
+    return res.json({
+      mode,
+      distanceM,
+      durationS,
+      line: [[fromLat, fromLng], [toLat, toLng]],
+    });
+  }
   ok(res, {
     mode,
     distanceM: route.distance,

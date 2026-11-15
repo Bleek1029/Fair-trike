@@ -1,7 +1,7 @@
 // ── Dynamic place search (no hardcoding) ──
 // Live autocomplete + geocoding via backend proxy (/api/places)
 // -> Photon (autocomplete) + Nominatim fallback, biased to the default area.
-import { API_BASE, MAP_DEFAULT_CENTER } from '../config.js';
+import { API_BASE, MAP_DEFAULT_CENTER, ROUTING_MODE } from '../config.js';
 
 // Default map center used to bias searches (single source: config.js).
 const OLONGAPO = { lat: MAP_DEFAULT_CENTER[0], lng: MAP_DEFAULT_CENTER[1] };
@@ -76,9 +76,9 @@ export async function reverseGeocode(lat, lng) {
 
 /**
  * Routed distance/duration/line via backend OSRM proxy.
- * mode: 'driving' | 'walking' | 'cycling'
+ * Uses ROUTING_MODE from config (default: 'cycling' for tricycles)
  */
-export async function fetchRoute(a, b, mode = 'driving') {
+export async function fetchRoute(a, b, mode = ROUTING_MODE) {
   const qs = new URLSearchParams({
     fromLat: String(a.lat),
     fromLng: String(a.lng),

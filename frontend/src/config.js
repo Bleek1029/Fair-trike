@@ -33,3 +33,7 @@ export const API_BASE = viteEnv.VITE_API_URL || '/api';
 
 // Profile pictures are served by the backend too (/uploads/<file>).
 export const UPLOADS_BASE = '/uploads';
+
+// Routing mode: 'driving' | 'cycling' | 'walking'
+// 'cycling' often better for tricycles (smaller vehicles, narrower roads)
+export const ROUTING_MODE = 'cycling';
