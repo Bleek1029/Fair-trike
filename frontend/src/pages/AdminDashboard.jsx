@@ -220,12 +220,15 @@ function renderDriverRow(driver, handleStatusUpdate, updatingId) {
         <div className="text-muted-foreground text-xs">{driver.email}</div>
       </td>
       <td className="py-3 px-3 text-foreground">
-        <div>{driver.contact_number || '—'}</div>
-        <div className="text-muted-foreground text-xs">{driver.toda_association || 'No TODA'}</div>
+        <div className="font-mono text-sm">{driver.licenseNumber || '—'}</div>
       </td>
       <td className="py-3 px-3 text-foreground">
-        <div>Plate: {driver.vehicle_plate || '—'}</div>
-        <div className="text-muted-foreground text-xs">Trike: {driver.trike_number || '—'}</div>
+        <div>{driver.contactNumber || '—'}</div>
+        <div className="text-muted-foreground text-xs">{driver.todaAssociation || 'No TODA'}</div>
+      </td>
+      <td className="py-3 px-3 text-foreground">
+        <div>Plate: {driver.vehiclePlate || '—'}</div>
+        <div className="text-muted-foreground text-xs">Trike: {driver.trikeNumber || '—'}</div>
       </td>
       <td className="py-3 px-3">
         <StatusBadge status={driver.status} size="md" />
@@ -241,7 +244,7 @@ function renderDriverRow(driver, handleStatusUpdate, updatingId) {
             <ActionButton
               key={s}
               disabled={driver.status === s || updatingId === driver.id}
-              onClick={() => handleStatusUpdate('driver', driver.user_id, s)}
+              onClick={() => handleStatusUpdate('driver', driver.userId, s)}
               variant={driver.status === s ? 'primary' : 'secondary'}
               size="sm"
               loading={updatingId === driver.id}
@@ -441,6 +444,7 @@ export function AdminDashboard() {
   // Column definitions for tables (moved before early return to satisfy Rules of Hooks)
   const driverColumns = useMemo(() => [
     { key: 'driver', label: 'Driver' },
+    { key: 'license', label: 'License #' },
     { key: 'contact', label: 'Contact' },
     { key: 'vehicle', label: 'Vehicle' },
     { key: 'status', label: 'Status' },
@@ -600,7 +604,7 @@ export function AdminDashboard() {
       switch (type) {
         case 'driver':
           await apiSetDriverStatus(id, status);
-          setDrivers((prev) => prev.map((d) => (d.id === id ? { ...d, status } : d)));
+          setDrivers((prev) => prev.map((d) => (d.userId === id ? { ...d, status } : d)));
           break;
         case 'user':
           await apiSetUserStatus(id, status);
