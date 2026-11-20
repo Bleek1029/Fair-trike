@@ -629,154 +629,347 @@ export function AdminDashboard() {
     }
   };
 
-  if (loading) {
-    return <BrandLoader message="Loading admin dashboard..." />;
-  }
-
   // Render functions
-  const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Users"
-          value={stats.users?.passenger + stats.users?.driver + stats.users?.admin || 0}
-          icon="people"
-          color="primary"
-        />
-        <StatCard
-          label="Drivers"
-          value={stats.drivers?.pending + stats.drivers?.approved + stats.drivers?.rejected || 0}
-          icon="directions_car"
-          color="secondary"
-        />
-        <StatCard
-          label="Rides"
-          value={stats.rides?.pending + stats.rides?.accepted + stats.rides?.completed + stats.rides?.cancelled || 0}
-          icon="history"
-          color="accent"
-        />
-        <StatCard
-          label="Documents"
-          value={stats.documents?.pending + stats.documents?.approved + stats.documents?.rejected || 0}
-          icon="description"
-          color="error"
-        />
-      </div>
-
-      {/* Breakdown Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-card rounded-xl p-5 border border-border">
-          <h3 className="text-base font-semibold text-foreground mb-4">Driver Status Breakdown</h3>
-          <div className="flex flex-wrap gap-3">
-            {['pending', 'approved', 'rejected'].map((s) => (
-              <div key={s} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
-                <StatusBadge status={s} size="sm" />
-                <span className="text-foreground font-medium">{stats.drivers?.[s] || 0}</span>
+  const renderOverview = () => {
+    if (loading) {
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-card rounded-xl p-5 border border-border animate-pulse">
+                <div className="h-4 w-1/3 bg-muted rounded mb-2"></div>
+                <div className="h-8 w-1/2 bg-muted rounded"></div>
               </div>
             ))}
           </div>
-        </div>
-        <div className="bg-card rounded-xl p-5 border border-border">
-          <h3 className="text-base font-semibold text-foreground mb-4">Ride Status Breakdown</h3>
-          <div className="space-y-2">
-            {['pending', 'accepted', 'completed', 'cancelled'].map((s) => (
-              <div key={s} className="flex justify-between items-center px-2 py-2 rounded-lg bg-muted">
-                <span className="capitalize text-foreground">{s}</span>
-                <span className="font-semibold text-primary">{stats.rides?.[s] || 0}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 bg-card rounded-xl p-5 border border-border animate-pulse">
+              <div className="h-4 w-1/4 bg-muted rounded mb-4"></div>
+              <div className="flex flex-wrap gap-3">
+                {[1,2,3].map(i => <div key={i} className="h-8 w-24 bg-muted rounded"></div>)}
               </div>
-            ))}
+            </div>
+            <div className="bg-card rounded-xl p-5 border border-border animate-pulse">
+              <div className="h-4 w-1/4 bg-muted rounded mb-4"></div>
+              <div className="space-y-2">
+                {[1,2,3,4].map(i => <div key={i} className="h-8 w-full bg-muted rounded"></div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Total Users"
+            value={stats.users?.passenger + stats.users?.driver + stats.users?.admin || 0}
+            icon="people"
+            color="primary"
+          />
+          <StatCard
+            label="Drivers"
+            value={stats.drivers?.pending + stats.drivers?.approved + stats.drivers?.rejected || 0}
+            icon="directions_car"
+            color="secondary"
+          />
+          <StatCard
+            label="Rides"
+            value={stats.rides?.pending + stats.rides?.accepted + stats.rides?.completed + stats.rides?.cancelled || 0}
+            icon="history"
+            color="accent"
+          />
+          <StatCard
+            label="Documents"
+            value={stats.documents?.pending + stats.documents?.approved + stats.documents?.rejected || 0}
+            icon="description"
+            color="error"
+          />
+        </div>
+
+        {/* Breakdown Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-card rounded-xl p-5 border border-border">
+            <h3 className="text-base font-semibold text-foreground mb-4">Driver Status Breakdown</h3>
+            <div className="flex flex-wrap gap-3">
+              {['pending', 'approved', 'rejected'].map((s) => (
+                <div key={s} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
+                  <StatusBadge status={s} size="sm" />
+                  <span className="text-foreground font-medium">{stats.drivers?.[s] || 0}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-5 border border-border">
+            <h3 className="text-base font-semibold text-foreground mb-4">Ride Status Breakdown</h3>
+            <div className="space-y-2">
+              {['pending', 'accepted', 'completed', 'cancelled'].map((s) => (
+                <div key={s} className="flex justify-between items-center px-2 py-2 rounded-lg bg-muted">
+                  <span className="capitalize text-foreground">{s}</span>
+                  <span className="font-semibold text-primary">{stats.rides?.[s] || 0}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
-  const renderDrivers = () => (
-    <DataTable
-      columns={driverColumns}
-      data={drivers}
-      keyExtractor={(d) => d.id}
-      renderRow={(driver, index) => renderDriverRow(driver, handleStatusUpdate)}
-      emptyMessage="No drivers found"
-      aria-label="Drivers list"
-    />
-  );
-
-  const renderUsers = () => (
-    <div className="space-y-6">
-      {/* Pending Users Section */}
-      <div className="bg-card rounded-xl p-4 border border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-foreground">Pending Approval</h3>
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/15 text-primary border border-primary/30">
-            {pendingUsers.length}
-          </span>
+  const renderDrivers = () => {
+    if (loading) {
+      return (
+        <div className="overflow-x-auto" role="region" aria-label="Drivers list" tabIndex={0}>
+          <table className="w-full text-sm" role="grid">
+            <thead>
+              <tr className="text-left text-muted-foreground border-b border-border font-medium">
+                {driverColumns.map((col) => (
+                  <th key={col.key} className="pb-3 px-3" scope="col">
+                    <div className="h-4 w-20 bg-muted rounded animate-pulse"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[1,2,3,4,5].map((_, rowIndex) => (
+                <tr key={rowIndex} className="border-b border-border/50 animate-pulse">
+                  {driverColumns.map((col, colIndex) => (
+                    <td key={colIndex} className="py-3 px-3">
+                      <div className={`h-4 bg-muted rounded ${colIndex === 0 ? 'w-32' : colIndex === 1 ? 'w-24' : colIndex === 5 ? 'w-40' : 'w-full'}`}></div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        {pendingUsers.length > 0 ? (
-          <div className="space-y-2">
-            {pendingUsers.map((u) => renderPendingUserRow(u, handleStatusUpdate))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-4">No pending users</p>
-        )}
-      </div>
-
-      {/* All Users Table */}
+      );
+    }
+    return (
       <DataTable
-        columns={userColumns}
-        data={users}
-        keyExtractor={(u) => u.id}
-        renderRow={renderUserRow}
-        emptyMessage="No users found"
-        aria-label="All users list"
+        columns={driverColumns}
+        data={drivers}
+        keyExtractor={(d) => d.id}
+        renderRow={(driver, index) => renderDriverRow(driver, handleStatusUpdate)}
+        emptyMessage="No drivers found"
+        aria-label="Drivers list"
       />
-    </div>
-  );
+    );
+  };
 
-  const renderRides = () => (
-    <DataTable
-      columns={rideColumns}
-      data={rides}
-      keyExtractor={(r) => r.id}
-      renderRow={renderRideRow}
-      emptyMessage="No rides found"
-      aria-label="Rides list"
-    />
-  );
+  const renderUsers = () => {
+    if (loading) {
+      return (
+        <div className="space-y-6 animate-pulse">
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-4 w-32 bg-muted rounded"></div>
+              <div className="h-6 w-16 bg-muted rounded-full"></div>
+            </div>
+            <div className="space-y-2">
+              {[1,2,3].map(i => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                  <div className="min-w-0">
+                    <div className="h-4 w-40 bg-muted rounded"></div>
+                    <div className="h-3 w-60 bg-muted rounded mt-1"></div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <div className="h-7 w-20 bg-muted rounded"></div>
+                    <div className="h-7 w-20 bg-muted rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="overflow-x-auto" role="region" aria-label="All users list" tabIndex={0}>
+            <table className="w-full text-sm" role="grid">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border font-medium">
+                  {userColumns.map((col) => (
+                    <th key={col.key} className="pb-3 px-3" scope="col">
+                      <div className="h-4 w-20 bg-muted rounded"></div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[1,2,3,4,5].map((_, rowIndex) => (
+                  <tr key={rowIndex} className="border-b border-border/50">
+                    {userColumns.map((col, colIndex) => (
+                      <td key={colIndex} className="py-3 px-3">
+                        <div className={`h-4 bg-muted rounded ${colIndex === 0 ? 'w-32' : colIndex === 1 ? 'w-20' : 'w-24'}`}></div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6">
+        {/* Pending Users Section */}
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold text-foreground">Pending Approval</h3>
+            <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary/15 text-primary border border-primary/30">
+              {pendingUsers.length}
+            </span>
+          </div>
+          {pendingUsers.length > 0 ? (
+            <div className="space-y-2">
+              {pendingUsers.map((u) => renderPendingUserRow(u, handleStatusUpdate))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No pending users</p>
+          )}
+        </div>
 
-  const renderDocuments = () => (
-    <div className="space-y-4">
-      <FilterChips
-        filters={['pending', 'approved', 'rejected']}
-        activeFilter={docFilter}
-        onChange={setDocFilter}
-        allLabel="All"
+        {/* All Users Table */}
+        <DataTable
+          columns={userColumns}
+          data={users}
+          keyExtractor={(u) => u.id}
+          renderRow={renderUserRow}
+          emptyMessage="No users found"
+          aria-label="All users list"
+        />
+      </div>
+    );
+  };
+
+  const renderRides = () => {
+    if (loading) {
+      return (
+        <div className="overflow-x-auto animate-pulse" role="region" aria-label="Rides list" tabIndex={0}>
+          <table className="w-full text-sm" role="grid">
+            <thead>
+              <tr className="text-left text-muted-foreground border-b border-border font-medium">
+                {rideColumns.map((col) => (
+                  <th key={col.key} className="pb-3 px-3" scope="col">
+                    <div className="h-4 w-20 bg-muted rounded"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[1,2,3,4,5].map((_, rowIndex) => (
+                <tr key={rowIndex} className="border-b border-border/50">
+                  {rideColumns.map((col, colIndex) => (
+                    <td key={colIndex} className="py-3 px-3">
+                      <div className={`h-4 bg-muted rounded ${colIndex === 0 ? 'w-16' : colIndex === 1 ? 'w-40' : colIndex === 2 ? 'w-24' : 'w-24'}`}></div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    return (
+      <DataTable
+        columns={rideColumns}
+        data={rides}
+        keyExtractor={(r) => r.id}
+        renderRow={renderRideRow}
+        emptyMessage="No rides found"
+        aria-label="Rides list"
       />
+    );
+  };
 
-      <div className="space-y-3" role="list" aria-label="Documents">
-        {documents.map((doc) => renderDocumentRow(doc, handleStatusUpdate))}
-        {documents.length === 0 && (
+  const renderDocuments = () => {
+    if (loading) {
+      return (
+        <div className="space-y-4 animate-pulse">
+          <div className="flex flex-wrap gap-2">
+            <div className="h-8 w-16 bg-muted rounded-lg"></div>
+            <div className="h-8 w-20 bg-muted rounded-lg"></div>
+            <div className="h-8 w-20 bg-muted rounded-lg"></div>
+            <div className="h-8 w-16 bg-muted rounded-lg"></div>
+          </div>
+          <div className="space-y-3" role="list" aria-label="Documents">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-card rounded-xl p-4 border border-border">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="h-4 w-60 bg-muted rounded mb-2"></div>
+                    <div className="h-3 w-40 bg-muted rounded"></div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="h-6 w-24 bg-muted rounded"></div>
+                    <div className="h-8 w-28 bg-muted rounded-lg"></div>
+                    <div className="h-7 w-20 bg-muted rounded"></div>
+                    <div className="h-7 w-20 bg-muted rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-4">
+        <FilterChips
+          filters={['pending', 'approved', 'rejected']}
+          activeFilter={docFilter}
+          onChange={setDocFilter}
+          allLabel="All"
+        />
+
+        <div className="space-y-3" role="list" aria-label="Documents">
+          {documents.map((doc) => renderDocumentRow(doc, handleStatusUpdate))}
+          {documents.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <span className="material-symbols-outlined text-4xl mb-2 block opacity-30">description</span>
+              No documents found
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderResetRequests = () => {
+    if (loading) {
+      return (
+        <div className="space-y-3 animate-pulse" role="list" aria-label="Password reset requests">
+          {[1,2,3].map(i => (
+            <div key={i} className="bg-card rounded-xl p-4 border border-border">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <div className="h-4 w-60 bg-muted rounded mb-1"></div>
+                  <div className="h-3 w-40 bg-muted rounded"></div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="h-6 w-24 bg-muted rounded"></div>
+                  <div className="h-7 w-20 bg-muted rounded"></div>
+                  <div className="h-7 w-20 bg-muted rounded"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-3" role="list" aria-label="Password reset requests">
+        {resetRequests.map((req) => renderResetRequestRow(req, handleResetRequest))}
+        {resetRequests.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <span className="material-symbols-outlined text-4xl mb-2 block opacity-30">description</span>
-            No documents found
+            <span className="material-symbols-outlined text-4xl mb-2 block opacity-30">lock_reset</span>
+            No password reset requests
           </div>
         )}
       </div>
-    </div>
-  );
-
-  const renderResetRequests = () => (
-    <div className="space-y-3" role="list" aria-label="Password reset requests">
-      {resetRequests.map((req) => renderResetRequestRow(req, handleResetRequest))}
-      {resetRequests.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <span className="material-symbols-outlined text-4xl mb-2 block opacity-30">lock_reset</span>
-          No password reset requests
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
