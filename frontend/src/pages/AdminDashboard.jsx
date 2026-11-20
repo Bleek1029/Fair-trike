@@ -72,7 +72,7 @@ function RoleBadge({ role }) {
   );
 }
 
-function ActionButton({ children, onClick, disabled, variant = 'secondary', size = 'sm', loading, 'aria-label': ariaLabel }) {
+function ActionButton({ children, onClick, disabled, variant = 'secondary', size = 'sm', 'aria-label': ariaLabel }) {
   const variants = {
     primary: 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary',
     secondary: 'bg-muted text-muted-foreground hover:bg-muted/80 border-border',
@@ -88,17 +88,10 @@ function ActionButton({ children, onClick, disabled, variant = 'secondary', size
   return (
     <button
       onClick={onClick}
-      disabled={disabled || loading}
+      disabled={disabled}
       aria-label={ariaLabel}
-      aria-busy={loading}
       className={`inline-flex items-center justify-center gap-1.5 font-medium rounded border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]}`}
     >
-      {loading && (
-        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" aria-hidden="true">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-      )}
       {children}
     </button>
   );
@@ -212,7 +205,7 @@ function Toast({ message, type = 'success', onClose }) {
 // Render Row Helpers (defined outside component for performance)
 // ─────────────────────────────────────────────────────────────
 
-function renderDriverRow(driver, handleStatusUpdate, updatingId) {
+function renderDriverRow(driver, handleStatusUpdate) {
   return (
     <tr key={driver.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
       <td className="py-3 px-3">
@@ -243,11 +236,10 @@ function renderDriverRow(driver, handleStatusUpdate, updatingId) {
           {STATUSES.map((s) => (
             <ActionButton
               key={s}
-              disabled={driver.status === s || updatingId === driver.id}
+              disabled={driver.status === s}
               onClick={() => handleStatusUpdate('driver', driver.userId, s)}
               variant={driver.status === s ? 'primary' : 'secondary'}
               size="sm"
-              loading={updatingId === driver.id}
               aria-label={`${s.charAt(0).toUpperCase() + s.slice(1)} ${driver.fullname}`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -297,7 +289,7 @@ function renderRideRow(ride) {
   );
 }
 
-function renderDocumentRow(doc, handleStatusUpdate, updatingId) {
+function renderDocumentRow(doc, handleStatusUpdate) {
   return (
     <div key={doc.id} className="bg-card rounded-xl p-4 border border-border" role="listitem">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -318,21 +310,17 @@ function renderDocumentRow(doc, handleStatusUpdate, updatingId) {
           {doc.status === 'pending' && (
             <div className="flex gap-2" role="group" aria-label={`Document actions for ${doc.fullname}`}>
               <ActionButton
-                disabled={updatingId === doc.id}
                 onClick={() => handleStatusUpdate('document', doc.id, 'approved')}
                 variant="success"
                 size="sm"
-                loading={updatingId === doc.id}
                 aria-label={`Approve document for ${doc.fullname}`}
               >
                 Approve
               </ActionButton>
               <ActionButton
-                disabled={updatingId === doc.id}
                 onClick={() => handleStatusUpdate('document', doc.id, 'rejected')}
                 variant="error"
                 size="sm"
-                loading={updatingId === doc.id}
                 aria-label={`Reject document for ${doc.fullname}`}
               >
                 Reject
@@ -345,7 +333,7 @@ function renderDocumentRow(doc, handleStatusUpdate, updatingId) {
   );
 }
 
-function renderResetRequestRow(req, handleResetRequest, updatingId) {
+function renderResetRequestRow(req, handleResetRequest) {
   return (
     <div key={req.id} className="bg-card rounded-xl p-4 border border-border" role="listitem">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -360,21 +348,17 @@ function renderResetRequestRow(req, handleResetRequest, updatingId) {
           {req.status === 'pending' && (
             <div className="flex gap-2" role="group" aria-label={`Reset request actions for ${req.fullname}`}>
               <ActionButton
-                disabled={updatingId === req.id}
                 onClick={() => handleResetRequest(req.id, 'approve')}
                 variant="success"
                 size="sm"
-                loading={updatingId === req.id}
                 aria-label={`Approve reset request for ${req.fullname}`}
               >
                 Approve
               </ActionButton>
               <ActionButton
-                disabled={updatingId === req.id}
                 onClick={() => handleResetRequest(req.id, 'reject')}
                 variant="error"
                 size="sm"
-                loading={updatingId === req.id}
                 aria-label={`Reject reset request for ${req.fullname}`}
               >
                 Reject
@@ -392,7 +376,7 @@ function renderResetRequestRow(req, handleResetRequest, updatingId) {
   );
 }
 
-function renderPendingUserRow(u, handleStatusUpdate, updatingId) {
+function renderPendingUserRow(u, handleStatusUpdate) {
   return (
     <div key={u.id} className="flex items-center justify-between p-3 rounded-lg bg-muted">
       <div className="min-w-0">
@@ -403,11 +387,9 @@ function renderPendingUserRow(u, handleStatusUpdate, updatingId) {
         {STATUSES.filter((s) => s !== 'pending').map((s) => (
           <ActionButton
             key={s}
-            disabled={updatingId === u.id}
             onClick={() => handleStatusUpdate('user', u.id, s)}
             variant={s === 'approved' ? 'success' : 'error'}
             size="sm"
-            loading={updatingId === u.id}
             aria-label={`${s.charAt(0).toUpperCase() + s.slice(1)} ${u.fullname}`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -435,7 +417,6 @@ export function AdminDashboard() {
   const [documents, setDocuments] = useState([]);
   const [resetRequests, setResetRequests] = useState([]);
   const [docFilter, setDocFilter] = useState(null);
-  const [updatingId, setUpdatingId] = useState(null);
   const [toast, setToast] = useState(null);
 
   // Socket.io connection for real-time updates
@@ -599,7 +580,6 @@ export function AdminDashboard() {
   };
 
   const handleStatusUpdate = async (type, id, status) => {
-    setUpdatingId(id);
     try {
       switch (type) {
         case 'driver':
@@ -619,13 +599,10 @@ export function AdminDashboard() {
       showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} marked as ${status}.`);
     } catch (err) {
       showToast(err.message || `Failed to update ${type} status`, 'error');
-    } finally {
-      setUpdatingId(null);
     }
   };
 
   const handleResetRequest = async (id, action) => {
-    setUpdatingId(id);
     try {
       if (action === 'approve') {
         await apiApproveResetRequest(id);
@@ -638,8 +615,6 @@ export function AdminDashboard() {
       }
     } catch (err) {
       showToast(err.message || `Failed to ${action} reset request`, 'error');
-    } finally {
-      setUpdatingId(null);
     }
   };
 
@@ -722,7 +697,7 @@ export function AdminDashboard() {
       columns={driverColumns}
       data={drivers}
       keyExtractor={(d) => d.id}
-      renderRow={(driver, index) => renderDriverRow(driver, handleStatusUpdate, updatingId)}
+      renderRow={(driver, index) => renderDriverRow(driver, handleStatusUpdate)}
       emptyMessage="No drivers found"
       aria-label="Drivers list"
     />
@@ -740,7 +715,7 @@ export function AdminDashboard() {
         </div>
         {pendingUsers.length > 0 ? (
           <div className="space-y-2">
-            {pendingUsers.map((u) => renderPendingUserRow(u, handleStatusUpdate, updatingId))}
+            {pendingUsers.map((u) => renderPendingUserRow(u, handleStatusUpdate))}
           </div>
         ) : (
           <p className="text-muted-foreground text-center py-4">No pending users</p>
@@ -780,7 +755,7 @@ export function AdminDashboard() {
       />
 
       <div className="space-y-3" role="list" aria-label="Documents">
-        {documents.map((doc) => renderDocumentRow(doc, handleStatusUpdate, updatingId))}
+        {documents.map((doc) => renderDocumentRow(doc, handleStatusUpdate))}
         {documents.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <span className="material-symbols-outlined text-4xl mb-2 block opacity-30">description</span>
@@ -793,7 +768,7 @@ export function AdminDashboard() {
 
   const renderResetRequests = () => (
     <div className="space-y-3" role="list" aria-label="Password reset requests">
-      {resetRequests.map((req) => renderResetRequestRow(req, handleResetRequest, updatingId))}
+      {resetRequests.map((req) => renderResetRequestRow(req, handleResetRequest))}
       {resetRequests.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <span className="material-symbols-outlined text-4xl mb-2 block opacity-30">lock_reset</span>
