@@ -11,7 +11,7 @@ services:
     repo: https://github.com/Bleek1029/Fair-trike
     branch: main
     rootDir: .
-    buildCommand: npm ci && npm ci --prefix frontend && npm run build --prefix frontend && echo "BUILD_COMPLETE"
+    buildCommand: npm ci && npm ci --prefix frontend && npm run build --prefix frontend
     startCommand: node backend/start.mjs
     healthCheckPath: /api/health
     envVars:
