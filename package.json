@@ -10,7 +10,7 @@
     "dev": "node scripts/start.mjs --dev",
     "stop": "node scripts/stop.mjs",
     "start:admin": "node backend/admin-server.js",
-    "build": "cd frontend && npm run build"
+    "build": "cd frontend && npm ci && npm run build"
   },
   "engines": {
     "node": ">=20"
