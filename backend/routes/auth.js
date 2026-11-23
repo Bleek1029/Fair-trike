@@ -267,7 +267,7 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   );
 
   // Notify admin in real time so they can review/approve the reset request
-  emitAdminResetRequested({ id: inserted.rows[0].id, userId, email }).catch(() => {});
+  Promise.resolve(emitAdminResetRequested({ id: inserted.rows[0].id, userId, email })).catch(() => {});
 
   // Send password reset email (async, don't block response)
   sendPasswordResetEmail(email, token).catch((err) => {
