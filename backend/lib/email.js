@@ -107,7 +107,10 @@ export async function sendEmail({ to, subject, html, text }) {
  * @returns {Promise<boolean>}
  */
 export async function sendPasswordResetEmail(email, token, frontendUrl = null) {
-  const baseUrl = frontendUrl || process.env.FRONTEND_URL || 'http://localhost:5173';
+  const baseUrl = frontendUrl || process.env.FRONTEND_URL;
+  if (!baseUrl) {
+    throw new Error('FRONTEND_URL is not set — password reset links cannot be generated.');
+  }
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   const subject = 'Fairtrike — Password Reset Request';
