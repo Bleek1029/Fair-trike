@@ -518,6 +518,12 @@ export function AdminDashboard() {
   // Connect to Socket.io for real-time admin updates
   useEffect(() => {
     const s = connectSocket();
+    if (!s) {
+      // No auth token available — cannot connect to Socket.io
+      socketRef.current = null;
+      setLoading(false);
+      return;
+    }
     socketRef.current = s;
 
     // Join admin room
