@@ -11,7 +11,7 @@ import { FareEstimator } from '../components/FareEstimator.jsx';
 import { AiAssistant } from '../components/AiAssistant.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { FARE, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL } from '../config.js';
-import { apiCreateRide, apiAiParseBooking, getAccessToken } from '../api.js';
+import { apiCreateRide, apiAiParseBooking, apiAiNotification, getAccessToken } from '../api.js';
 import {
   connectSocket, joinRide, leaveRide, onDriverLocation, onRideEvent,
 } from '../lib/socket.js';
@@ -329,7 +329,7 @@ export function MapApp() {
     joinRide(s, booked.id);
     setRideStatus(booked.status);
 
-    const unsubAccepted = onRideEvent(s, 'ride-accepted', (data) => {
+    const unsubAccepted = onRideEvent(s, 'ride-accepted', async (data) => {
       setDriverAccepted(true);
       setRideStatus('accepted');
       // Capture driver details from the accepted-ride payload so the
@@ -340,15 +340,17 @@ export function MapApp() {
       if (data?.pickupCoord) {
         drawDriverLine(data.pickupCoord.lat, data.pickupCoord.lng);
       }
-      // Toast notification
+      // AI-generated toast notification
       const driver = data?.driverName || 'Your driver';
       const trike = data?.trikeNumber ? ` (Trike #${data.trikeNumber})` : '';
-      success(`${driver}${trike} accepted your ride! They're on the way.`, { duration: 6000 });
+      const aiMessage = await generateRideNotification('accepted', driver, data?.trikeNumber ?? undefined);
+      success(aiMessage ?? `${driver}${trike} accepted your ride! They're on the way.`, { duration: 6000 });
     });
-    const unsubCompleted = onRideEvent(s, 'ride-completed', () => {
+    const unsubCompleted = onRideEvent(s, 'ride-completed', async () => {
       setRideCompleted(true);
       setRideStatus('completed');
-      success('Your ride is complete. Thank you for choosing Fairtrike!', { duration: 6000 });
+      const aiMessage = await generateRideNotification('completed', driverName, undefined);
+      success(aiMessage ?? 'Your ride is complete. Thank you for choosing Fairtrike!', { duration: 6000 });
     });
     const unsubCancelled = onRideEvent(s, 'ride-cancelled', () => {
       setRideStatus('cancelled');
@@ -424,6 +426,22 @@ export function MapApp() {
       { color: '#1a73e8', weight: 3, dashArray: '6, 8', opacity: 0.8 }
     ).addTo(mapRef.current);
   };
+
+  // ── AI-generated ride notifications ──
+  // Calls the backend /api/ai/notification endpoint (Gemini) to generate a
+  // warm, Filipino-friendly ride-status message. Falls back to a default
+  // message if the AI request fails so the user is never left without a toast.
+  const generateRideNotification = useCallback(
+    async (status, driverName, trikeNumber) => {
+      try {
+        const res = await apiAiNotification({ status, driverName, trikeNumber });
+        return res.message;
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
 
   const calculateRoute = async () => {
     const a = await resolveCoord('start', startStr);
