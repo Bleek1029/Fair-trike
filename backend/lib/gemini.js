@@ -80,7 +80,18 @@ function getMockResponse({ system, prompt, schema }) {
   }
 
   if (system.includes('admin dashboard')) {
-    return 'AI-generated: Fairtrike has 150 active users, 42 drivers (8 pending approval), 1,200 completed rides this month, and 3 documents awaiting review. The platform is running smoothly with steady growth.';
+    // Use real stats from the prompt (passed by the AI route handler from /api/admin/stats)
+    let totalUsers = 0, totalDrivers = 0, totalRides = 0, pendingDocs = 0;
+    try {
+      const ctx = JSON.parse(prompt);
+      totalUsers = Object.values(ctx.users ?? {}).reduce((a, b) => a + b, 0);
+      totalDrivers = Object.values(ctx.drivers ?? {}).reduce((a, b) => a + b, 0);
+      totalRides = Object.values(ctx.rides ?? {}).reduce((a, b) => a + b, 0);
+      pendingDocs = ctx.documents?.pending ?? 0;
+    } catch {
+      // If prompt isn't valid JSON, fall back to zeros
+    }
+    return `AI-generated: Fairtrike currently has ${totalUsers} active users and ${totalDrivers} drivers on the platform. A total of ${totalRides} rides have been logged, with ${pendingDocs} documents pending review.`;
   }
 
   if (system.includes('earnings summary')) {
