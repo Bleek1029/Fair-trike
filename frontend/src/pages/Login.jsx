@@ -57,7 +57,7 @@ export function Login() {
         <div className='pt-0.5 text-center space-y-1'>
           <p className='text-[12px] leading-5 text-secondary'>
             Forgot your password?
-            <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1' to='/reset-password'>
+            <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1' to='/forgot-password'>
               Request Reset
             </Link>
           </p>

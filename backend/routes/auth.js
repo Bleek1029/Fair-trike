@@ -6,7 +6,7 @@ import { asyncHandler } from '../lib/asyncHandler.js';
 import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/AppError.js';
 import { ok, created } from '../lib/http.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
-import { emitAdminUserCreated, emitAdminDriverCreated } from '../socket.js';
+import { emitAdminUserCreated, emitAdminDriverCreated, emitAdminResetRequested } from '../socket.js';
 import { sendPasswordResetEmail } from '../lib/email.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -257,13 +257,17 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   const token = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-  // Store hashed token with 1-hour expiry
+  // Store hashed token with 1-hour expiry (pending admin approval)
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  await pool.query(
+  const inserted = await pool.query(
     `INSERT INTO password_reset_requests (user_id, email, new_password_hash, status, admin_note, reviewed_by, reviewed_at, created_at)
-     VALUES ($1, $2, $3, 'pending', 'Auto-generated via forgot-password flow', NULL, NULL, NOW())`,
+     VALUES ($1, $2, $3, 'pending', 'Auto-generated via forgot-password flow', NULL, NULL, NOW())
+     RETURNING id`,
     [userId, email, tokenHash]
   );
+
+  // Notify admin in real time so they can review/approve the reset request
+  emitAdminResetRequested({ id: inserted.rows[0].id, userId, email }).catch(() => {});
 
   // Send password reset email (async, don't block response)
   sendPasswordResetEmail(email, token).catch((err) => {
@@ -274,7 +278,8 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
 }));
 
 // ── POST /api/auth/reset-password ──────────────────────────
-// Completes password reset using token from email. No current password required.
+// Completes password reset using token from email. Requires admin approval
+// (status = 'approved') before the new password can be set.
 router.post('/reset-password', asyncHandler(async (req, res) => {
   const token = req.body.token || '';
   const newPassword = req.body.new_password || '';
@@ -289,7 +294,7 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 
   const result = await pool.query(
     `SELECT * FROM password_reset_requests
-     WHERE new_password_hash = $1 AND status = 'pending' AND created_at > NOW() - INTERVAL '1 hour'`,
+     WHERE new_password_hash = $1 AND status = 'approved' AND created_at > NOW() - INTERVAL '1 hour'`,
     [tokenHash]
   );
   if (result.rows.length === 0) {

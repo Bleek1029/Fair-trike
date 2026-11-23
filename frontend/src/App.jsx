@@ -7,6 +7,7 @@ import { onAdminPort, separateAdminPort, goToAdminPort, goToAppPort } from './li
 import { Landing } from './pages/Landing.jsx';
 import { Login } from './pages/Login.jsx';
 import { DriverLogin } from './pages/DriverLogin.jsx';
+import { ForgotPassword } from './pages/ForgotPassword.jsx';
 import { Register } from './pages/Register.jsx';
 import { DriverRegister } from './pages/DriverRegister.jsx';
 import { DriverInfo } from './pages/DriverInfo.jsx';
@@ -141,6 +142,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+          <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
           <Route path="/login-driver" element={<GuestOnly><DriverLogin /></GuestOnly>} />
           <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
           <Route path="/register-driver" element={<GuestOnly><DriverRegister /></GuestOnly>} />

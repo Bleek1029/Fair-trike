@@ -1,34 +1,61 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext.jsx';
-import { apiResetPasswordRequest } from '../api.js';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { apiResetPassword } from '../api.js';
 import { usePageLoading, withPageLoading } from '../loading/LoadingContext.jsx';
-import { AuthSplit, ErrorAlert, SuccessAlert, TextField, PasswordField, SubmitButton } from '../components/AuthSplit.jsx';
+import { AuthSplit, ErrorAlert, SuccessAlert, PasswordField, SubmitButton, TextField } from '../components/AuthSplit.jsx';
 
 export function ResetPassword() {
-  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') || '';
   const navigate = useNavigate();
   const { showLoading, hideLoading } = usePageLoading();
-  const [email, setEmail] = useState(user?.email || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // A reset link without a token is invalid — send the user to the request page instead.
+  if (!token) {
+    return (
+      <AuthSplit
+        heroEyebrow='Password Reset'
+        heroTitle='Invalid Reset Link'
+        heroSubtitle='This reset link is missing a token and cannot be used.'
+        formBadge='Password Reset'
+        formTitle='Invalid Reset Link'
+        formSubtitle='Please request a new reset link from the login page.'
+        bottom={
+          <div className='pt-0.5 text-center space-y-1'>
+            <p className='text-[12px] leading-5 text-secondary'>
+              Don&apos;t have a reset link?{' '}
+              <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1' to='/forgot-password'>
+                Request Reset
+              </Link>
+            </p>
+          </div>
+        }
+      >
+        <ErrorAlert message='The reset link is invalid or missing a token. Please request a new one.' />
+      </AuthSplit>
+    );
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    if (!email.trim()) return setError('Email is required.');
     if (!newPassword) return setError('New password is required.');
+    if (newPassword.length < 6) return setError('Password must be at least 6 characters long.');
     if (newPassword !== confirmPassword) return setError('Passwords do not match.');
     setLoading(true);
     try {
-      await withPageLoading(showLoading, hideLoading, 'Submitting reset request…', () =>
-        apiResetPasswordRequest({ email: email.trim().toLowerCase(), new_password: newPassword })
+      await withPageLoading(showLoading, hideLoading, 'Resetting your password…', () =>
+        apiResetPassword({ token, new_password: newPassword })
       );
-      setSuccess('Reset request submitted! You will receive a reset link shortly.');
+      setSuccess('Password has been reset successfully. You can now sign in.');
+      setNewPassword('');
+      setConfirmPassword('');
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       setError(err.message);
@@ -37,21 +64,19 @@ export function ResetPassword() {
     }
   };
 
-  const isDriver = user?.role === 'driver';
-
   return (
     <AuthSplit
       heroEyebrow='Password Reset'
       heroTitle='Reset Your Password'
-      heroSubtitle='Enter your email and new password. We will send you a reset link.'
+      heroSubtitle='Enter your new password to complete the reset.'
       formBadge='Password Reset'
-      formTitle='Request Password Reset'
-      formSubtitle='We will verify your identity and send a password reset link to your email.'
+      formTitle='Set New Password'
+      formSubtitle='Your reset link is valid. Choose a new password to continue.'
       bottom={
         <div className='pt-0.5 text-center space-y-1'>
           <p className='text-[12px] leading-5 text-secondary'>
             Already have access?{' '}
-            <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1' to={isDriver ? '/login-driver' : '/login'}>
+            <Link className='text-[13px] text-primary hover:text-on-primary-container font-bold underline ml-1' to='/login'>
               Sign In
             </Link>
           </p>
@@ -62,32 +87,26 @@ export function ResetPassword() {
       <SuccessAlert message={success} />
       <form className='flex flex-col gap-1.5' onSubmit={handleSubmit}>
         <TextField
-          id='resetEmail'
-          label='Email Address'
-          icon='mail'
-          type='email'
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder='driver@example.com'
-          required
-        />
-        <PasswordField
+          id='resetNewPassword'
           label='New Password'
+          icon='lock'
+          type='password'
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder='Enter your new password'
-          id='resetNewPassword'
-          withMeter={false}
+          required
         />
-        <PasswordField
+        <TextField
+          id='resetConfirmPassword'
           label='Confirm New Password'
+          icon='lock'
+          type='password'
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder='Confirm your new password'
-          id='resetConfirmPassword'
-          withMeter={false}
+          required
         />
-        <SubmitButton loading={loading} loadingText='Submitting…'>Request Reset</SubmitButton>
+        <SubmitButton loading={loading} loadingText='Resetting…'>Reset Password</SubmitButton>
       </form>
     </AuthSplit>
   );
