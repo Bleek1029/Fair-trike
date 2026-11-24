@@ -5,6 +5,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        'brand': {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+          950: '#022c22'
+        },
         'primary': '#004328',
         'surface-bright': '#faf8ff',
         'primary-container': '#0d5c3a',
@@ -56,6 +67,9 @@ export default {
         'surface': '#faf8ff',
         'outline-variant': '#bfc9c0',
       },
+      boxShadow: {
+        'subtle-glow': '0 20px 40px -15px rgba(6, 78, 59, 0.08)',
+      },
       borderRadius: {
         DEFAULT: '0.25rem',
         lg: '0.5rem',
@@ -86,6 +100,8 @@ export default {
         'headline-lg': ['Plus Jakarta Sans'],
         'label-lg': ['Plus Jakarta Sans'],
         'headline-sm': ['Plus Jakarta Sans'],
+        'telemetry-metric': ['Inter'],
+        'telemetry-code': ['JetBrains Mono'],
         display: ['Plus Jakarta Sans'],
         'display-mobile': ['Plus Jakarta Sans'],
       },

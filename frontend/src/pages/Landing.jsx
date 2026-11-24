@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BrandLoader } from '../components/BrandLoader.jsx';
 
-// ── Welcome landing with value proposition before redirecting to sign-in ──
+// ── Landing page matching the Fairtrike brand design ──
 export function Landing() {
   const navigate = useNavigate();
   const [showContent, setShowContent] = useState(false);
@@ -21,71 +21,89 @@ export function Landing() {
 
   if (!showContent) {
     return (
-      <BrandLoader
-        message="Loading Fairtrike..."
-        className="min-h-screen"
-      />
+      <BrandLoader message="Loading Fairtrike..." className="min-h-screen" />
     );
   }
 
   return (
-    <main className="w-full min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-12">
-      {/* Brand Header */}
-      <header className="w-full max-w-[480px] text-center mb-8">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <img src="/fairtrike-logo.png" alt="Fairtrike logo" className="w-14 h-14 object-contain" />
-          <span className="text-headline-lg font-extrabold text-on-surface tracking-tight">Fairtrike</span>
+    <main className="min-h-screen bg-[#f8faff] text-slate-800 flex flex-col relative overflow-x-hidden">
+      {/* Header */}
+      <header className="w-full pt-8 pb-4 px-6 relative z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full text-xs font-semibold text-emerald-800">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Olongapo Official Mobility Partner</span>
+          </div>
+          <a href="#toda-matrix" className="text-xs font-medium text-slate-500 hover:text-emerald-700 transition-colors">
+            TODA Fare Guide 2024
+          </a>
         </div>
-        <p className="text-body-md text-on-surface-variant leading-relaxed">
-          Olongapo's trusted tricycle ride-hailing — metered fares, live tracking, no haggling.
-        </p>
       </header>
 
-      {/* Value Props */}
-      <section className="w-full max-w-[480px] space-y-3 mb-8" aria-label="Why choose Fairtrike">
-        <article className="flex items-start gap-3 p-4 rounded-xl bg-surface-container-low border border-surface-container-highest shadow-sm animate-slide-in" style={{ animationDelay: '0ms' }}>
-          <div className="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-primary text-[22px]">local_taxi</span>
-          </div>
-          <div>
-            <h3 className="text-label-lg font-bold text-on-surface">Metered Fares</h3>
-            <p className="text-body-sm text-on-surface-variant mt-0.5">Government-regulated pricing — what you see is what you pay.</p>
-          </div>
-        </article>
-        <article className="flex items-start gap-3 p-4 rounded-xl bg-surface-container-low border border-surface-container-highest shadow-sm animate-slide-in" style={{ animationDelay: '100ms' }}>
-          <div className="w-10 h-10 rounded-lg bg-tertiary-container/20 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-tertiary text-[22px]">gps_fixed</span>
-          </div>
-          <div>
-            <h3 className="text-label-lg font-bold text-on-surface">Live Ride Tracking</h3>
-            <p className="text-body-sm text-on-surface-variant mt-0.5">Real-time GPS for every trip — share your location with family.</p>
-          </div>
-        </article>
-      </section>
+      {/* Main content */}
+      <main className="flex-grow flex items-center justify-center px-4 py-6 relative z-10">
+        <div className="w-full max-w-[580px] mx-auto bg-white/80 backdrop-blur-sm border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-subtle-glow">
+          <section className="text-center p-6">
+            {/* Brand & Logo */}
+            <div className="flex items-center justify-center gap-3.5 mb-4 group cursor-default">
+              <div className="relative w-16 h-16 sm:w-18 sm:h-18 flex items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-100/80 p-1.5 shadow-sm transition-transform duration-300 group-hover:scale-105">
+                <img
+                  alt="Fairtrike Green Tricycle Logo"
+                  className="w-full h-full object-contain drop-shadow-sm"
+                  loading="eager"
+                  src="/fairtrike-logo.png"
+                />
+              </div>
+              <div className="text-left">
+                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-none">
+                  Fairtrike
+                </h1>
+                <p className="text-[11px] uppercase tracking-wider font-bold text-emerald-700 mt-1">
+                  Olongapo City Commuter Mobility
+                </p>
+              </div>
+            </div>
 
-      {/* CTA */}
-      <div className="w-full max-w-[480px] space-y-3">
-        <button
-          onClick={handleGetStarted}
-          disabled={redirecting}
-          className="w-full min-h-[52px] px-6 py-3 rounded-xl bg-primary text-on-primary text-label-lg font-bold tracking-tight shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-70"
-          type="button"
-        >
-          <span>Get Started</span>
-          <span className="material-symbols-outlined text-[22px]">arrow_forward</span>
-        </button>
-        <p className="text-center text-body-sm text-on-surface-variant">
-          Already have an account?{' '}
-          <a href="/login" className="text-primary font-bold underline hover:text-on-primary-container">Sign In</a>
-        </p>
-      </div>
+            {/* Description */}
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-md mx-auto font-normal">
+              Olongapo's trusted tricycle ride-hailing — metered fares, live tracking, no haggling.
+            </p>
+          </section>
 
-      {/* Trust indicator */}
-      <footer className="w-full max-w-[480px] mt-10 text-center">
-        <p className="text-[10px] leading-4 text-secondary uppercase tracking-wider">
-          Serving Olongapo City commuters since 2024
-        </p>
-      </footer>
+          {/* Call to action */}
+          <section className="space-y-4">
+            <button
+              onClick={handleGetStarted}
+              disabled={redirecting}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-brand-900 hover:bg-brand-950 active:scale-[0.99] text-white font-semibold text-base shadow-md hover:shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+              type="button"
+            >
+              <span>Get Started</span>
+            </button>
+            <div className="text-center pt-1">
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                Already have an account?{' '}
+                <a href="#signin" className="text-emerald-800 font-bold hover:underline hover:text-emerald-950 ml-1 inline-block">
+                  Sign In
+                </a>
+              </p>
+            </div>
+          </section>
+
+          {/* Trust footer */}
+          <footer className="w-full pb-8 pt-4 px-4 text-center relative z-10">
+            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2 text-center">
+              <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase text-emerald-800/90">
+                <span>Serving Olongapo City Commuters Since 2024</span>
+              </div>
+              <span className="hidden sm:inline text-slate-300">•</span>
+              <span className="text-[11px] text-slate-400 font-medium">
+                In coordination with City TODA Federations
+              </span>
+            </div>
+          </footer>
+        </div>
+      </main>
     </main>
   );
 }
