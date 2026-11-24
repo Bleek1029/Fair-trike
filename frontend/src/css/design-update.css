@@ -1,3 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  overscroll-behavior: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
 /* ════════════════════════════════════════════════════════════════
    Fairtrike — Urban Transit Modern (Design Update)
    Applied: 2026-11-08
@@ -879,4 +891,142 @@ main > :last-child  { margin-bottom: 0; }
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+}.brand-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  /* overflow: hidden; -- removed to prevent clipping "Fairtrike" text */
+  background:
+    radial-gradient(600px 300px at 50% 18%, rgba(13, 92, 58, 0.16), transparent 70%),
+    radial-gradient(500px 260px at 50% 85%, rgba(0, 108, 73, 0.10), transparent 70%),
+    #faf8ff;
 }
+.brand-loader--overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  min-height: 0;
+  height: 100vh;
+  background: rgba(248, 249, 255, 0.92);
+  backdrop-filter: blur(6px);
+  animation: brandOverlayIn 0.25s ease-out;
+}
+@keyframes brandOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.brand-loader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+  animation: brandInnerIn 0.35s ease-out;
+}
+@keyframes brandInnerIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.brand-loader--done .brand-loader-inner {
+  animation: brandInnerOut 0.3s ease-in forwards;
+}
+@keyframes brandInnerOut {
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
+/* Logo mark — transparent PNG shared by the React loader and the boot splash.
+   The shadow is a drop-shadow (follows the mark's alpha), never a box-shadow:
+   the artwork is transparent, so a box shadow would paint a rectangle. */
+.brand-mark-logo {
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 30px rgba(13, 92, 58, 0.22));
+  animation: brandDrive 2.2s ease-in-out forwards, brandBob 0.5s ease-in-out 2.2s infinite;
+}
+/* Air-resistance / speed streaks that trail the tricycle as it drives in */
+.brand-mark-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.brand-wind {
+  position: absolute;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #0d5c3a);
+  box-shadow: 0 0 10px rgba(13, 92, 58, 0.6);
+  opacity: 0;
+  animation: brandWind 2.2s ease-in-out infinite;
+}
+.brand-wind--1 { width: 58px; right: 74%; top: 28%; animation-delay: 0s; }
+.brand-wind--2 { width: 50px; right: 80%; top: 42%; animation-delay: .36s; }
+.brand-wind--3 { width: 66px; right: 76%; top: 56%; animation-delay: .73s; }
+.brand-wind--4 { width: 44px; right: 86%; top: 66%; animation-delay: 1.09s; }
+.brand-wind--5 { width: 54px; right: 82%; top: 20%; animation-delay: 1.46s; }
+.brand-wind--6 { width: 48px; right: 84%; top: 48%; animation-delay: 1.82s; }
+/* Tire smoke puffs — continuous while the trike rolls/idles */
+.brand-smoke {
+  position: absolute;
+  bottom: 5%;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 40% 40%, rgba(140,150,163,.92), rgba(185,193,201,.7) 55%, rgba(185,193,201,.2) 78%, transparent 100%);
+  opacity: 0;
+  animation: brandSmoke 1.5s ease-out infinite;
+}
+.brand-smoke--1 { left: 14%; animation-delay: 0s; }
+.brand-smoke--2 { left: 28%; animation-delay: 0.5s; }
+.brand-smoke--3 { left: 42%; animation-delay: 1s; }
+/* Wind keeps streaming — tiny dead zone + evenly-spaced delays = seamless flow */
+@keyframes brandWind {
+  0%   { transform: translateX(40px) scaleX(.3); opacity: 0; }
+  4%   { opacity: 1; }
+  32%  { transform: translateX(-14px) scaleX(1.45); opacity: 1; }
+  58%  { transform: translateX(-58px) scaleX(1.2); opacity: 1; }
+  80%  { transform: translateX(-92px) scaleX(.85); opacity: 1; }
+  88%  { transform: translateX(-102px) scaleX(.6); opacity: 0; }
+  100% { transform: translateX(-106px) scaleX(.5); opacity: 0; }
+}
+/* Smoke puffs drift up and back, expanding and fading like tire smoke */
+@keyframes brandSmoke {
+  0%   { transform: translate(0, 0) scale(.4); opacity: 0; }
+  20%  { opacity: .95; }
+  100% { transform: translate(-26px, -34px) scale(1.9); opacity: 0; }
+}
+/* Trike drives in from the left and parks at center, then holds still */
+@keyframes brandDrive {
+  0%   { transform: translateX(-110px) translateY(0) scale(.9); opacity: 0; }
+  12%  { opacity: 1; }
+  45%  { transform: translateX(0) translateY(0) scale(1); }
+  52%  { transform: translateX(4px) translateY(-4px) scale(1.02); }
+  60%  { transform: translateX(0) translateY(0) scale(1); }
+  72%  { transform: translateX(0) translateY(-3px) scale(1); }
+  84%  { transform: translateX(0) translateY(0) scale(1); }
+  100% { transform: translateX(0) translateY(0) scale(1); }
+}
+/* After parking at center, the trike keeps a gentle rolling idle until the app loads */
+@keyframes brandBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.suggestions {
+  background: #faf8ff;
+  border: 1px solid #e5e5ef;
+  border-radius: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+.suggestion-item:hover {
+  background: #c3ecd7;
+}
+

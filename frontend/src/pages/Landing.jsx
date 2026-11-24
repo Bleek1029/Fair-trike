@@ -61,15 +61,6 @@ export function Landing() {
             <p className="text-body-sm text-on-surface-variant mt-0.5">Real-time GPS for every trip — share your location with family.</p>
           </div>
         </article>
-        <article className="flex items-start gap-3 p-4 rounded-xl bg-surface-container-low border border-surface-container-highest shadow-sm animate-slide-in" style={{ animationDelay: '200ms' }}>
-          <div className="w-10 h-10 rounded-lg bg-secondary-container/20 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-secondary text-[22px]">payments</span>
-          </div>
-          <div>
-            <h3 className="text-label-lg font-bold text-on-surface">Cashless Options</h3>
-            <p className="text-body-sm text-on-surface-variant mt-0.5">Pay with wallet, card, or cash — your ride, your choice.</p>
-          </div>
-        </article>
       </section>
 
       {/* CTA */}

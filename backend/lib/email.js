@@ -1,69 +1,26 @@
-// ── Email Service ──────────────────────────────────────────────────────
+// ── Email Service (Resend) ──────────────────────────────────────────────────────
 //
-// Sends emails using nodemailer with SMTP configuration from environment.
-// Supports Neon Auth email provider configuration (shared or standard SMTP).
-// Falls back to console logging in development if not configured.
+// Sends emails using Resend API instead of SMTP.
+// Faster delivery, no SMTP configuration headaches, better deliverability.
 
-import nodemailer from 'nodemailer';
-import { env } from '../config.js';
+import { Resend } from 'resend';
 
-let transporter = null;
-let isConfigured = false;
+let resend = null;
 
 /**
- * Creates the email transporter from environment configuration.
- * Uses standard SMTP settings (same as Neon Auth email provider).
- */
-function createTransporter() {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const senderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER;
-  const senderName = process.env.SMTP_SENDER_NAME || 'Fairtrike';
-
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    return null;
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpPort === 465, // true for 465, false for other ports
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-    // Optional: custom TLS settings for self-signed certs
-    // tls: { rejectUnauthorized: false },
-  });
-
-  return { transporter, senderEmail, senderName };
-}
-
-/**
- * Initializes the email transporter. Call once at startup.
+ * Initializes the Resend client. Call once at startup.
  */
 export async function initEmail() {
-  const config = createTransporter();
-  if (config) {
-    transporter = config.transporter;
-    isConfigured = true;
-    // Verify connection
-    try {
-      await transporter.verify();
-      console.log('[Email] SMTP connection verified');
-    } catch (err) {
-      console.error('[Email] SMTP verification failed:', err.message);
-      isConfigured = false;
-    }
-  } else {
-    console.warn('[Email] SMTP not configured - emails will be logged to console (dev only)');
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[Email] RESEND_API_KEY not set - emails will not be sent');
+    return;
   }
+  resend = new Resend(process.env.RESEND_API_KEY);
+  console.log('[Email] Resend configured');
 }
 
 /**
- * Sends an email.
+ * Sends an email via Resend.
  * @param {Object} options
  * @param {string} options.to - Recipient email
  * @param {string} options.subject - Email subject
@@ -72,26 +29,30 @@ export async function initEmail() {
  * @returns {Promise<boolean>} Success status
  */
 export async function sendEmail({ to, subject, html, text }) {
-  if (!isConfigured || !transporter) {
-    // Development fallback: log to console
+  if (!resend) {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[Email] Would send to ${to}:`, { subject, html: html?.substring(0, 200) });
+      console.log(`[Email] Would send to ${to}:`, { subject });
       return true;
     }
-    console.error('[Email] Cannot send - SMTP not configured');
+    console.error('[Email] Cannot send - Resend not configured');
     return false;
   }
 
   try {
-    const config = createTransporter();
-    const info = await transporter.sendMail({
-      from: `"${config.senderName}" <${config.senderEmail}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'Fairtrike <onboarding@resend.dev>',
       to,
       subject,
       html,
-      text: text || html?.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+      text: text || html?.replace(/<[^>]*>/g, ''),
     });
-    console.log('[Email] Sent:', info.messageId);
+
+    if (error) {
+      console.error('[Email] Send failed:', error.message);
+      return false;
+    }
+
+    console.log('[Email] Sent:', data.id);
     return true;
   } catch (err) {
     console.error('[Email] Send failed:', err.message);
@@ -160,21 +121,19 @@ This link expires in 1 hour for security. If you didn't request this, please ign
 }
 
 /**
- * Sends a test email to verify SMTP configuration.
+ * Sends a test email to verify Resend configuration.
  * @param {string} to - Test recipient
  * @returns {Promise<boolean>}
  */
 export async function sendTestEmail(to) {
   return sendEmail({
     to,
-    subject: 'Fairtrike — SMTP Test',
+    subject: 'Fairtrike — Email Test',
     html: `
       <p>This is a test email from Fairtrike.</p>
-      <p>If you received this, your SMTP configuration is working correctly.</p>
+      <p>If you received this, your email configuration is working correctly.</p>
       <p>Sent at: ${new Date().toISOString()}</p>
     `,
-    text: 'This is a test email from Fairtrike. If you received this, your SMTP configuration is working correctly.',
+    text: 'This is a test email from Fairtrike. If you received this, your email configuration is working correctly.',
   });
 }
-
-export { isConfigured };

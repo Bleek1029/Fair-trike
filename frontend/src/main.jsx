@@ -7,7 +7,6 @@ import { LoadingProvider } from './loading/LoadingContext.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import { useVersionCheck, injectAppVersion } from './hooks/useVersionCheck.js';
 import 'leaflet/dist/leaflet.css';
-import './css/main.css';
 import './css/design-update.css';
 import './css/mobile-map.css';
 

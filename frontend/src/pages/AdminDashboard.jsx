@@ -1,6 +1,7 @@
 // ── Admin Dashboard ───────────────────────────────────────
 // Fairtrike Operations Console - Full admin management interface
-// Design System: Brutalism (dark tech + status green), Fira Code/Sans, Dense dashboard layout
+// Design System: Modern admin UI (fixed header, metric banner, fleet registry table,
+// realtime audit feed, TODA quota card) — styled with Tailwind via design-update.css
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
@@ -408,7 +409,7 @@ function renderPendingUserRow(u, handleStatusUpdate) {
 export function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('drivers');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [drivers, setDrivers] = useState([]);
@@ -653,13 +654,37 @@ export function AdminDashboard() {
     }
   };
 
-  // Render functions
+  const totalDrivers = (stats.drivers?.pending || 0) + (stats.drivers?.approved || 0) + (stats.drivers?.rejected || 0);
+
+  // Render driver table rows (used by the Drivers tab)
+  const renderDriverRows = () => {
+    if (loading) {
+      return (
+        <>
+          {[1, 2, 3, 4, 5].map((_, rowIndex) => (
+            <tr key={rowIndex} className="border-b border-border/50 animate-pulse">
+              <td className="py-3 px-space-lg"><div className="h-8 bg-muted rounded animate-pulse"></div></td>
+              <td className="py-3 px-space-md"><div className="h-6 bg-muted rounded animate-pulse"></div></td>
+              <td className="py-3 px-space-md"><div className="h-6 bg-muted rounded animate-pulse"></div></td>
+              <td className="py-3 px-space-md"><div className="h-6 bg-muted rounded animate-pulse"></div></td>
+              <td className="py-3 px-space-md text-center"><div className="h-6 bg-muted rounded animate-pulse"></div></td>
+              <td className="py-3 px-space-md text-center"><div className="h-6 bg-muted rounded animate-pulse"></div></td>
+              <td className="py-3 px-space-lg text-right"><div className="h-6 bg-muted rounded animate-pulse"></div></td>
+            </tr>
+          ))}
+        </>
+      );
+    }
+    return drivers.map((driver) => renderDriverRow(driver, handleStatusUpdate));
+  };
+
+  // Render functions for each tab
   const renderOverview = () => {
     if (loading) {
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="bg-card rounded-xl p-5 border border-border animate-pulse">
                 <div className="h-4 w-1/3 bg-muted rounded mb-2"></div>
                 <div className="h-8 w-1/2 bg-muted rounded"></div>
@@ -670,13 +695,13 @@ export function AdminDashboard() {
             <div className="lg:col-span-2 bg-card rounded-xl p-5 border border-border animate-pulse">
               <div className="h-4 w-1/4 bg-muted rounded mb-4"></div>
               <div className="flex flex-wrap gap-3">
-                {[1,2,3].map(i => <div key={i} className="h-8 w-24 bg-muted rounded"></div>)}
+                {[1, 2, 3].map((i) => <div key={i} className="h-8 w-24 bg-muted rounded"></div>)}
               </div>
             </div>
             <div className="bg-card rounded-xl p-5 border border-border animate-pulse">
               <div className="h-4 w-1/4 bg-muted rounded mb-4"></div>
               <div className="space-y-2">
-                {[1,2,3,4].map(i => <div key={i} className="h-8 w-full bg-muted rounded"></div>)}
+                {[1, 2, 3, 4].map((i) => <div key={i} className="h-8 w-full bg-muted rounded"></div>)}
               </div>
             </div>
           </div>
@@ -782,46 +807,223 @@ export function AdminDashboard() {
     );
   };
 
-  const renderDrivers = () => {
-    if (loading) {
-      return (
-        <div className="overflow-x-auto" role="region" aria-label="Drivers list" tabIndex={0}>
-          <table className="w-full text-sm" role="grid">
+  const renderDriversTab = () => (
+    <>
+      {/* Main Table Section & Filter Deck */}
+      <div className="w-full bg-surface-container-lowest rounded-xl shadow-sm flex flex-col overflow-hidden">
+        {/* Header & Controls Bar */}
+        <div className="p-space-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-md bg-surface-container-lowest">
+          <div>
+            <div className="flex items-center gap-space-sm">
+              <h1 className="font-headline-md text-headline-md text-on-surface">Driver Fleet Registry</h1>
+              <span className="font-telemetry-code text-telemetry-code bg-surface-container-low text-primary px-2.5 py-0.5 rounded-full font-semibold">SEC-NCR-402</span>
+            </div>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Manage operator accreditation, municipal tricycle franchises, and document verification records.</p>
+          </div>
+          {/* Action Utilities */}
+          <div className="flex items-center flex-wrap gap-space-sm">
+            <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md">
+              <span className="material-symbols-outlined text-[18px]">file_download</span>
+              <span>Export CSV</span>
+            </button>
+            <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md">
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+              <span>Columns</span>
+            </button>
+            <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-all shadow-sm font-label-md text-label-md">
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              <span>Enroll Driver</span>
+            </button>
+          </div>
+        </div>
+        {/* Search & Filter Controls */}
+        <div className="px-space-lg py-space-md bg-surface-container-low/40 flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-xl">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+            <input className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-secondary transition-all shadow-xs" id="driverSearchInput" placeholder="Search by driver name, license, contact, or plate (e.g. TRIKE-PC-012)..." type="text" />
+            <button className="hidden absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" id="clearSearchBtn">
+              <span className="material-symbols-outlined text-[16px]">cancel</span>
+            </button>
+          </div>
+          {/* Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="filterChipsContainer">
+            <button className="filter-chip px-3 py-1.5 rounded-lg font-label-sm text-label-sm uppercase tracking-wider transition-all bg-primary text-on-primary font-semibold shadow-xs" data-filter="all">
+              All ({totalDrivers})
+            </button>
+            <button className="filter-chip px-3 py-1.5 rounded-lg font-label-sm text-label-sm uppercase tracking-wider transition-all bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-semibold shadow-xs" data-filter="approved">
+              Approved ({stats.drivers?.approved || 0})
+            </button>
+            <button className="filter-chip px-3 py-1.5 rounded-lg font-label-sm text-label-sm uppercase tracking-wider transition-all bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-semibold shadow-xs" data-filter="pending">
+              Pending ({stats.drivers?.pending || 0})
+            </button>
+            <button className="filter-chip px-3 py-1.5 rounded-lg font-label-sm text-label-sm uppercase tracking-wider transition-all bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-semibold shadow-xs" data-filter="rejected">
+              Rejected ({stats.drivers?.rejected || 0})
+            </button>
+          </div>
+        </div>
+        {/* Drivers Table */}
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left font-body-md text-body-md">
             <thead>
-              <tr className="text-left text-muted-foreground border-b border-border font-medium">
-                {driverColumns.map((col) => (
-                  <th key={col.key} className="pb-3 px-3" scope="col">
-                    <div className="h-4 w-20 bg-muted rounded animate-pulse"></div>
-                  </th>
-                ))}
+              <tr className="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider select-none">
+                <th className="py-3 px-space-lg font-semibold">Driver Details</th>
+                <th className="py-3 px-space-md font-semibold">License #</th>
+                <th className="py-3 px-space-md font-semibold">Contact &amp; TODA</th>
+                <th className="py-3 px-space-md font-semibold">Vehicle &amp; Unit</th>
+                <th className="py-3 px-space-md font-semibold text-center">Status</th>
+                <th className="py-3 px-space-md font-semibold text-center">Docs</th>
+                <th className="py-3 px-space-lg font-semibold text-right">Quick Decision</th>
               </tr>
             </thead>
-            <tbody>
-              {[1,2,3,4,5].map((_, rowIndex) => (
-                <tr key={rowIndex} className="border-b border-border/50 animate-pulse">
-                  {driverColumns.map((col, colIndex) => (
-                    <td key={colIndex} className="py-3 px-3">
-                      <div className={`h-4 bg-muted rounded ${colIndex === 0 ? 'w-32' : colIndex === 1 ? 'w-24' : colIndex === 5 ? 'w-40' : 'w-full'}`}></div>
-                    </td>
-                  ))}
-                </tr>
-              ))}
+            <tbody className="bg-surface-container-lowest" id="driverTableBody">
+              {renderDriverRows()}
             </tbody>
           </table>
         </div>
-      );
-    }
-    return (
-      <DataTable
-        columns={driverColumns}
-        data={drivers}
-        keyExtractor={(d) => d.id}
-        renderRow={(driver, index) => renderDriverRow(driver, handleStatusUpdate)}
-        emptyMessage="No drivers found"
-        aria-label="Drivers list"
-      />
-    );
-  };
+        {/* Table Footer with Pagination Controls */}
+        <div className="p-space-md bg-surface-container-low/40 flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-body-sm text-body-sm text-on-surface-variant">Showing <strong className="font-semibold text-on-surface" id="visibleRowCount">{drivers.length}</strong> of <strong className="font-semibold text-on-surface">{totalDrivers}</strong> registered drivers</span>
+            <span className="inline-block w-1 h-1 rounded-full bg-outline-variant"></span>
+            <span className="font-label-sm text-label-sm text-secondary font-semibold">Sync: LGU Pasay TODA Matrix</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button className="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1 shadow-xs disabled:opacity-50" disabled>
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+              <span>Previous</span>
+            </button>
+            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold flex items-center justify-center shadow-xs">
+              1
+            </button>
+            <button className="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center shadow-xs">
+              2
+            </button>
+            <button className="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center shadow-xs">
+              3
+            </button>
+            <span className="px-1 text-on-surface-variant font-label-sm text-label-sm">…</span>
+            <button className="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center justify-center shadow-xs">
+              29
+            </button>
+            <button className="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 shadow-xs">
+              <span>Next</span>
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Realtime Verification & Audit Log Card */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mt-space-lg">
+        {/* Audit Feed */}
+        <div className="lg:col-span-2 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-space-md">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-[22px]">verified_user</span>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">Recent Regulatory Verifications</h2>
+              </div>
+              <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Live Audit Sync</span>
+            </div>
+            <div className="space-y-space-sm">
+              <div className="flex items-start justify-between p-space-sm rounded-lg bg-surface-container-low/50">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-secondary text-[20px]">check_circle</span>
+                  <div>
+                    <span className="font-headline-sm text-body-md font-semibold text-on-surface block">LTO Franchise Match • TRIKE-PC-012</span>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">Eduardo Santos validated via LGU Pasay Central Database API</span>
+                  </div>
+                </div>
+                <span className="font-telemetry-code text-body-sm text-on-surface-variant">2 mins ago</span>
+              </div>
+              <div className="flex items-start justify-between p-space-sm rounded-lg bg-surface-container-low/50">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-error text-[20px]">cancel</span>
+                  <div>
+                    <span className="font-headline-sm text-body-md font-semibold text-on-surface block">NBI Clearance Flag • TRIKE-MC-055</span>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">Danilo Reyes clearance record expired beyond 60-day renewal grace</span>
+                  </div>
+                </div>
+                <span className="font-telemetry-code text-body-sm text-on-surface-variant">14 mins ago</span>
+              </div>
+              <div className="flex items-start justify-between p-space-sm rounded-lg bg-surface-container-low/50">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-on-secondary-container text-[20px]">upload_file</span>
+                  <div>
+                    <span className="font-headline-sm text-body-md font-semibold text-on-surface block">Barangay Clearance Uploaded</span>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">Rodrigo Dela Cruz uploaded revised San Antonio barangay cert</span>
+                  </div>
+                </div>
+                <span className="font-telemetry-code text-body-sm text-on-surface-variant">41 mins ago</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+            <span>Automatic biometric and municipal franchise cross-referencing active.</span>
+            <a className="text-secondary font-semibold hover:underline flex items-center gap-1" href="#">
+              <span>View All 124 Audits</span>
+              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </a>
+          </div>
+        </div>
+        {/* Quick Dispatch Summary & Toda Distribution Mini-Card */}
+        <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-space-md">
+              <h2 className="font-headline-sm text-headline-sm text-on-surface">TODA Sector Quota</h2>
+              <span className="font-telemetry-code text-label-sm text-on-secondary-container bg-secondary-container/40 px-2 py-0.5 rounded-full font-bold">PASAY CITY</span>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between font-label-sm text-label-sm mb-1">
+                  <span className="font-medium text-on-surface">Poblacion Central TODA</span>
+                  <span className="font-telemetry-code text-on-surface-variant">112 / 120 (93%)</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: '93%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between font-label-sm text-label-sm mb-1">
+                  <span className="font-medium text-on-surface">San Antonio TODA</span>
+                  <span className="font-telemetry-code text-on-surface-variant">88 / 100 (88%)</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                  <div className="bg-secondary h-full rounded-full" style={{ width: '88%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between font-label-sm text-label-sm mb-1">
+                  <span className="font-medium text-on-surface">Malibay Proper TODA</span>
+                  <span className="font-telemetry-code text-on-surface-variant">74 / 90 (82%)</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                  <div className="bg-secondary-fixed-dim h-full rounded-full" style={{ width: '82%' }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between font-label-sm text-label-sm mb-1">
+                  <span className="font-medium text-on-surface">Maricaban Sector TODA</span>
+                  <span className="font-telemetry-code text-on-surface-variant">74 / 110 (67%)</span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
+                  <div className="bg-outline-variant h-full rounded-full" style={{ width: '67%' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-space-md p-space-sm bg-surface-container-low rounded-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
+              <span className="font-label-sm text-label-sm text-on-surface font-semibold">TODA Cap Compliance</span>
+            </div>
+            <span className="font-telemetry-code text-label-sm text-secondary font-bold">98.2%</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   const renderUsers = () => {
     if (loading) {
@@ -833,7 +1035,7 @@ export function AdminDashboard() {
               <div className="h-6 w-16 bg-muted rounded-full"></div>
             </div>
             <div className="space-y-2">
-              {[1,2,3].map(i => (
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted">
                   <div className="min-w-0">
                     <div className="h-4 w-40 bg-muted rounded"></div>
@@ -859,7 +1061,7 @@ export function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {[1,2,3,4,5].map((_, rowIndex) => (
+                {[1, 2, 3, 4, 5].map((_, rowIndex) => (
                   <tr key={rowIndex} className="border-b border-border/50">
                     {userColumns.map((col, colIndex) => (
                       <td key={colIndex} className="py-3 px-3">
@@ -921,7 +1123,7 @@ export function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {[1,2,3,4,5].map((_, rowIndex) => (
+              {[1, 2, 3, 4, 5].map((_, rowIndex) => (
                 <tr key={rowIndex} className="border-b border-border/50">
                   {rideColumns.map((col, colIndex) => (
                     <td key={colIndex} className="py-3 px-3">
@@ -958,7 +1160,7 @@ export function AdminDashboard() {
             <div className="h-8 w-16 bg-muted rounded-lg"></div>
           </div>
           <div className="space-y-3" role="list" aria-label="Documents">
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="bg-card rounded-xl p-4 border border-border">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1 min-w-[200px]">
@@ -1004,7 +1206,7 @@ export function AdminDashboard() {
     if (loading) {
       return (
         <div className="space-y-3 animate-pulse" role="list" aria-label="Password reset requests">
-          {[1,2,3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="bg-card rounded-xl p-4 border border-border">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex-1 min-w-[200px]">
@@ -1038,7 +1240,7 @@ export function AdminDashboard() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview': return renderOverview();
-      case 'drivers': return renderDrivers();
+      case 'drivers': return renderDriversTab();
       case 'users': return renderUsers();
       case 'rides': return renderRides();
       case 'documents': return renderDocuments();
@@ -1048,7 +1250,7 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div className="min-h-screen bg-surface text-on-surface font-sans">
       {/* Toast */}
       {toast && (
         <Toast
@@ -1059,62 +1261,141 @@ export function AdminDashboard() {
       )}
 
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-40">
-        <div className="max-w-full mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                <span className="material-symbols-outlined text-xl" aria-hidden="true">admin_panel_settings</span>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-28 w-full px-margin flex flex-col justify-between pt-3 pb-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-space-md">
+              <div className="p-1.5 rounded-lg bg-surface-container-low flex items-center justify-center">
+                <img alt="logo-final-check.png" className="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrBz0zthyrXv9HWUD7OLdTH4n8sw271oie4dGEnMwszWMr3w0C8rhuX9f5Xk4WVYvEMAorx0mqXjIlBFVFFgSf3ib2_IAB5DWtm6i_ymYmUxnc06eIYf4XnYqx1M2LkdZENlnh0cvthQlRZzUg8NTeuUcvpcEHCgx70rvtEsAOld-VVTQMhbMlCDqbLApphFkIiWWQGYqPn40gIOsAP6c_AuwJcFtTbuI7CWdJIRCt7N-j6Y9QdQqtGRsw" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-foreground tracking-tight">Fairtrike Admin</h1>
-                <p className="text-muted-foreground text-xs">Operations Console</p>
+                <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight block">Fairtrike Admin</span>
+                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Operations Console</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground hidden sm:block">
-                Signed in as <span className="font-medium text-foreground">{user?.fullname}</span>
-              </span>
+            <div className="flex items-center gap-space-lg">
+              <div className="flex items-center gap-space-sm bg-surface-container-low px-3 py-1.5 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                <span className="font-label-md text-label-md text-on-surface">Signed in as <strong className="font-semibold">{user?.fullname}</strong></span>
+              </div>
               <ActionButton
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
                 aria-label="Sign out"
               >
-                <span className="material-symbols-outlined text-base" aria-hidden="true">logout</span>
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">logout</span>
+                <span>Sign Out</span>
               </ActionButton>
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
+              </div>
             </div>
           </div>
-
-          {/* Tabs */}
-          <nav className="h-12 overflow-x-auto" aria-label="Admin sections" role="tablist">
-            <div className="flex gap-1 min-w-max" role="tablist">
-              {TAB_CONFIG.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  aria-controls={`panel-${tab.id}`}
-                  id={`tab-${tab.id}`}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-                >
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+          <nav className="flex items-center gap-space-xl overflow-x-auto" aria-label="Admin sections" role="tablist">
+            {TAB_CONFIG.map((tab) => (
+              <a
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                className={`pb-2.5 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-primary font-headline-sm border-b-2 border-primary' : 'font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface'}`}
+              >
+                {tab.label}
+              </a>
+            ))}
           </nav>
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-full mx-auto px-4 py-6">
-        <div id="main-content" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="animate-fade-in">
-          {renderTabContent()}
+      <main className="w-full pt-28 bg-surface min-h-screen relative px-margin">
+        <div className="flex flex-col w-full pb-space-xl">
+          {/* Metric Quick Rollout & Dispatch Telemetry Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-space-lg pt-space-md">
+            {/* Stat 1 */}
+            <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Enrolled</span>
+                <div className="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[18px]">electric_rickshaw</span>
+                </div>
+              </div>
+              <div className="mt-space-sm flex items-baseline justify-between">
+                <span className="font-telemetry-metric text-telemetry-metric text-on-surface">{totalDrivers}</span>
+                <span className="font-label-md text-label-md text-secondary font-semibold flex items-center gap-0.5">
+                  <span className="material-symbols-outlined text-[16px]">trending_up</span>+12.4%
+                </span>
+              </div>
+              <span className="font-body-sm text-body-sm text-on-surface-variant mt-1">Across 8 TODA sectors</span>
+            </div>
+            {/* Stat 2 */}
+            <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Approved Drivers</span>
+                <div className="w-8 h-8 rounded-lg bg-secondary-container/30 flex items-center justify-center text-secondary">
+                  <span className="material-symbols-outlined text-[18px]">verified</span>
+                </div>
+              </div>
+              <div className="mt-space-sm flex items-baseline justify-between">
+                <span className="font-telemetry-metric text-telemetry-metric text-on-surface">{stats.drivers?.approved || 0}</span>
+                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-container/40 text-on-secondary-container font-semibold">
+                  {totalDrivers > 0 ? Math.round((stats.drivers?.approved || 0) / totalDrivers * 100) : 0}% Active
+                </span>
+              </div>
+              <span className="font-body-sm text-body-sm text-on-surface-variant mt-1">Verified LTO &amp; Franchise</span>
+            </div>
+            {/* Stat 3 */}
+            <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Pending Review</span>
+                <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-on-secondary-container">
+                  <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+                </div>
+              </div>
+              <div className="mt-space-sm flex items-baseline justify-between">
+                <span className="font-telemetry-metric text-telemetry-metric text-on-surface">{stats.drivers?.pending || 0}</span>
+                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold animate-pulse">Needs Review</span>
+              </div>
+              <span className="font-body-sm text-body-sm text-on-surface-variant mt-1">Avg turnaround: 3.2 hrs</span>
+            </div>
+            {/* Stat 4 */}
+            <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Compliance Disqualified</span>
+                <div className="w-8 h-8 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+                  <span className="material-symbols-outlined text-[18px]">gavel</span>
+                </div>
+              </div>
+              <div className="mt-space-sm flex items-baseline justify-between">
+                <span className="font-telemetry-metric text-telemetry-metric text-on-surface">{stats.drivers?.rejected || 0}</span>
+                <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-semibold">
+                  {totalDrivers > 0 ? Math.round((stats.drivers?.rejected || 0) / totalDrivers * 100) : 0}%
+                </span>
+              </div>
+              <span className="font-body-sm text-body-sm text-on-surface-variant mt-1">Expired permits / Violations</span>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div id="main-content" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="animate-fade-in">
+            {renderTabContent()}
+          </div>
         </div>
       </main>
+      <div className="fixed bottom-margin right-margin z-40">
+        <button className="flex items-center gap-2 px-space-md py-2.5 bg-primary-container text-on-primary shadow-[0_12px_24px_-4px_rgba(6,78,59,0.2),0_6px_12px_-3px_rgba(15,23,42,0.08)] rounded-xl font-label-lg text-label-lg hover:bg-primary transition-all duration-200 transform hover:-translate-y-0.5">
+          <span className="material-symbols-outlined text-[20px]">download_for_offline</span>
+          <span>Install App</span>
+        </button>
+      </div>
+      <footer className="w-full bg-surface-container-low py-space-md">
+        <div className="w-full px-margin flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+          <span>Fairtrike Operations Command • Version 2.4.0-prod</span>
+          <span>© 2025 Fairtrike Mobility Network. All dispatch telemetries authenticated.</span>
+        </div>
+      </footer>
     </div>
   );
 }
