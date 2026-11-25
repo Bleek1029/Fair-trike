@@ -253,6 +253,7 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
     return ok(res, { message: 'If an account exists, a reset link has been sent.' });
   }
   const userId = result.rows[0].id;
+    console.log(`[Auth] User found for ${email} (id: ${userId}), generating reset token...`);
 
   // Generate a secure random token (32 bytes = 256 bits)
   const crypto = await import('node:crypto');
@@ -272,7 +273,9 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   Promise.resolve(emitAdminResetRequested({ id: inserted.rows[0].id, userId, email })).catch(() => {});
 
   // Send password reset email (async, don't block response)
-  sendPasswordResetEmail(email, token).catch((err) => {
+  sendPasswordResetEmail(email, token).then((sent) => {
+    console.log(`[Auth] Password reset email to ${email}: ${sent ? 'SENT ✅' : 'FAILED ❌'}`);
+  }).catch((err) => {
     console.error('[Auth] Failed to send password reset email:', err.message);
   });
 
