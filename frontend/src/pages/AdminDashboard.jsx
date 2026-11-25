@@ -290,6 +290,8 @@ function renderRideRow(ride) {
 }
 
 function renderDocumentRow(doc, handleStatusUpdate) {
+  const fileName = String(doc.filePath).split(/[\\/]/).pop();
+  const viewUrl = `/uploads/${fileName}`;
   return (
     <div key={doc.id} className="bg-card rounded-xl p-4 border border-border" role="listitem">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -300,7 +302,7 @@ function renderDocumentRow(doc, handleStatusUpdate) {
         <div className="flex items-center gap-3 shrink-0">
           <StatusBadge status={doc.status} size="md" />
           <a
-            href={`/${doc.filePath.replace(/^\/+/, '')}`}
+            href={viewUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="px-3 py-2 rounded-lg bg-primary/15 text-primary text-sm font-medium border border-primary/30 hover:bg-primary/25 transition-colors"

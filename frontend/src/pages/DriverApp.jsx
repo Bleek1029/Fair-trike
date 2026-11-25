@@ -16,7 +16,7 @@ import { DriverMap } from '../app/DriverMap.jsx';
 import {
   connectSocket, joinRide, leaveRide, joinDrivers, leaveDrivers,
   sendDriverLocation, onDriverLocation, onRideEvent, onRideRequested,
-  disconnectSocket,
+  onAdminDocumentStatusChanged, disconnectSocket,
 } from '../lib/socket.js';
 
 const DOC_TYPES = [
@@ -55,6 +55,8 @@ export function DriverApp() {
   const [documents, setDocuments] = useState([]);
   const [docType, setDocType] = useState('license');
   const [docBusy, setDocBusy] = useState(false);
+  const [requestAvatarError, setRequestAvatarError] = useState(false);
+  const [acceptedAvatarError, setAcceptedAvatarError] = useState(false);
   const fileRef = useRef(null);
 
   const isApproved = driver?.status === 'approved';
@@ -159,6 +161,7 @@ export function DriverApp() {
     const unsubAccepted = onRideEvent(s, 'ride-accepted', (data) => {
       if (!cancelled && data?.ride) {
         setAccepted(data.ride);
+        setAcceptedAvatarError(false);
         activeRideId.current = data.ride.id;
         startWatching(data.ride.id);
         syncRideToUrl(data.ride);
@@ -179,6 +182,15 @@ export function DriverApp() {
       }
     });
 
+    // Real-time document status updates from admin (approve/reject)
+    const unsubDocStatus = onAdminDocumentStatusChanged(s, (data) => {
+      if (!cancelled && data.userId === user?.id) {
+        apiGetDriverDocuments()
+          .then((data) => { if (!cancelled) setDocuments(data.documents ?? []); })
+          .catch(() => {});
+      }
+    });
+
     apiGetMyDriver()
       .then((data) => { if (!cancelled) setDriver(data.driver); })
       .catch(() => { /* driver profile may not exist yet */ })
@@ -194,6 +206,7 @@ export function DriverApp() {
       unsubAccepted();
       unsubCompleted();
       unsubCancelled();
+      unsubDocStatus();
       stopWatching();
       try { leaveDrivers(socketRef.current); } catch (_) {}
       disconnectSocket();
@@ -395,8 +408,13 @@ export function DriverApp() {
             </div>
             <div className="flex items-center gap-space-sm">
               <div className="w-9 h-9 rounded-full bg-primary text-on-primary text-label-sm font-bold flex items-center justify-center shrink-0 overflow-hidden">
-              {request.passengerAvatar ? (
-                <img src={avatarUrl(request.passengerAvatar)} alt={request.passengerName || 'Passenger'} className="w-full h-full object-cover" />
+              {request.passengerAvatar && !requestAvatarError ? (
+                <img
+                  src={avatarUrl(request.passengerAvatar)}
+                  alt={request.passengerName || 'Passenger'}
+                  className="w-full h-full object-cover"
+                  onError={() => setRequestAvatarError(true)}
+                />
               ) : (
                 initialsOf(request.passengerName || 'P')
               )}
@@ -438,8 +456,13 @@ export function DriverApp() {
             </div>
             <div className="flex items-center gap-space-sm">
               <div className="w-10 h-10 rounded-full bg-primary text-on-primary text-label-sm font-bold flex items-center justify-center shrink-0 overflow-hidden">
-                {accepted.passengerAvatar ? (
-                  <img src={avatarUrl(accepted.passengerAvatar)} alt={accepted.passengerName || 'Passenger'} className="w-full h-full object-cover" />
+                {accepted.passengerAvatar && !acceptedAvatarError ? (
+                  <img
+                    src={avatarUrl(accepted.passengerAvatar)}
+                    alt={accepted.passengerName || 'Passenger'}
+                    className="w-full h-full object-cover"
+                    onError={() => setAcceptedAvatarError(true)}
+                  />
                 ) : (
                   initialsOf(accepted.passengerName || 'P')
                 )}
