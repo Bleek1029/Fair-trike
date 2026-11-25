@@ -146,6 +146,8 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
     /^\/login-driver(\/|$)/,
     /^\/register(\/|$)/,
     /^\/register-driver(\/|$)/,
+    /^\/forgot-password(\/|$)/,
+    /^\/reset-password(\/|$)/,
     /^\/assets(\/|$)/,
     /^\/favicon/,
     /^\/manifest/,
