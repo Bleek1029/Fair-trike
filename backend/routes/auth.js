@@ -273,10 +273,12 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   Promise.resolve(emitAdminResetRequested({ id: inserted.rows[0].id, userId, email })).catch(() => {});
 
   // Send password reset email (await result for debugging)
-  const emailSent = await sendPasswordResetEmail(email, token).catch((err) => {
+  let emailSent = false;
+  try {
+    emailSent = await sendPasswordResetEmail(email, token);
+  } catch (err) {
     console.error('[Auth] Failed to send password reset email:', err.message);
-    return false;
-  });
+  }
 
   console.log(`[Auth] Password reset email to ${email}: ${emailSent ? 'SENT ✅' : 'FAILED ❌'}`);
 
