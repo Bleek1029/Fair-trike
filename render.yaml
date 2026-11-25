@@ -45,3 +45,15 @@ services:
         value: "900000"
       - key: AUTH_RATE_MAX
         value: "100"
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: "Fairtrike <fairtrike@gmail.com>"
+      - key: FRONTEND_URL
+        value: https://fairtrike.onrender.com
