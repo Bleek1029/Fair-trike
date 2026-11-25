@@ -272,14 +272,15 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   // Notify admin in real time so they can review/approve the reset request
   Promise.resolve(emitAdminResetRequested({ id: inserted.rows[0].id, userId, email })).catch(() => {});
 
-  // Send password reset email (async, don't block response)
-  sendPasswordResetEmail(email, token).then((sent) => {
-    console.log(`[Auth] Password reset email to ${email}: ${sent ? 'SENT ✅' : 'FAILED ❌'}`);
-  }).catch((err) => {
+  // Send password reset email (await result for debugging)
+  const emailSent = await sendPasswordResetEmail(email, token).catch((err) => {
     console.error('[Auth] Failed to send password reset email:', err.message);
+    return false;
   });
 
-  ok(res, { message: 'If an account exists, a reset link has been sent.' });
+  console.log(`[Auth] Password reset email to ${email}: ${emailSent ? 'SENT ✅' : 'FAILED ❌'}`);
+
+  ok(res, { message: 'If an account exists, a reset link has been sent.', emailSent });
 }));
 
 // ── POST /api/auth/reset-password ──────────────────────────
