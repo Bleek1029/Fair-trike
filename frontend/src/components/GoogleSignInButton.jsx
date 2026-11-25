@@ -14,6 +14,7 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
   const buttonRef = useRef(null);
   const initializedRef = useRef(false);
   const [error, setError] = useState(null);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   const handleCredential = useCallback(
     async (credentialResponse) => {
@@ -35,10 +36,6 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.__fairtrikeGoogleInitialized) return;
-
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    console.log('[GoogleSignInButton] VITE_GOOGLE_CLIENT_ID:', clientId ? 'SET' : 'MISSING');
 
     if (!clientId) {
       setError('Google Sign-In not configured (missing VITE_GOOGLE_CLIENT_ID).');
@@ -50,8 +47,8 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
     const maxAttempts = 100; // ~10 seconds
     const timer = setInterval(() => {
       attempts++;
-      const libReady = window.google && window.google.accounts && window.google.accounts.id;
-      console.log(`[GoogleSignInButton] Poll attempt ${attempts}: google ready = ${libReady}`);
+      const libReady =
+        window.google && window.google.accounts && window.google.accounts.id;
       if (!libReady) {
         if (attempts >= maxAttempts) {
           clearInterval(timer);
@@ -62,18 +59,25 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
       }
 
       clearInterval(timer);
-      window.__fairtrikeGoogleInitialized = true;
-      initializedRef.current = true;
 
-      try {
-        console.log('[GoogleSignInButton] Initializing Google ID...');
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleCredential,
-        });
+      // Initialize only once per session
+      if (!initializedRef.current) {
+        initializedRef.current = true;
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleCredential,
+          });
+        } catch (err) {
+          console.error('[GoogleSignInButton] Initialize failed:', err);
+          setError(err.message);
+          return;
+        }
+      }
 
-        if (buttonRef.current) {
-          console.log('[GoogleSignInButton] Rendering button...');
+      // Render (or re-render) the button on every mount — handles StrictMode remounts
+      if (buttonRef.current) {
+        try {
           window.google.accounts.id.renderButton(buttonRef.current, {
             theme: 'outline',
             size: 'large',
@@ -81,16 +85,15 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
             logo_alignment: 'center',
             text: 'signin_with',
           });
-          console.log('[GoogleSignInButton] Button rendered.');
+        } catch (err) {
+          console.error('[GoogleSignInButton] Render button failed:', err);
+          setError(err.message);
         }
-      } catch (err) {
-        console.error('[GoogleSignInButton] Initialize failed:', err);
-        setError(err.message);
       }
     }, 100);
 
     return () => clearInterval(timer);
-  }, [handleCredential]);
+  }, [handleCredential, clientId]);
 
   // Render the button div; the Google library injects the actual iframe/button into it.
   return (
