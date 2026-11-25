@@ -1,13 +1,13 @@
-// ── Email Service (Nodemailer + Mailjet SMTP) ───────────────────────────────
+// ── Email Service (Nodemailer + Brevo SMTP) ─────────────────────────────────
 //
-// Sends emails using Nodemailer over SMTP via Mailjet.
-// Get your SMTP credentials from: https://app.mailjet.com (Account → API keys → SMTP)
+// Sends emails using Nodemailer over SMTP via Brevo (formerly Sendinblue).
+// Get your SMTP credentials from: https://app.brevo.com (SMTP & API settings)
 //
 // Required env vars:
-//   SMTP_HOST   (default: in-v3.mailjet.com)
+//   SMTP_HOST   (default: smtp-relay.brevo.com)
 //   SMTP_PORT   (default: 587)
-//   SMTP_USER   (your Mailjet API Key)
-//   SMTP_PASS   (your Mailjet Secret Key)
+//   SMTP_USER   (your Brevo account email address)
+//   SMTP_PASS   (your Brevo SMTP key — starts with xsmtpsib-)
 //   SMTP_FROM   (default: "Fairtrike" <your verified sender>)
 
 import nodemailer from 'nodemailer';
@@ -18,7 +18,7 @@ let transporter = null;
  * Initializes the SMTP transporter. Call once at startup.
  */
 export async function initEmail() {
-  const host = process.env.SMTP_HOST || 'in-v3.mailjet.com';
+  const host = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
   const port = Number(process.env.SMTP_PORT) || 587;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;

@@ -46,7 +46,7 @@ services:
       - key: AUTH_RATE_MAX
         value: "100"
       - key: SMTP_HOST
-        value: in-v3.mailjet.com
+        value: smtp-relay.brevo.com
       - key: SMTP_PORT
         value: "587"
       - key: SMTP_USER
