@@ -153,6 +153,47 @@ BEGIN
     END IF;
 END $$;
 
+-- Fare-context columns (tariff scenarios: terminal vs street hail, extras, cross-zone).
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'rides' AND column_name = 'boarding_context'
+    ) THEN
+        ALTER TABLE rides ADD COLUMN boarding_context VARCHAR(20) NOT NULL DEFAULT 'terminal';
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'rides' AND column_name = 'street_base'
+    ) THEN
+        ALTER TABLE rides ADD COLUMN street_base NUMERIC(5,2) DEFAULT NULL;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'rides' AND column_name = 'extra_passengers'
+    ) THEN
+        ALTER TABLE rides ADD COLUMN extra_passengers INTEGER NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'rides' AND column_name = 'cross_zone'
+    ) THEN
+        ALTER TABLE rides ADD COLUMN cross_zone BOOLEAN NOT NULL DEFAULT FALSE;
+    END IF;
+END $$;
+
 DROP TRIGGER IF EXISTS trigger_set_updated_at_rides ON rides;
 CREATE TRIGGER trigger_set_updated_at_rides
 BEFORE UPDATE ON rides
