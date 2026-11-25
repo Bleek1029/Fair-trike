@@ -31,7 +31,7 @@ router.post('/register', asyncHandler(async (req, res) => {
     [fullname, email, hash]
   );
   const newUser = inserted.rows[0];
-  created(res, { message: 'Account created successfully!', user: publicUser(newUser) });
+  created(res, { message: 'Account created! Wait for admin approval before signing in.', user: publicUser(newUser) });
   emitAdminUserCreated(newUser);
   Promise.resolve(sendWelcomeEmail(newUser.email, newUser.fullname, 'passenger')).catch(() => {});
 }));

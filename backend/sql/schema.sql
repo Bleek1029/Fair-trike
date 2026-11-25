@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     email           VARCHAR(191) NOT NULL UNIQUE,
     password_hash   VARCHAR(255) NOT NULL,
     role            VARCHAR(20) NOT NULL DEFAULT 'passenger' CHECK (role IN ('passenger', 'driver')),
+    status          VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     profile_picture VARCHAR(255) DEFAULT NULL,
     created_at      TIMESTAMPTZ   DEFAULT NOW(),
     updated_at      TIMESTAMPTZ   DEFAULT NOW()
