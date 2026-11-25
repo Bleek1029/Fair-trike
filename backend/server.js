@@ -55,7 +55,7 @@ app.use(cors({
 // CSP tuned for: Vite (inline scripts in dev), Leaflet (CDN tiles), Socket.io (WS)
 const cspDirectives = {
   defaultSrc: ["'self'"],
-  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vite needs inline + eval in dev
+  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://accounts.google.com'], // Google Identity Services
   styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   fontSrc: ["'self'", 'https://fonts.gstatic.com'],
   imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
