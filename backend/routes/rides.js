@@ -5,7 +5,7 @@ import { asyncHandler } from '../lib/asyncHandler.js';
 import { ok, created } from '../lib/http.js';
 import { badRequest, notFound, conflict } from '../lib/AppError.js';
 import { assertCoordPair, requireFields, trim } from '../lib/validation.js';
-import { computeFare, normalizeRideType, normalizeBoardingContext } from '../lib/fares.js';
+import { computeFare, normalizeRideType } from '../lib/fares.js';
 import { emitRideRequested, emitRideEvent } from '../socket.js';
 
 const router = Router();
@@ -50,21 +50,15 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
   // Fare tier: regular | pwd | discounted — PWD and student/senior tiers get
   // the statutory 20% discount (₱30.00 → ₱24.00 at the standard fare).
   const rideType = normalizeRideType(req.body.ride_type);
-  const boardingContext = normalizeBoardingContext(req.body.boarding_context);
-  const streetBase = req.body.street_base == null ? null : Number.parseFloat(req.body.street_base);
-  const extraPassengers = Math.max(0, Number.parseInt(req.body.extra_passengers, 10) || 0);
-  const crossZone = req.body.cross_zone === 'true' || req.body.cross_zone === true;
 
   const inserted = await pool.query(
     `INSERT INTO rides (passenger_user_id, passenger_name, pickup_label, dropoff_label,
-       pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, distance_m, fare,
-       boarding_context, street_base, extra_passengers, cross_zone)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+       pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, distance_m, fare)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
     [(req.user.id || null), (passengerName || trim(req.user?.fullname || '') || null), pickupLabel, dropoffLabel,
       req.body.pickup_coord.lat, req.body.pickup_coord.lng,
       req.body.dropoff_coord.lat, req.body.dropoff_coord.lng,
-      distanceM, computeFare({ distanceMeters: distanceM, rideType, boardingContext, streetBase, extraPassengers, crossZone }),
-      boardingContext, streetBase, extraPassengers, crossZone]
+      distanceM, computeFare(distanceM, rideType)]
   );
   const ride = publicRide(inserted.rows[0]);
   emitRideRequested(ride);

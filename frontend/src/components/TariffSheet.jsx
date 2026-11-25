@@ -44,7 +44,7 @@ export function TariffSheet({ open, driver, onClose, onBook }) {
                 <p className="text-label-lg text-on-surface font-bold">Base fare</p>
                 <p className="text-body-sm text-on-surface-variant">Flag-down rate</p>
               </div>
-              <span className="text-headline-sm text-primary font-black">{formatPeso(FARE.base.terminal)}</span>
+              <span className="text-headline-sm text-primary font-black">{formatPeso(FARE.base)}</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest">
               <div>

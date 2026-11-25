@@ -10,17 +10,16 @@ import { RideOptionCard } from '../components/RideOptionCard.jsx';
 import { FareEstimator } from '../components/FareEstimator.jsx';
 import { AiAssistant } from '../components/AiAssistant.jsx';
 import { useToast } from '../components/Toast.jsx';
-import {
-  FARE, RIDE_TYPES, BOARDING_CONTEXTS,
-  normalizeRideType, normalizeBoardingContext, computeFare,
-  MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL,
-} from '../config.js';
+import { FARE, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL } from '../config.js';
 import { apiCreateRide, apiAiParseBooking, apiAiNotification, getAccessToken } from '../api.js';
 import {
   connectSocket, joinRide, leaveRide, onDriverLocation, onRideEvent,
 } from '../lib/socket.js';
 import { initialsOf, avatarUrl, haversine } from '../lib/utils.js';
 import { fmtDist, fmtTime, formatPeso } from '../lib/format.js';
+
+const BASE_FARE = FARE.base;
+const PER_KM = FARE.perKm;
 
 const NL_PLACEHOLDER = 'e.g., "Rizal Triangle to Gordon College as student" or "SM Olongapo to Robinson\'s Place, PWD"';
 
@@ -31,7 +30,7 @@ export function getInitials(fullname) {
 // ── Ride options (fare tiers). The tricycle is the only ride —
 //    Drive / Walk / Bike travel modes have been removed. ──
 const RIDE_OPTIONS = [
-  { id: 'regular', title: 'Standard Regular', icon: 'electric_rickshaw', desc: 'Standard trike fare · flag-down base fare' },
+  { id: 'regular', title: 'Standard Regular', icon: 'electric_rickshaw', desc: 'Standard trike fare · ₱30.00 flag-down' },
   { id: 'pwd', title: 'PWD', icon: 'accessible', badge: '20% OFF', badgeClass: 'bg-primary-container text-on-primary', desc: 'Persons with Disability — 20% off by law' },
   { id: 'discounted', title: 'Student / Senior Pass', icon: 'badge', badge: '20% OFF', badgeClass: 'bg-primary-container text-on-primary', desc: 'Students & senior citizens — 20% off by law' },
 ];
@@ -81,10 +80,6 @@ export function MapApp() {
   const [driverAvatar, setDriverAvatar] = useState(null);
   const [rideCompleted, setRideCompleted] = useState(false);
   const [rideStatus, setRideStatus] = useState(booked ? booked.status : null);
-  const [rideContext, setRideContext] = useState('terminal');
-  const [rideStreetBase, setRideStreetBase] = useState(20.0);
-  const [rideExtraPassengers, setRideExtraPassengers] = useState(0);
-  const [rideCrossZone, setRideCrossZone] = useState(false);
   const [showAssistant, setShowAssistant] = useState(false);
   const [nlBookingText, setNlBookingText] = useState('');
   const [nlBookingLoading, setNlBookingLoading] = useState(false);
@@ -554,10 +549,6 @@ export function MapApp() {
         dropoff_coord: b,
         distance_m: Math.round(distance),
         ride_type: rideId,
-        boarding_context: rideContext,
-        street_base: rideStreetBase,
-        extra_passengers: rideExtraPassengers,
-        cross_zone: rideCrossZone,
       });
       setBooked(data.ride);
     } catch (err) {
@@ -569,25 +560,17 @@ export function MapApp() {
 
   const selectedRide = RIDE_OPTIONS.find((r) => r.id === rideId) || RIDE_OPTIONS[0];
 
-  // Per-tier fares from the routed distance and tariff context.
-  // PWD and student/senior tiers apply the mandatory 20% discount.
+  // Per-tier fares from the routed distance. PWD and student/senior tiers apply
+  // the mandatory 20% discount: ₱30.00 × 0.20 = ₱6.00 off → ₱24.00 to pay.
   const fares = useMemo(() => {
     if (!routeResult) return null;
-    const compute = (type) =>
-      computeFare({
-        distanceMeters: routeResult.distance,
-        rideType: type,
-        boardingContext: rideContext,
-        streetBase: rideStreetBase,
-        extraPassengers: rideExtraPassengers,
-        crossZone: rideCrossZone,
-      });
-    return {
-      regular: compute('regular'),
-      pwd: compute('pwd'),
-      discounted: compute('discounted'),
-    };
-  }, [routeResult, rideContext, rideStreetBase, rideExtraPassengers, rideCrossZone]);
+    const km = routeResult.distance / 1000;
+    const round = (n) => Math.round(n * 100) / 100;
+    const regular = Math.max(FARE.minFloors.regular, BASE_FARE + PER_KM * km);
+    const pwd = Math.max(FARE.minFloors.pwd, (1 - FARE.pwdDiscount) * (BASE_FARE + PER_KM * km));
+    const discounted = Math.max(FARE.minFloors.discounted, (1 - FARE.studentDiscount) * (BASE_FARE + PER_KM * km));
+    return { regular: round(regular), pwd: round(pwd), discounted: round(discounted) };
+  }, [routeResult]);
   const computedFare = fares ? fares[rideId] : null;
 
   const fareLabel = computedFare == null ? '—' : formatPeso(computedFare);
@@ -789,9 +772,7 @@ export function MapApp() {
 
         <FareEstimator
           range={routeResult ? `${fareLabel} • ${fmtDist(routeResult.distance)}` : '—'}
-          note={routeResult
-            ? `${rideContext === 'street' ? 'Street hail' : 'Terminal / Pila'} base ${formatPeso(rideContext === 'street' ? rideStreetBase : FARE.base.terminal)} • ${rideId !== 'regular' ? '20% discount applied' : 'Regular fare'}${rideCrossZone ? ' • cross-zone surcharge' : ''}`
-            : 'Calculate a route to see the fare'}
+          note={routeResult ? (rideId === 'regular' ? 'Computed from route distance' : '20% statutory discount applied') : 'Calculate a route to see the fare'}
         />
 
         <div className="w-full flex flex-col gap-2">
@@ -813,92 +794,6 @@ export function MapApp() {
               onSelect={() => setRideId(r.id)}
             />
           ))}
-        </div>
-
-        {/* Tariff context — how & where the ride is boarded affects the base fare. */}
-        <div className="w-full flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-headline-sm text-on-surface">Tariff Context</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setRideContext('terminal')}
-              className={`h-10 rounded-lg border flex items-center justify-center gap-2 text-label-sm text-label-sm font-medium transition-colors ${
-                rideContext === 'terminal'
-                  ? 'bg-primary text-on-primary border-primary'
-                  : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high'
-              }`}
-            >
-              <Icon name="train" size={16} /> Terminal / Pila
-            </button>
-            <button
-              type="button"
-              onClick={() => setRideContext('street')}
-              className={`h-10 rounded-lg border flex items-center justify-center gap-2 text-label-sm font-medium transition-colors ${
-                rideContext === 'street'
-                  ? 'bg-primary text-on-primary border-primary'
-                  : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high'
-              }`}
-            >
-              <Icon name="hail" size={16} /> Street Hail
-            </button>
-          </div>
-
-          {rideContext === 'street' && (
-            <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-outline-variant/50">
-              <span className="text-label-sm text-on-surface-variant">Street base fare</span>
-              <div className="flex items-center gap-1">
-                <span className="text-label-sm text-on-surface">₱</span>
-                <input
-                  type="number"
-                  min={FARE.streetBaseRange.min}
-                  max={FARE.streetBaseRange.max}
-                  step={1}
-                  value={rideStreetBase}
-                  onChange={(e) => {
-                    const v = Number.parseFloat(e.target.value);
-                    if (Number.isFinite(v)) setRideStreetBase(v);
-                  }}
-                  className="w-16 rounded-lg bg-surface border border-outline-variant px-2 py-1 text-label-sm text-on-surface focus:outline-none focus:border-primary"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-surface-container-low border border-outline-variant/50">
-            <span className="text-label-sm text-on-surface-variant">Extra passengers</span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setRideExtraPassengers((p) => Math.max(0, p - 1))}
-                className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high"
-              >
-                <Icon name="remove" size={16} />
-              </button>
-              <span className="w-8 text-center text-label-sm font-bold text-on-surface">{rideExtraPassengers}</span>
-              <button
-                type="button"
-                onClick={() => setRideExtraPassengers((p) => p + 1)}
-                className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high"
-              >
-                <Icon name="add" size={16} />
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setRideCrossZone((v) => !v)}
-            className={`w-full h-10 rounded-lg border flex items-center justify-center gap-2 text-label-sm font-medium transition-colors ${
-              rideCrossZone
-                ? 'bg-primary text-on-primary border-primary'
-                : 'bg-surface-container-low text-on-surface-variant border-outline-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <Icon name={rideCrossZone ? 'toggle_on' : 'toggle_off'} size={16} />
-            <span>Cross-zone / Out-of-route (₱40+)</span>
-          </button>
         </div>
 
         <div className="w-full flex flex-col gap-2">
