@@ -108,7 +108,7 @@ app.use('/api/ai', requireAuth, rateLimiters.ai, aiRouter);
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtrike-backend' }));
 
-// Email test (verify Resend config)
+// Email test (verify SMTP config)
 app.use('/api/email', emailRouter);
 
 // Prometheus metrics

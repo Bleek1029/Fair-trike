@@ -1,26 +1,52 @@
-// ── Email Service (Resend) ──────────────────────────────────────────────────────
+// ── Email Service (Nodemailer + Gmail SMTP) ─────────────────────────────────
 //
-// Sends emails using Resend API instead of SMTP.
-// Faster delivery, no SMTP configuration headaches, better deliverability.
+// Sends emails using Nodemailer over SMTP (Gmail by default).
+// No third-party API key needed — just your Gmail address + App Password.
+// See https://myaccount.google.com/apppasswords to generate an App Password.
+//
+// Required env vars:
+//   SMTP_HOST   (default: smtp.gmail.com)
+//   SMTP_PORT   (default: 587)
+//   SMTP_USER   (your Gmail address)
+//   SMTP_PASS   (your Gmail App Password — NOT your regular Gmail password)
+//   SMTP_FROM   (default: "Fairtrike" <your SMTP_USER>)
 
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-let resend = null;
+let transporter = null;
 
 /**
- * Initializes the Resend client. Call once at startup.
+ * Initializes the SMTP transporter. Call once at startup.
  */
 export async function initEmail() {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('[Email] RESEND_API_KEY not set - emails will not be sent');
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    console.warn('[Email] SMTP_USER/SMTP_PASS not set - emails will not be sent');
     return;
   }
-  resend = new Resend(process.env.RESEND_API_KEY);
-  console.log('[Email] Resend configured');
+
+  transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // true for 465, false for 587 (STARTTLS)
+    auth: { user, pass },
+  });
+
+  try {
+    await transporter.verify();
+    console.log('[Email] SMTP transporter configured and verified');
+  } catch (err) {
+    console.error('[Email] SMTP verification failed:', err.message);
+    transporter = null;
+  }
 }
 
 /**
- * Sends an email via Resend.
+ * Sends an email via SMTP.
  * @param {Object} options
  * @param {string} options.to - Recipient email
  * @param {string} options.subject - Email subject
@@ -29,30 +55,25 @@ export async function initEmail() {
  * @returns {Promise<boolean>} Success status
  */
 export async function sendEmail({ to, subject, html, text }) {
-  if (!resend) {
+  if (!transporter) {
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[Email] Would send to ${to}:`, { subject });
       return true;
     }
-    console.error('[Email] Cannot send - Resend not configured');
+    console.error('[Email] Cannot send - SMTP not configured');
     return false;
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'Fairtrike <onboarding@resend.dev>',
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_FROM || `Fairtrike <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
       text: text || html?.replace(/<[^>]*>/g, ''),
     });
 
-    if (error) {
-      console.error('[Email] Send failed:', error.message);
-      return false;
-    }
-
-    console.log('[Email] Sent:', data.id);
+    console.log('[Email] Sent:', info.messageId);
     return true;
   } catch (err) {
     console.error('[Email] Send failed:', err.message);
@@ -174,7 +195,7 @@ Forgot your password? You can reset it from the login screen.
 }
 
 /**
- * Sends a test email to verify Resend configuration.
+ * Sends a test email to verify SMTP configuration.
  * @param {string} to - Test recipient
  * @returns {Promise<boolean>}
  */

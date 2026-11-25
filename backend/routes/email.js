@@ -1,5 +1,5 @@
 // ── Email test route ───────────────────────────────────────────────────────
-// Sends a test email via Resend so you can verify your API key works.
+// Sends a test email via SMTP so you can verify your configuration works.
 // POST /api/email/test   { "to": "recipient@example.com" }
 import { Router } from 'express';
 import { asyncHandler } from '../lib/asyncHandler.js';
