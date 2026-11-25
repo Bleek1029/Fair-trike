@@ -2,24 +2,40 @@ import React, { useEffect, useState } from 'react';
 import { MobileHeader } from '../components/MobileHeader.jsx';
 import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
-import { apiGetEarnings } from '../api.js';
+import { apiGetEarnings, apiAiSummary } from '../api.js';
 
 // ── Driver earnings — real report from completed trips ──
 export function DriverEarnings() {
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     apiGetEarnings()
-      .then((data) => {
+      .then(async (data) => {
+        if (!mounted) return;
         setReport(data);
         setLoading(false);
+        // Generate an AI earnings recap from real (non-hardcoded) data.
+        try {
+          setAiSummaryLoading(true);
+          const summary = await apiAiSummary('driver', data);
+          if (mounted) setAiSummary(summary.summary || '');
+        } catch (err) {
+          if (mounted) setAiSummary('Unable to generate earnings summary at this time.');
+        } finally {
+          if (mounted) setAiSummaryLoading(false);
+        }
       })
       .catch((err) => {
+        if (!mounted) return;
         setError(err.message);
         setLoading(false);
       });
+    return () => { mounted = false; };
   }, []);
 
   const fmtPeso = (n) => `₱${Number(n || 0).toFixed(2)}`;
@@ -97,6 +113,23 @@ export function DriverEarnings() {
             </div>
           )}
         </section>
+
+        {/* AI earnings recap — generated from real trip data, no hardcoded figures */}
+        {(aiSummary || aiSummaryLoading) && (
+          <section className="rounded-2xl bg-surface-container-low p-space-lg shadow-sm border border-surface-variant">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon name="auto_awesome" size={20} />
+              <h3 className="text-title-sm font-bold text-on-surface">Earnings Recap</h3>
+            </div>
+            {aiSummaryLoading ? (
+              <div className="p-space-md text-center">
+                <p className="text-body-sm text-on-surface-variant">Generating summary…</p>
+              </div>
+            ) : (
+              <p className="text-body-sm text-on-surface-variant whitespace-pre-wrap">{aiSummary}</p>
+            )}
+          </section>
+        )}
       </main>
       <BottomNav />
     </div>
