@@ -36,17 +36,23 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.__fairtrikeGoogleInitialized) return;
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-      console.warn('[GoogleSignInButton] VITE_GOOGLE_CLIENT_ID not configured.');
+
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    console.log('[GoogleSignInButton] VITE_GOOGLE_CLIENT_ID:', clientId ? 'SET' : 'MISSING');
+
+    if (!clientId) {
+      setError('Google Sign-In not configured (missing VITE_GOOGLE_CLIENT_ID).');
       return;
     }
 
     // Poll for the Google library to load (script is async/defer)
     let attempts = 0;
-    const maxAttempts = 50; // ~5 seconds
+    const maxAttempts = 100; // ~10 seconds
     const timer = setInterval(() => {
       attempts++;
-      if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      const libReady = window.google && window.google.accounts && window.google.accounts.id;
+      console.log(`[GoogleSignInButton] Poll attempt ${attempts}: google ready = ${libReady}`);
+      if (!libReady) {
         if (attempts >= maxAttempts) {
           clearInterval(timer);
           console.error('[GoogleSignInButton] Google library failed to load.');
@@ -60,12 +66,14 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
       initializedRef.current = true;
 
       try {
+        console.log('[GoogleSignInButton] Initializing Google ID...');
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: clientId,
           callback: handleCredential,
         });
 
         if (buttonRef.current) {
+          console.log('[GoogleSignInButton] Rendering button...');
           window.google.accounts.id.renderButton(buttonRef.current, {
             theme: 'outline',
             size: 'large',
@@ -73,6 +81,7 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
             logo_alignment: 'center',
             text: 'signin_with',
           });
+          console.log('[GoogleSignInButton] Button rendered.');
         }
       } catch (err) {
         console.error('[GoogleSignInButton] Initialize failed:', err);
