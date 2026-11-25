@@ -10,6 +10,7 @@ import { MobileHeader } from '../components/MobileHeader.jsx';
 import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { initialsOf, avatarUrl } from '../lib/utils.js';
+import { UPLOADS_BASE } from '../config.js';
 import { fetchSteps, fmtStepDistance } from '../lib/navigation.js';
 import { DriverMap } from '../app/DriverMap.jsx';
 import {
@@ -625,23 +626,37 @@ export function DriverApp() {
             {documents.length === 0 ? (
               <p className="text-body-sm text-on-surface-variant">No documents uploaded yet.</p>
             ) : (
-              documents.map((d) => (
-                <div key={d.id} className="flex items-center justify-between rounded-xl bg-surface p-space-md">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Icon name={d.docType === 'license' ? 'badge' : 'description'} size={18} />
-                    <span className="text-label-lg truncate">
-                      {DOC_TYPES.find((t) => t.value === d.docType)?.label ?? d.docType}
-                    </span>
+              documents.map((d) => {
+                const fileName = String(d.filePath).split(/[\\/]/).pop();
+                const viewUrl = `${UPLOADS_BASE}/${fileName}`;
+                return (
+                  <div key={d.id} className="flex items-center justify-between rounded-xl bg-surface p-space-md">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon name={d.docType === 'license' ? 'badge' : 'description'} size={18} />
+                      <span className="text-label-lg truncate">
+                        {DOC_TYPES.find((t) => t.value === d.docType)?.label ?? d.docType}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={viewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 transition-colors"
+                      >
+                        View
+                      </a>
+                      <span className={`text-label-sm font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        d.status === 'approved' ? 'bg-tertiary-container/30 text-on-tertiary-container'
+                          : d.status === 'rejected' ? 'bg-error-container/40 text-error'
+                          : 'bg-surface-container-high text-on-surface-variant'
+                      }`}>
+                        {d.status}
+                      </span>
+                    </div>
                   </div>
-                  <span className={`text-label-sm font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                    d.status === 'approved' ? 'bg-tertiary-container/30 text-on-tertiary-container'
-                      : d.status === 'rejected' ? 'bg-error-container/40 text-error'
-                      : 'bg-surface-container-high text-on-surface-variant'
-                  }`}>
-                    {d.status}
-                  </span>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>
