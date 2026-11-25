@@ -269,17 +269,12 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
     [userId, email, codeHash]
   );
 
-  // Send password reset code via email (await result for debugging)
-  let emailSent = false;
-  try {
-    emailSent = await sendPasswordResetCode(email, code);
-  } catch (err) {
+  // Send password reset code via email in background (don't block the API response)
+  Promise.resolve(sendPasswordResetCode(email, code)).catch((err) => {
     console.error('[Auth] Failed to send password reset code:', err.message);
-  }
+  });
 
-  console.log(`[Auth] Password reset code to ${email}: ${emailSent ? 'SENT ✅' : 'FAILED ❌'}`);
-
-  ok(res, { message: 'If an account exists, a reset code has been sent.', emailSent });
+  ok(res, { message: 'If an account exists, a reset code has been sent.' });
 }));
 
 // ── POST /api/auth/reset-password ──────────────────────────
