@@ -33,10 +33,10 @@ export function InstallPrompt() {
     <button
       type="button"
       onClick={install}
-      className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-container text-on-primary-container text-label-lg font-bold shadow-lg hover:bg-primary-fixed-dim transition-all"
+      className="fixed bottom-4 left-4 z-30 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant text-on-surface-variant text-label-sm font-medium shadow-sm hover:bg-surface-container-high transition-all"
       aria-label="Install Fairtrike app"
     >
-      <span className="material-symbols-outlined text-[20px]">install_mobile</span>
+      <span className="material-symbols-outlined text-[18px]">install_mobile</span>
       Install App
     </button>
   );
