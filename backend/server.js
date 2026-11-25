@@ -55,12 +55,12 @@ app.use(cors({
 // CSP tuned for: Vite (inline scripts in dev), Leaflet (CDN tiles), Socket.io (WS)
 const cspDirectives = {
   defaultSrc: ["'self'"],
-  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://accounts.google.com'], // Google Identity Services
+  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://accounts.google.com', 'https://apis.google.com'], // Google Identity Services
   styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   fontSrc: ["'self'", 'https://fonts.gstatic.com'],
   imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-  connectSrc: ["'self'", 'https:', 'wss:', 'ws:'], // Leaflet tiles, Socket.io, OSRM
-  frameSrc: ["'none'"],
+  connectSrc: ["'self'", 'https:', 'wss:', 'ws:'], // Leaflet tiles, Socket.io, OSRM, Google APIs
+  frameSrc: ["'none'", 'https://accounts.google.com'], // Google Sign-In button iframe
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
