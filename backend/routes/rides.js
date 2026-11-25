@@ -146,12 +146,14 @@ router.get('/history', requireAuth, asyncHandler(async (req, res) => {
 
 // ── GET /api/rides/earnings — driver earnings report ─────
 router.get('/earnings', requireAuth, requireRole(pool, 'driver'), asyncHandler(async (req, res) => {
+  // Use Asia/Manila (UTC+8) for "today"/"week" boundaries so earnings
+  // reflect the driver's local calendar day, not the server's UTC day.
   const summary = await pool.query(
     `SELECT
-       COUNT(*) FILTER (WHERE completed_at >= date_trunc('day', NOW()))               AS today_trips,
-       COALESCE(SUM(fare) FILTER (WHERE completed_at >= date_trunc('day', NOW())), 0) AS today_earnings,
-       COUNT(*) FILTER (WHERE completed_at >= date_trunc('week', NOW()))              AS week_trips,
-       COALESCE(SUM(fare) FILTER (WHERE completed_at >= date_trunc('week', NOW())),0) AS week_earnings,
+       COUNT(*) FILTER (WHERE completed_at >= (date_trunc('day', NOW() AT TIME ZONE 'Asia/Manila')) AT TIME ZONE 'Asia/Manila') AS today_trips,
+       COALESCE(SUM(fare) FILTER (WHERE completed_at >= (date_trunc('day', NOW() AT TIME ZONE 'Asia/Manila')) AT TIME ZONE 'Asia/Manila'), 0) AS today_earnings,
+       COUNT(*) FILTER (WHERE completed_at >= date_trunc('week', NOW() AT TIME ZONE 'Asia/Manila'))              AS week_trips,
+       COALESCE(SUM(fare) FILTER (WHERE completed_at >= date_trunc('week', NOW() AT TIME ZONE 'Asia/Manila')), 0) AS week_earnings,
        COUNT(*)                                                                       AS total_trips,
        COALESCE(SUM(fare), 0)                                                         AS total_earnings
      FROM rides
@@ -159,7 +161,7 @@ router.get('/earnings', requireAuth, requireRole(pool, 'driver'), asyncHandler(a
     [req.user.id]
   );
   const daily = await pool.query(
-    `SELECT to_char(date_trunc('day', completed_at), 'YYYY-MM-DD') AS day,
+    `SELECT to_char(date_trunc('day', completed_at AT TIME ZONE 'Asia/Manila'), 'YYYY-MM-DD') AS day,
             COUNT(*) AS trips, COALESCE(SUM(fare), 0) AS earnings
      FROM rides
      WHERE driver_user_id = $1 AND status = 'completed'
