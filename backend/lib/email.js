@@ -1,15 +1,14 @@
-// ── Email Service (Nodemailer + Gmail SMTP) ─────────────────────────────────
+// ── Email Service (Nodemailer + Mailjet SMTP) ───────────────────────────────
 //
-// Sends emails using Nodemailer over SMTP (Gmail by default).
-// No third-party API key needed — just your Gmail address + App Password.
-// See https://myaccount.google.com/apppasswords to generate an App Password.
+// Sends emails using Nodemailer over SMTP via Mailjet.
+// Get your SMTP credentials from: https://app.mailjet.com (Account → API keys → SMTP)
 //
 // Required env vars:
-//   SMTP_HOST   (default: smtp.gmail.com)
+//   SMTP_HOST   (default: in-v3.mailjet.com)
 //   SMTP_PORT   (default: 587)
-//   SMTP_USER   (your Gmail address)
-//   SMTP_PASS   (your Gmail App Password — NOT your regular Gmail password)
-//   SMTP_FROM   (default: "Fairtrike" <your SMTP_USER>)
+//   SMTP_USER   (your Mailjet API Key)
+//   SMTP_PASS   (your Mailjet Secret Key)
+//   SMTP_FROM   (default: "Fairtrike" <your verified sender>)
 
 import nodemailer from 'nodemailer';
 
@@ -19,7 +18,7 @@ let transporter = null;
  * Initializes the SMTP transporter. Call once at startup.
  */
 export async function initEmail() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const host = process.env.SMTP_HOST || 'in-v3.mailjet.com';
   const port = Number(process.env.SMTP_PORT) || 587;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
