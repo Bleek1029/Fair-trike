@@ -78,7 +78,7 @@ export function DriverAccount() {
         <section className="rounded-2xl bg-surface-container-low p-space-lg shadow-sm flex flex-col items-center gap-space-md">
           <div className="relative">
             <div
-              className={`w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 ${
+              className={`w-20 h-20 rounded-full overflow-hidden shrink-0 border-2 ${
                 userAvatar ? 'border-primary' : 'border-primary/30'
               }`}
             >
@@ -94,24 +94,25 @@ export function DriverAccount() {
                 />
               ) : (
                 <div className="w-full h-full bg-primary text-on-primary flex items-center justify-center">
-                  <span className="text-title-lg font-bold">{initialsOf(user?.fullname)}</span>
+                  <span className="text-title-xl font-bold">{initialsOf(user?.fullname)}</span>
                 </div>
               )}
             </div>
             {!profileBusy && (
-              <label className="absolute bottom-0 right-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-on-primary shadow-sm cursor-pointer hover:bg-primary/90 transition-colors">
+              <label className="absolute bottom-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary shadow-lg cursor-pointer hover:bg-primary/90 transition-colors">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleProfileChange}
                   className="hidden"
                 />
-                <span className="text-[10px]">✎</span>
+                <span className="text-[12px] font-bold">✎</span>
               </label>
             )}
           </div>
+          <p className="text-body-sm text-on-surface-variant">{userAvatar ? 'Profile picture' : 'Add profile picture'}</p>
           {profileBusy && (
-            <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center animate-pulse">
+            <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center animate-pulse">
               <span className="text-body-sm">⟳</span>
             </div>
           )}
@@ -134,7 +135,7 @@ export function DriverAccount() {
               type="button"
               onClick={handleSaveProfile}
               disabled={profileBusy}
-              className={`text-body-xs font-bold px-2 py-1 rounded-md ${profileBusy ? 'bg-surface-container-high text-on-surface-variant opacity-60' : 'bg-primary text-on-primary hover:bg-primary/90'}`}
+              className={`text-body-xs font-bold px-3 py-1.5 rounded-md ${profileBusy ? 'bg-surface-container-high text-on-surface-variant opacity-60' : 'bg-primary text-on-primary hover:bg-primary/90'}`}
             >
               {profileBusy ? 'Uploading…' : 'Save photo'}
             </button>

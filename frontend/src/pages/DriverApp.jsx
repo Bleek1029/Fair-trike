@@ -5,7 +5,7 @@ import {
   apiGetMyDriver, apiGetAvailableRides, apiAcceptRide, apiCompleteRide,
   apiGetEarnings, apiGetDriverDocuments, apiUploadDriverDocument,
 } from '../api.js';
-import { apiAiSummary } from '../api.js';
+import { apiAiSummary, apiUpdateProfile, apiRemovePicture } from '../api.js';
 import { MobileHeader } from '../components/MobileHeader.jsx';
 import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
@@ -57,6 +57,9 @@ export function DriverApp() {
   const [docBusy, setDocBusy] = useState(false);
   const [requestAvatarError, setRequestAvatarError] = useState(false);
   const [acceptedAvatarError, setAcceptedAvatarError] = useState(false);
+  const [profileFile, setProfileFile] = useState(null);
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [driverAvatar, setDriverAvatar] = useState(null);
   const fileRef = useRef(null);
 
   const isApproved = driver?.status === 'approved';
@@ -191,6 +194,7 @@ export function DriverApp() {
       }
     });
 
+    if (!cancelled) setDriverAvatar(user?.profile_picture ?? null);
     apiGetMyDriver()
       .then((data) => { if (!cancelled) setDriver(data.driver); })
       .catch(() => { /* driver profile may not exist yet */ })
@@ -317,6 +321,37 @@ export function DriverApp() {
     }
   };
 
+  const handleDriverProfileChange = (e) => {
+    setProfileFile(e.target.files?.[0] ?? null);
+  };
+
+  const handleSaveDriverProfile = async (e) => {
+    e.preventDefault();
+    if (!profileFile) return;
+    setProfileBusy(true);
+    const fd = new FormData();
+    fd.append('fullname', user?.fullname || '');
+    fd.append('profile_picture', profileFile);
+    try {
+      const res = await apiUpdateProfile(fd);
+      setDriverAvatar(res.user?.profilePicture ?? null);
+      setProfileFile(null);
+    } catch (err) {
+      setError(err.message || 'Failed to upload profile picture.');
+    } finally {
+      setProfileBusy(false);
+    }
+  };
+
+  const handleRemoveDriverProfile = async () => {
+    try {
+      await apiRemovePicture();
+      setDriverAvatar(null);
+    } catch (err) {
+      setError(err.message || 'Failed to remove profile picture.');
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-surface text-on-surface text-body-md" style={{ paddingTop: '5rem' }}>
       <MobileHeader />
@@ -330,10 +365,47 @@ export function DriverApp() {
         )}
 
         {/* Driver identity + approval status */}
-        <section className="rounded-2xl bg-surface-container-low p-space-lg shadow-sm flex items-center gap-space-md">
-          <div className="w-14 h-14 rounded-full bg-primary text-on-primary text-title-md font-bold flex items-center justify-center shrink-0">
-            {initialsOf(user?.fullname)}
+        <section className="rounded-2xl bg-surface-container-low p-space-lg shadow-sm flex flex-col items-center gap-space-md">
+          <div className="relative">
+            <div
+              className={`w-18 h-18 rounded-full overflow-hidden shrink-0 border-2 ${
+                driverAvatar ? 'border-primary' : 'border-primary/30'
+              }`}
+            >
+              {driverAvatar ? (
+                <img
+                  src={avatarUrl(driverAvatar)}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = '';
+                    setDriverAvatar(null);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-primary text-on-primary flex items-center justify-center">
+                  <span className="text-title-lg font-bold">{initialsOf(user?.fullname)}</span>
+                </div>
+              )}
+            </div>
+            {!profileBusy && (
+              <label className="absolute bottom-0 right-0 flex items-center justify-center w-7 h-7 rounded-full bg-primary text-on-primary shadow-lg cursor-pointer hover:bg-primary/90 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleDriverProfileChange}
+                  className="hidden"
+                />
+                <span className="text-[11px] font-bold">✎</span>
+              </label>
+            )}
           </div>
+          <p className="text-body-sm text-on-surface-variant">{driverAvatar ? 'Profile picture' : 'Add profile picture'}</p>
+          {profileBusy && (
+            <div className="w-18 h-18 rounded-full bg-surface-container-high flex items-center justify-center animate-pulse">
+              <span className="text-body-sm">⟳</span>
+            </div>
+          )}
           <div className="min-w-0 grow">
             <h2 className="text-headline-sm font-bold truncate">{user?.fullname || 'Driver'}</h2>
             {driverLoading ? (
@@ -352,6 +424,25 @@ export function DriverApp() {
             <span className={`w-1.5 h-1.5 rounded-full ${isApproved ? 'bg-tertiary' : 'bg-error'}`} />
             {driverLoading ? '…' : isApproved ? 'Verified' : (driver?.status || 'Pending')}
           </span>
+          {driverAvatar && (
+            <button
+              type="button"
+              onClick={handleRemoveDriverProfile}
+              className="text-body-xs text-error hover:text-error/80 underline underline-offset-2 mt-1"
+            >
+              Remove photo
+            </button>
+          )}
+          {!driverAvatar && profileFile && (
+            <button
+              type="button"
+              onClick={handleSaveDriverProfile}
+              disabled={profileBusy}
+              className={`text-body-xs font-bold px-3 py-1.5 rounded-md ${profileBusy ? 'bg-surface-container-high text-on-surface-variant opacity-60' : 'bg-primary text-on-primary hover:bg-primary/90'}`}
+            >
+              {profileBusy ? 'Uploading…' : 'Save photo'}
+            </button>
+          )}
         </section>
 
         {/* Duty status toggle */}
