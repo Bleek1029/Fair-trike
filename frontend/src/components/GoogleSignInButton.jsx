@@ -16,6 +16,10 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
   const [error, setError] = useState(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+  // Keep the latest credential handler in a ref so Phase 1 doesn't need
+  // to re-run when login/onSuccess change.
+  const callbackRef = useRef(null);
+
   const handleCredential = useCallback(
     async (credentialResponse) => {
       const { credential } = credentialResponse;
@@ -34,6 +38,12 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
     [login, onSuccess],
   );
 
+  // Sync the callback ref on every render
+  useEffect(() => {
+    callbackRef.current = handleCredential;
+  }, [handleCredential]);
+
+  // ── Phase 1: Poll for the Google library, initialize once ─────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -42,7 +52,6 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
       return;
     }
 
-    // Poll for the Google library to load (script is async/defer)
     let attempts = 0;
     const maxAttempts = 100; // ~10 seconds
     const timer = setInterval(() => {
@@ -60,13 +69,12 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
 
       clearInterval(timer);
 
-      // Initialize only once per session
       if (!initializedRef.current) {
         initializedRef.current = true;
         try {
           window.google.accounts.id.initialize({
             client_id: clientId,
-            callback: handleCredential,
+            callback: (resp) => callbackRef.current?.(resp),
           });
         } catch (err) {
           console.error('[GoogleSignInButton] Initialize failed:', err);
@@ -74,26 +82,34 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
           return;
         }
       }
-
-      // Render (or re-render) the button on every mount — handles StrictMode remounts
-      if (buttonRef.current) {
-        try {
-          window.google.accounts.id.renderButton(buttonRef.current, {
-            theme: 'outline',
-            size: 'large',
-            width: 320,
-            logo_alignment: 'center',
-            text: 'signin_with',
-          });
-        } catch (err) {
-          console.error('[GoogleSignInButton] Render button failed:', err);
-          setError(err.message);
-        }
-      }
     }, 100);
 
     return () => clearInterval(timer);
-  }, [handleCredential, clientId]);
+  }, [clientId]); // Only re-run if clientId changes
+
+  // ── Phase 2: Render button into current div after every render ────────
+  // This ensures the button survives React StrictMode remounts and any
+  // parent re-renders that recreate the div.
+  useEffect(() => {
+    if (!initializedRef.current || !buttonRef.current) return;
+
+    // Only render if this div doesn't already have a Google button iframe
+    const hasButton = buttonRef.current.querySelector('iframe, .g_id_onload');
+    if (!hasButton) {
+      try {
+        window.google.accounts.id.renderButton(buttonRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: 320,
+          logo_alignment: 'center',
+          text: 'signin_with',
+        });
+      } catch (err) {
+        console.error('[GoogleSignInButton] Render button failed:', err);
+        setError(err.message);
+      }
+    }
+  });
 
   // Render the button div; the Google library injects the actual iframe/button into it.
   return (
