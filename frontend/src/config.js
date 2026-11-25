@@ -5,7 +5,6 @@
 // 20% discount on regular tricycle fares — ₱30.00 × 0.20 = ₱6.00 off → ₱24.00.
 export const FARE = {
   base: 30.0,                 // ₱ standard fare (flag-down) — ₱30.00
-  perKm: 3.0,                 // ₱ per succeeding km
   pwdDiscount: 0.2,           // 20% statutory PWD discount (₱30.00 → ₱24.00)
   studentDiscount: 0.2,       // 20% statutory student/senior discount
   minFloors: { regular: 30.0, pwd: 24.0, discounted: 24.0 },

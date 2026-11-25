@@ -1,7 +1,6 @@
 // Server-side fare policy (PHP) — single source of truth for pricing on the API.
 export const FARE = {
   base: 30.0,                 // ₱ standard fare (flag-down) — ₱30.00
-  perKm: 3.0,                 // ₱ per succeeding km
   discounts: {
     pwd: 0.2,                 // 20% statutory discount for Persons with Disabilities
     discounted: 0.2,          // 20% statutory discount for students / senior citizens
@@ -19,12 +18,12 @@ export function normalizeRideType(value) {
 }
 
 // Fare from a distance in meters for the given tier.
+// Distance-based pricing removed — flat base fare only.
 // PWD / student-senior tiers apply the mandatory 20% discount:
 // ₱30.00 × 0.20 = ₱6.00 deducted → ₱24.00 to pay.
 export function computeFare(distanceMeters, rideType = 'regular') {
-  const km = Math.max(0, distanceMeters / 1000);
   const type = normalizeRideType(rideType);
-  const regular = FARE.base + FARE.perKm * km;
+  const regular = FARE.base;
   const fare = regular * (1 - (FARE.discounts[type] || 0));
   return Math.round(Math.max(FARE.minFloors[type], fare) * 100) / 100;
 }
