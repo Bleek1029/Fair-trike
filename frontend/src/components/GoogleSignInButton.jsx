@@ -33,10 +33,12 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
   );
 
   useEffect(() => {
-    // Avoid double-initialization (StrictMode, remounts)
-    if (initializedRef.current || typeof window === 'undefined') return;
+    // Avoid double-initialization (StrictMode, remounts, multiple pages)
+    if (typeof window === 'undefined') return;
+    if (window.__fairtrikeGoogleInitialized) return;
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
 
+    window.__fairtrikeGoogleInitialized = true;
     initializedRef.current = true;
 
     try {
@@ -49,7 +51,7 @@ export function GoogleSignInButton({ onSuccess, className = 'w-full' }) {
         window.google.accounts.id.renderButton(buttonRef.current, {
           theme: 'outline',
           size: 'large',
-          width: '100%',
+          width: 320,
           logo_alignment: 'center',
           text: 'signin_with',
         });
