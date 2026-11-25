@@ -171,19 +171,63 @@ router.get('/documents', requireAuth, requireRole(pool, 'admin'), asyncHandler(a
 }));
 
 // POST /api/admin/documents/:id/status - approve/reject doc
+// When the last pending document is approved, auto-verify the driver (and user)
 router.post('/documents/:id/status', requireAuth, requireRole(pool, 'admin'), asyncHandler(async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
   const status = req.body?.status;
   if (!Number.isFinite(id)) throw badRequest('Invalid document id.');
   if (!STATUSES.includes(status)) throw badRequest('Invalid status.');
 
-  const result = await pool.query('UPDATE driver_documents SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
-  if (result.rows.length === 0) throw notFound('Document not found.');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  // Emit real-time event
-  emitAdminDocumentStatusChanged({ id, status, userId: result.rows[0].user_id });
+    const result = await client.query(
+      'UPDATE driver_documents SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (result.rows.length === 0) throw notFound('Document not found.');
+    const doc = result.rows[0];
 
-  ok(res, { message: `Document marked as ${status}.`, document: { id: result.rows[0].id, docType: result.rows[0].doc_type, status: result.rows[0].status } });
+    let driverVerified = false;
+    if (status === 'approved') {
+      // If every document for this driver is now approved, mark the driver (and user) as approved.
+      const allDocs = await client.query(
+        'SELECT status FROM driver_documents WHERE user_id = $1',
+        [doc.user_id]
+      );
+      const allApproved = allDocs.rows.length > 0 && allDocs.rows.every((d) => d.status === 'approved');
+      if (allApproved) {
+        const driverRes = await client.query(
+          'UPDATE drivers SET status = $1 WHERE user_id = $2 RETURNING *',
+          ['approved', doc.user_id]
+        );
+        if (driverRes.rows.length > 0) {
+          await client.query('UPDATE users SET status = $1 WHERE id = $2', ['approved', doc.user_id]);
+          driverVerified = true;
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+
+    // Emit real-time events
+    emitAdminDocumentStatusChanged({ id, status, userId: doc.user_id });
+    if (driverVerified) {
+      emitAdminDriverStatusChanged({ id: doc.user_id, userId: doc.user_id, status: 'approved' });
+    }
+
+    ok(res, {
+      message: `Document marked as ${status}.`,
+      document: { id: doc.id, docType: doc.doc_type, status: doc.status },
+      driverVerified,
+    });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
 }));
 
 // GET /api/admin/reset-requests - password reset queue

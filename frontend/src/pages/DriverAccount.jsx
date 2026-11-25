@@ -15,7 +15,7 @@ export function DriverAccount() {
   const [driver, setDriver] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const signOutOpen = useState(false)[1];
+  const [signOutOpen, setSignOutOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
