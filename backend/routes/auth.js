@@ -7,7 +7,7 @@ import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/
 import { ok, created } from '../lib/http.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
 import { emitAdminUserCreated, emitAdminDriverCreated, emitAdminResetRequested } from '../socket.js';
-import { sendPasswordResetEmail } from '../lib/email.js';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../lib/email.js';
 
 const BCRYPT_ROUNDS = 12;
 const router = Router();
@@ -33,6 +33,7 @@ router.post('/register', asyncHandler(async (req, res) => {
   const newUser = inserted.rows[0];
   created(res, { message: 'Account created successfully!', user: publicUser(newUser) });
   emitAdminUserCreated(newUser);
+  Promise.resolve(sendWelcomeEmail(newUser.email, newUser.fullname, 'passenger')).catch(() => {});
 }));
 
 // ── POST /api/auth/register-driver ───────────────────────
@@ -78,6 +79,7 @@ const client = await pool.connect();
     });
     emitAdminUserCreated(newUser);
     emitAdminDriverCreated(newDriver);
+    Promise.resolve(sendWelcomeEmail(newUser.email, newUser.fullname, 'driver')).catch(() => {});
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;

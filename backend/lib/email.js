@@ -121,6 +121,59 @@ This link expires in 1 hour for security. If you didn't request this, please ign
 }
 
 /**
+ * Sends a welcome email to a newly registered user.
+ * @param {string} email - Recipient email
+ * @param {string} fullname - Recipient's full name
+ * @param {string} role - 'passenger' or 'driver'
+ * @param {string} [loginUrl] - Frontend login URL (defaults to env)
+ * @returns {Promise<boolean>}
+ */
+export async function sendWelcomeEmail(email, fullname, role, loginUrl = null) {
+  const base = loginUrl || process.env.FRONTEND_URL || 'https://fairtrike.onrender.com';
+  const loginLink = `${base}/login`;
+
+  const subject = `Welcome to Fairtrike, ${fullname}!`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #0d5c3a 0%, #1a73e8 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Fairtrike</h1>
+      </div>
+      <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e9ecef; border-top: none;">
+        <p style="font-size: 16px; margin-bottom: 24px;">Hi ${fullname},</p>
+        <p style="font-size: 16px; margin-bottom: 24px;">Your Fairtrike account has been created successfully. You can now log in and start using the app as a <strong>${role}</strong>.</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${loginLink}" style="background: #0d5c3a; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">Log In</a>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-bottom: 16px;">Forgot your password? You can reset it from the login screen.</p>
+        <hr style="border: none; border-top: 1px solid #e9ecef; margin: 24px 0;">
+        <p style="font-size: 13px; color: #888; margin: 0;">— The Fairtrike Team</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+Welcome to Fairtrike, ${fullname}!
+
+Your Fairtrike account has been created successfully. You can now log in and start using the app as a ${role}.
+
+Log in here: ${loginLink}
+
+Forgot your password? You can reset it from the login screen.
+
+— The Fairtrike Team
+  `;
+
+  return sendEmail({ to: email, subject, html, text });
+}
+
+/**
  * Sends a test email to verify Resend configuration.
  * @param {string} to - Test recipient
  * @returns {Promise<boolean>}
