@@ -56,11 +56,11 @@ app.use(cors({
 const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://accounts.google.com', 'https://apis.google.com'], // Google Identity Services
-  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'], // Google Identity Services stylesheet
   fontSrc: ["'self'", 'https://fonts.gstatic.com'],
   imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
   connectSrc: ["'self'", 'https:', 'wss:', 'ws:'], // Leaflet tiles, Socket.io, OSRM, Google APIs
-  frameSrc: ["'none'", 'https://accounts.google.com'], // Google Sign-In button iframe
+  frameSrc: ['https://accounts.google.com'], // Google Sign-In button iframe
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
