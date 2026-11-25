@@ -68,7 +68,7 @@ export const apiLoginDriver = (payload) => request('POST', '/auth/login-driver',
 
 export const apiChangePassword = (payload) => request('POST', '/auth/change-password', { body: payload });
 export const apiForgotPassword = (payload) => request('POST', '/auth/forgot-password', { body: payload });
-export const apiResetPassword = (payload) => request('POST', '/auth/reset-password', { body: payload });
+export const apiResetPassword = (payload) => request('POST', '/auth/reset-password', { body: { ...payload, new_password: payload.new_password } });
 
 // Token management
 export const apiRefreshToken = (refreshToken) => request('POST', '/auth/refresh', { body: { refresh_token: refreshToken } });

@@ -7,7 +7,7 @@ import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/
 import { ok, created } from '../lib/http.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
 import { emitAdminUserCreated, emitAdminDriverCreated, emitAdminResetRequested } from '../socket.js';
-import { sendPasswordResetEmail, sendWelcomeEmail } from '../lib/email.js';
+import { sendPasswordResetCode, sendWelcomeEmail } from '../lib/email.js';
 
 const BCRYPT_ROUNDS = 12;
 const router = Router();
@@ -241,8 +241,8 @@ router.post('/change-password', asyncHandler(async (req, res) => {
 }));
 
 // ── POST /api/auth/forgot-password ─────────────────────────
-// Initiates a password reset by email. Generates a secure token, stores it
-// in password_reset_requests (pending admin approval), and sends reset email.
+// Initiates a password reset by email. Generates a 6-digit code, stores its
+// hash in password_reset_requests, and sends the code via email.
 router.post('/forgot-password', asyncHandler(async (req, res) => {
   const email = normalizeEmail(req.body.email);
   if (!email) throw badRequest('Email is required.');
@@ -250,63 +250,60 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
   if (result.rows.length === 0) {
     // Don't reveal whether email exists — always return success for security.
-    return ok(res, { message: 'If an account exists, a reset link has been sent.' });
+    return ok(res, { message: 'If an account exists, a reset code has been sent.' });
   }
   const userId = result.rows[0].id;
-    console.log(`[Auth] User found for ${email} (id: ${userId}), generating reset token...`);
+  console.log(`[Auth] User found for ${email} (id: ${userId}), generating reset code...`);
 
-  // Generate a secure random token (32 bytes = 256 bits)
   const crypto = await import('node:crypto');
-  const token = crypto.randomBytes(32).toString('hex');
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-  // Store hashed token with 1-hour expiry (pending admin approval)
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+  // Generate a 6-digit numeric code
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+
+  // Store hashed code with 1-hour expiry (pending admin approval)
   const inserted = await pool.query(
     `INSERT INTO password_reset_requests (user_id, email, new_password_hash, status, admin_note, reviewed_by, reviewed_at, created_at)
      VALUES ($1, $2, $3, 'pending', 'Auto-generated via forgot-password flow', NULL, NULL, NOW())
      RETURNING id`,
-    [userId, email, tokenHash]
+    [userId, email, codeHash]
   );
 
-  // Notify admin in real time so they can review/approve the reset request
-  Promise.resolve(emitAdminResetRequested({ id: inserted.rows[0].id, userId, email })).catch(() => {});
-
-  // Send password reset email (await result for debugging)
+  // Send password reset code via email (await result for debugging)
   let emailSent = false;
   try {
-    emailSent = await sendPasswordResetEmail(email, token);
+    emailSent = await sendPasswordResetCode(email, code);
   } catch (err) {
-    console.error('[Auth] Failed to send password reset email:', err.message);
+    console.error('[Auth] Failed to send password reset code:', err.message);
   }
 
-  console.log(`[Auth] Password reset email to ${email}: ${emailSent ? 'SENT ✅' : 'FAILED ❌'}`);
+  console.log(`[Auth] Password reset code to ${email}: ${emailSent ? 'SENT ✅' : 'FAILED ❌'}`);
 
-  ok(res, { message: 'If an account exists, a reset link has been sent.', emailSent });
+  ok(res, { message: 'If an account exists, a reset code has been sent.', emailSent });
 }));
 
 // ── POST /api/auth/reset-password ──────────────────────────
-// Completes password reset using token from email. Requires admin approval
-// (status = 'approved') before the new password can be set.
+// Completes password reset using the 6-digit code emailed to the user.
+// Verifies the code hash and updates the user's password.
 router.post('/reset-password', asyncHandler(async (req, res) => {
-  const token = req.body.token || '';
+  const code = req.body.code || '';
   const newPassword = req.body.new_password || '';
 
-  if (!token || !newPassword) {
-    throw badRequest('Reset token and new password are required.');
+  if (!code || !newPassword) {
+    throw badRequest('Reset code and new password are required.');
   }
   assertPassword(newPassword);
 
   const crypto = await import('node:crypto');
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const codeHash = crypto.createHash('sha256').update(code).digest('hex');
 
   const result = await pool.query(
     `SELECT * FROM password_reset_requests
-     WHERE new_password_hash = $1 AND status = 'approved' AND created_at > NOW() - INTERVAL '1 hour'`,
-    [tokenHash]
+     WHERE new_password_hash = $1 AND created_at > NOW() - INTERVAL '1 hour'`,
+    [codeHash]
   );
   if (result.rows.length === 0) {
-    throw badRequest('Invalid or expired reset token.');
+    throw badRequest('Invalid or expired reset code.');
   }
   const resetRequest = result.rows[0];
 
@@ -321,7 +318,7 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
   try {
     await client.query('BEGIN');
     await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, resetRequest.user_id]);
-    await client.query('UPDATE password_reset_requests SET status = \'approved\', reviewed_at = NOW() WHERE id = $1', [resetRequest.id]);
+    await client.query('UPDATE password_reset_requests SET status = \'used\', reviewed_at = NOW() WHERE id = $1', [resetRequest.id]);
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
