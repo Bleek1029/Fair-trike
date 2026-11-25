@@ -19,7 +19,7 @@ Two role-specific portals over one PostgreSQL database + one Express/Socket.io b
 | Mobile | PWA (pwa.webmanifest for installable web app) |
 | Hosting | Dev: Vite `:5173` proxies `/api`, `/uploads`, `/socket.io` → backend `app :5000` + `admin :5001`. Prod: `node scripts/start.mjs` runs `server.js` (API + built SPA on 5000) and `admin-server.js` (admin on 5001). Vercel serverless supported (`backend/vercel.json` rewrites `/api` → `/api`); app exported as default on Vercel. |
 
-**Fare engine (server-authoritative):** tariff-based pricing — Terminal / Queue (Pila) ₱30.00 flag-down base; Street Hail ₱20.00–₱25.00 base fare; +₱10.00 regular / +₱8.00 discounted extra passenger per head; ₱40.00+ cross-zone / out-of-route surcharge; statutory 20% discount for PWD / student / senior tiers applied to base+distance and cross-zone surcharge (extra-passenger charge already tier-adjusted, not double-discounted). Tiers: `regular`, `pwd`, `discounted`. Boarding contexts: `terminal`, `street`. Client fare estimates in the UI are only previews; actual fare is computed server-side at booking.
+**Fare engine (server-authoritative):** flat base ₱30 flag-down + ₱3/km, 20% statutory discount for PWD / student / senior tiers. Tiers: `regular`, `pwd`, `discounted`. Client fare estimates in the UI are only previews; actual fare is computed server-side at booking.
 
 ---
 
