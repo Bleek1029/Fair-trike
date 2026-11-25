@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
     id              SERIAL PRIMARY KEY,
     fullname        VARCHAR(255) NOT NULL,
     email           VARCHAR(191) NOT NULL UNIQUE,
-    password_hash   VARCHAR(255) NOT NULL,
+    password_hash   VARCHAR(255) DEFAULT NULL,        -- nullable for Google sign-in users
+    google_id       VARCHAR(255) UNIQUE DEFAULT NULL, -- Google OAuth subject ID
     role            VARCHAR(20) NOT NULL DEFAULT 'passenger' CHECK (role IN ('passenger', 'driver')),
     profile_picture VARCHAR(255) DEFAULT NULL,
     created_at      TIMESTAMPTZ   DEFAULT NOW(),

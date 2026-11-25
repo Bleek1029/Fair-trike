@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { apiRegisterDriver, apiLoginDriver } from '../api.js';
 import { usePageLoading, withPageLoading } from '../loading/LoadingContext.jsx';
 
 import { AuthSplit, ErrorAlert, SuccessAlert, TextField, PasswordField, passwordChecks, SubmitButton } from '../components/AuthSplit.jsx';
+import { GoogleSignInButton } from '../components/GoogleSignInButton.jsx';
 
 const PERKS = [
   { icon: 'verified', iconBg: 'bg-primary-container text-on-primary-container', title: 'Driver directory', desc: 'Your franchise details get listed in the driver directory.' },
@@ -27,7 +28,15 @@ export function DriverRegister() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+const [googleError, setGoogleError] = useState('');
+
+useEffect(() => {
+  const onError = (e) => setGoogleError(e.detail);
+  window.addEventListener('google-signin-error', onError);
+  return () => window.removeEventListener('google-signin-error', onError);
+}, []);
+
+const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,7 +108,9 @@ export function DriverRegister() {
             <span className="text-[12px] leading-5 font-semibold text-[#42506b] leading-snug">I accept the <span className="font-bold text-on-surface underline">Driver Franchise Terms</span> and driver verification.</span>
           </label>
         </div>
-        <SubmitButton loading={loading} loadingText="Registering Driver...">Register as Driver</SubmitButton>
+        {googleError && <ErrorAlert message={googleError} onClose={() => setGoogleError('')} />}
+<GoogleSignInButton onSuccess={() => navigate('/driver')} />
+<SubmitButton loading={loading} loadingText="Registering Driver...">Register as Driver</SubmitButton>
       </form>
     </AuthSplit>
   );

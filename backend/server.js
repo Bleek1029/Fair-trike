@@ -20,6 +20,7 @@ import ridesRouter from './routes/rides.js';
 import adminRouter from './routes/admin.js';
 import aiRouter from './routes/ai.js';
 import emailRouter from './routes/email.js';
+import googleAuthRouter from './routes/googleAuth.js';
 import { sendIndex, originFor } from './lib/spa.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 import { requireAuth } from './middleware/auth.js';
@@ -110,6 +111,7 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtri
 
 // Email test (verify Resend config)
 app.use('/api/email', emailRouter);
+app.use('/api/auth/google', googleAuthRouter);
 
 // Prometheus metrics
 app.get('/metrics', async (_req, res) => {
