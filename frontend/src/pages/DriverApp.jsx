@@ -202,11 +202,11 @@ export function DriverApp() {
 
     return () => {
       cancelled = true;
-      unsubRequested();
-      unsubAccepted();
-      unsubCompleted();
-      unsubCancelled();
-      unsubDocStatus();
+      if (typeof unsubRequested === 'function') unsubRequested();
+      if (typeof unsubAccepted === 'function') unsubAccepted();
+      if (typeof unsubCompleted === 'function') unsubCompleted();
+      if (typeof unsubCancelled === 'function') unsubCancelled();
+      if (typeof unsubDocStatus === 'function') unsubDocStatus();
       stopWatching();
       try { leaveDrivers(socketRef.current); } catch (_) {}
       disconnectSocket();

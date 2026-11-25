@@ -7,6 +7,7 @@ import { SignOutModal } from './SignOutModal.jsx';
 
 export function MobileHeader() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [signOutOpen, setSignOutOpen] = React.useState(false);
   const confirmSignOut = () => {
     setSignOutOpen(false);
