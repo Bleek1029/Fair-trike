@@ -20,7 +20,6 @@ import ridesRouter from './routes/rides.js';
 import adminRouter from './routes/admin.js';
 import aiRouter from './routes/ai.js';
 import emailRouter from './routes/email.js';
-import googleAuthRouter from './routes/googleAuth.js';
 import { sendIndex, originFor } from './lib/spa.js';
 import { notFoundHandler, errorHandler } from './middleware/error.js';
 import { requireAuth } from './middleware/auth.js';
@@ -55,12 +54,12 @@ app.use(cors({
 // CSP tuned for: Vite (inline scripts in dev), Leaflet (CDN tiles), Socket.io (WS)
 const cspDirectives = {
   defaultSrc: ["'self'"],
-  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://accounts.google.com', 'https://apis.google.com'], // Google Identity Services
-  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'], // Google Identity Services stylesheet
+  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vite needs inline + eval in dev
+  styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   fontSrc: ["'self'", 'https://fonts.gstatic.com'],
   imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-  connectSrc: ["'self'", 'https:', 'wss:', 'ws:'], // Leaflet tiles, Socket.io, OSRM, Google APIs
-  frameSrc: ['https://accounts.google.com'], // Google Sign-In button iframe
+  connectSrc: ["'self'", 'https:', 'wss:', 'ws:'], // Leaflet tiles, Socket.io, OSRM
+  frameSrc: ["'none'"],
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
@@ -111,7 +110,6 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'fairtri
 
 // Email test (verify Resend config)
 app.use('/api/email', emailRouter);
-app.use('/api/auth/google', googleAuthRouter);
 
 // Prometheus metrics
 app.get('/metrics', async (_req, res) => {

@@ -1,10 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { apiLogin } from '../api.js';
 import { usePageLoading, withPageLoading } from '../loading/LoadingContext.jsx';
 import { AuthSplit, ErrorAlert, SuccessAlert, TextField, PasswordField, SubmitButton } from '../components/AuthSplit.jsx';
-import { GoogleSignInButton } from '../components/GoogleSignInButton.jsx';
 
 const PERKS = [
   { icon: 'local_taxi', iconBg: 'bg-primary-container text-on-primary-container', title: 'Metered Fares', desc: 'Transparent, government-regulated pricing.' },
@@ -20,15 +19,8 @@ export function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-const [googleError, setGoogleError] = useState('');
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
-useEffect(() => {
-  const onError = (e) => setGoogleError(e.detail);
-  window.addEventListener('google-signin-error', onError);
-  return () => window.removeEventListener('google-signin-error', onError);
-}, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,11 +99,8 @@ useEffect(() => {
           id='loginPassword'
           withMeter={false}
         />
-        {googleError && <ErrorAlert message={googleError} onClose={() => setGoogleError('')} />}
-<GoogleSignInButton onSuccess={() => navigate('/app')} />
-<SubmitButton loading={loading} loadingText='Signing in...'>Sign In</SubmitButton>
+        <SubmitButton loading={loading} loadingText='Signing in...'>Sign In</SubmitButton>
       </form>
     </AuthSplit>
   );
 }
-

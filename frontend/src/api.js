@@ -62,9 +62,6 @@ const request = (method, path, opts = {}) =>
 export const apiRegister = (payload) => request('POST', '/auth/register', { body: payload });
 export const apiRegisterDriver = (payload) => request('POST', '/auth/register-driver', { body: payload });
 
-// Google Sign-In: sends the Google ID token credential, receives access + refresh tokens + user
-export const apiGoogleLogin = (credential) => request('POST', '/auth/google', { body: { credential } });
-
 // Login returns { accessToken, refreshToken, user }
 export const apiLogin = (payload) => request('POST', '/auth/login', { body: payload });
 export const apiLoginDriver = (payload) => request('POST', '/auth/login-driver', { body: payload });
