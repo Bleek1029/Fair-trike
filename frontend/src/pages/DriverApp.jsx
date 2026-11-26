@@ -29,7 +29,7 @@ const DOC_TYPES = [
 // ── Driver console: a dedicated interface for drivers, fully separate
 // from the commuter booking app (/app). Reached only when user.role === 'driver'.
 export function DriverApp() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [driver, setDriver] = useState(null);
   const [driverLoading, setDriverLoading] = useState(true);
@@ -335,6 +335,7 @@ export function DriverApp() {
     try {
       const res = await apiUpdateProfile(fd);
       setDriverAvatar(res.user?.profilePicture ?? null);
+      updateUser(res.user); // keep AuthContext + storage in sync with the database
       setProfileFile(null);
     } catch (err) {
       setError(err.message || 'Failed to upload profile picture.');

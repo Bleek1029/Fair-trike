@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 
 // ── Driver account — separate tab from Duty console ──
 export function DriverAccount() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [driver, setDriver] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,7 @@ export function DriverAccount() {
     try {
       const res = await apiUpdateProfile(fd);
       setUserAvatar(res.user?.profilePicture ?? null);
+      updateUser(res.user); // keep AuthContext + storage in sync with the database
       setProfileFile(null);
     } catch (err) {
       setError(err.message || 'Failed to upload profile picture.');
