@@ -20,7 +20,6 @@ import { initialsOf, avatarUrl, haversine } from '../lib/utils.js';
 import { fmtDist, fmtTime, formatPeso } from '../lib/format.js';
 
 const BASE_FARE = FARE.base;
-const PER_KM = FARE.perKm;
 
 const NL_PLACEHOLDER = 'e.g., "Rizal Triangle to Gordon College as student" or "SM Olongapo to Robinson\'s Place, PWD"';
 
@@ -100,13 +99,7 @@ export function MapApp() {
         (pos) => {
           const { latitude: lat, longitude: lng } = pos.coords;
           map.setView([lat, lng], 15);
-          setGpsText('GPS lock acquired • East Bajac-Bajac');
-          const icon = L.divIcon({
-            className: 'user-location-marker',
-            html: '<div class="user-location-marker"><div class="pulse-ring"></div><div class="dot"></div></div>',
-            iconSize: [28, 28], iconAnchor: [14, 14],
-          });
-          L.marker([lat, lng], { icon }).addTo(map);
+          setGpsText('GPS lock acquired • tap "Use current location" to set pickup');
         },
         () => setGpsText('GPS not available • Using default location'),
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
@@ -575,9 +568,10 @@ export function MapApp() {
     if (!routeResult) return null;
     const km = routeResult.distance / 1000;
     const round = (n) => Math.round(n * 100) / 100;
-    const regular = Math.max(FARE.minFloors.regular, BASE_FARE + PER_KM * km);
-    const pwd = Math.max(FARE.minFloors.pwd, (1 - FARE.pwdDiscount) * (BASE_FARE + PER_KM * km));
-    const discounted = Math.max(FARE.minFloors.discounted, (1 - FARE.studentDiscount) * (BASE_FARE + PER_KM * km));
+    // Flat base fare only — no per-km charge.
+    const regular = Math.max(FARE.minFloors.regular, BASE_FARE);
+    const pwd = Math.max(FARE.minFloors.pwd, (1 - FARE.pwdDiscount) * BASE_FARE);
+    const discounted = Math.max(FARE.minFloors.discounted, (1 - FARE.studentDiscount) * BASE_FARE);
     return { regular: round(regular), pwd: round(pwd), discounted: round(discounted) };
   }, [routeResult]);
   const computedFare = fares ? fares[rideId] : null;
