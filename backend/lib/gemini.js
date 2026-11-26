@@ -68,7 +68,7 @@ function getMockResponse({ system, prompt, schema }) {
   // Return mock responses for testing without real API key
   if (system.includes('Fairtrike virtual assistant')) {
     if (prompt.toLowerCase().includes('fare') || prompt.toLowerCase().includes('student') || prompt.toLowerCase().includes('pwd') || prompt.toLowerCase().includes('discount')) {
-      return 'For a 5 km ride as a student, the fare would be approximately ₱36.00 (20% discount on the regular ₱45.00 fare). The app calculates this automatically based on distance and your discount tier.';
+      return 'The regular fare is a flat ₱30.00 flag-down with no per-km charge. PWD, students, and seniors get a 20% discount, paying ₱24.00. The app calculates this automatically based on your discount tier.';
     }
     if (prompt.toLowerCase().includes('document') || prompt.toLowerCase().includes('register')) {
       return 'To register as a driver, you need 4 documents: 1) Driver\'s license, 2) OR/CR (vehicle registration), 3) TODA certification, 4) Valid ID. Upload them in the driver portal for approval.';
