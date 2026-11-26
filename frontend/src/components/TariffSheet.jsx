@@ -42,16 +42,9 @@ export function TariffSheet({ open, driver, onClose, onBook }) {
             <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest">
               <div>
                 <p className="text-label-lg text-on-surface font-bold">Base fare</p>
-                <p className="text-body-sm text-on-surface-variant">Flag-down rate</p>
+                <p className="text-body-sm text-on-surface-variant">Flat rate, no per-km charge</p>
               </div>
               <span className="text-headline-sm text-primary font-black">{formatPeso(FARE.base)}</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest">
-              <div>
-                <p className="text-label-lg text-on-surface font-bold">Per kilometre</p>
-                <p className="text-body-sm text-on-surface-variant">Distance rate</p>
-              </div>
-              <span className="text-headline-sm text-on-surface font-black">+{formatPeso(FARE.perKm)}</span>
             </div>
           </div>
         </div>
