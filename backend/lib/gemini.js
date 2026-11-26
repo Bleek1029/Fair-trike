@@ -95,7 +95,21 @@ function getMockResponse({ system, prompt, schema }) {
   }
 
   if (system.includes('earnings summary')) {
-    return 'AI-generated: Great week! You completed 18 trips earning ₱2,340.00. Your daily average is ₱334.00. Keep up the excellent work serving Olongapo commuters!';
+    // Use real earnings data passed in the prompt (from /api/rides/earnings), no hardcoded figures.
+    let todayTrips = 0, todayEarnings = 0, weekTrips = 0, weekEarnings = 0, totalTrips = 0, totalEarnings = 0;
+    try {
+      const ctx = JSON.parse(prompt);
+      todayTrips = ctx.today?.trips ?? 0;
+      todayEarnings = Number(ctx.today?.earnings ?? 0);
+      weekTrips = ctx.week?.trips ?? 0;
+      weekEarnings = Number(ctx.week?.earnings ?? 0);
+      totalTrips = ctx.totals?.trips ?? 0;
+      totalEarnings = Number(ctx.totals?.earnings ?? 0);
+    } catch {
+      // If prompt isn't valid JSON, fall back to zeros
+    }
+    const fmt = (n) => `₱${Number(n || 0).toFixed(2)}`;
+    return `AI-generated: You completed ${todayTrips} trip${todayTrips !== 1 ? 's' : ''} today earning ${fmt(todayEarnings)}. This week: ${weekTrips} trips, ${fmt(weekEarnings)}. All time: ${totalTrips} trips, ${fmt(totalEarnings)}.`;
   }
 
   if (system.includes('ride-status notification')) {
