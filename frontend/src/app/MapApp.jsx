@@ -431,7 +431,7 @@ const [selectedPreset, setSelectedPreset] = useState(null); // { id, for: 'start
   // ── Driver live marker + approaching line ────────────────────────────────
   const DRIVER_ICON = L.divIcon({
     className: 'driver-marker',
-    html: '<div style="font-size:22px; line-height:1;">🚕</div>',
+    html: '<div style="width:10px;height:10px;background:#1a73e8;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>',
     iconSize: [24, 24], iconAnchor: [12, 12],
   });
 
