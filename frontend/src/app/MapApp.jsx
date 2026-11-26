@@ -17,6 +17,9 @@ import {
 } from '../lib/socket.js';
 import { initialsOf, avatarUrl, haversine } from '../lib/utils.js';
 import { fmtDist, fmtTime, formatPeso } from '../lib/format.js';
+import {
+  OLONGAPO_LOCATIONS,
+} from '../lib/olongapo-locations.js';
 
 const BASE_FARE = FARE.base;
 const PER_KM = FARE.perKm;
@@ -85,6 +88,7 @@ export function MapApp() {
   const [nlBookingLoading, setNlBookingLoading] = useState(false);
   const [nlBookingResult, setNlBookingResult] = useState(null);
   const [showNlBooking, setShowNlBooking] = useState(false);
+const [selectedPreset, setSelectedPreset] = useState(null); // { id, for: 'start'|'dest' }
 
   useEffect(() => {
     const container = document.getElementById('mobile-map-container');
@@ -228,6 +232,29 @@ export function MapApp() {
       setSearchParams(prev => {
         const next = new URLSearchParams(prev);
         next.set('dropoff', s.name);
+        return next;
+      }, { replace: true });
+    }
+  };
+
+  // ── Preset Olongapo location quick-select ────────────────────────────
+  // Fills pickup or drop-off from a curated Olongapo City location and
+  // places the matching Leaflet marker.
+  const usePresetLocation = (loc, forField) => {
+    setSelectedPreset({ id: loc.id, for: forField });
+    if (mapRef.current) mapRef.current.setView([loc.lat, loc.lng], 15);
+    if (forField === 'start') {
+      placeMarker('start', loc.name, loc.lat, loc.lng, loc.full);
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('pickup', loc.name);
+        return next;
+      }, { replace: true });
+    } else {
+      placeMarker('dest', loc.name, loc.lat, loc.lng, loc.full);
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('dropoff', loc.name);
         return next;
       }, { replace: true });
     }
@@ -639,6 +666,33 @@ export function MapApp() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Preset Olongapo City locations — quick one-tap pickups/dropoffs */}
+          <div className="bg-surface-container-low rounded-xl p-space-md shadow-sm space-y-3">
+            <h3 className="text-label-sm text-secondary uppercase font-bold tracking-wider">
+              Popular Olongapo locations
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {OLONGAPO_LOCATIONS.map((loc) => (
+                <button
+                  key={loc.id}
+                  type="button"
+                  onClick={() => usePresetLocation(loc, 'start')}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-left ${
+                    selectedPreset?.id === loc.id && selectedPreset.for === 'start'
+                      ? 'bg-primary/10 border-primary text-primary'
+                      : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container-high'
+                  }`}
+                >
+                  <span className="text-body-sm font-semibold leading-tight">{loc.name}</span>
+                  <span className="text-[10px] text-outline">{loc.full.split(',')[0]}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-on-surface-variant italic">
+              Tap a location to set it as pickup. Use the destination field for drop-off.
+            </p>
           </div>
 
           {/* Natural Language Booking */}
