@@ -74,9 +74,21 @@ function getMockResponse({ system, prompt, schema }) {
       return 'To register as a driver, you need 4 documents: 1) Driver\'s license, 2) OR/CR (vehicle registration), 3) TODA certification, 4) Valid ID. Upload them in the driver portal for approval.';
     }
     if (prompt.toLowerCase().includes('book') || prompt.toLowerCase().includes('cancel')) {
-      return 'To book a ride, open the map, set your pickup and dropoff, choose your fare tier, and tap Book. To cancel, go to your active ride and tap Cancel (only while pending).';
+      return 'To book a ride, open the map, set your pickup and dropoff locations, choose your fare tier (Regular, PWD, or Student/Senior), and tap Book. Your request goes to nearby drivers in real time. You can cancel only while the ride is still pending.';
     }
-    return 'I can help you with Fairtrike fares, booking, driver registration, and documents. What would you like to know?';
+    if (prompt.toLowerCase().includes('password') || prompt.toLowerCase().includes('reset') || prompt.toLowerCase().includes('forgot')) {
+      return 'To reset your password, go to the login page and tap "Forgot your password?" to request a reset code. An admin must approve the reset request before you can set a new password. You can request this from either the passenger or driver login page.';
+    }
+    if (prompt.toLowerCase().includes('feature') || prompt.toLowerCase().includes('app') || prompt.toLowerCase().includes('what can')) {
+      return 'Fairtrike helps you book tricycle rides in Olongapo City with live GPS tracking, fare estimates, trip history, earnings reports, document management, and real-time notifications. Passengers book rides; drivers go on duty and accept trips; admins approve accounts and documents.';
+    }
+    if (prompt.toLowerCase().includes('login') || prompt.toLowerCase().includes('approve') || prompt.toLowerCase().includes('pending')) {
+      return 'New accounts are created as "pending" and require admin approval before you can log in. Drivers must upload 4 documents (License, OR/CR, TODA Certificate, Valid ID) which are reviewed by an admin. Once all documents are approved, your driver account is auto-approved and you can log in.';
+    }
+    if (prompt.toLowerCase().includes('passenger') || prompt.toLowerCase().includes('driver') || prompt.toLowerCase().includes('role')) {
+      return 'Passengers book rides, view trip history, and manage their profile. Drivers apply to be driver partners, go on duty, accept ride requests, complete trips, and view earnings and documents. Admins approve accounts, review documents, and manage the platform.';
+    }
+    return 'I can help you with Fairtrike fares, booking, driver registration, documents, account approval, password reset, and app features. What would you like to know?';
   }
 
   if (system.includes('admin dashboard')) {
