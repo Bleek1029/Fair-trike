@@ -14,9 +14,9 @@ import { UPLOADS_BASE } from '../config.js';
 import { fetchSteps, fmtStepDistance } from '../lib/navigation.js';
 import { DriverMap } from '../app/DriverMap.jsx';
 import {
-  connectSocket, joinRide, leaveRide, joinDrivers, leaveDrivers,
+  connectSocket, joinRide, leaveRide, joinDrivers, leaveDrivers, joinUser,
   sendDriverLocation, onDriverLocation, onRideEvent, onRideRequested,
-  onAdminDocumentStatusChanged, disconnectSocket,
+  onAdminDocumentStatusChanged, onAdminUserStatusChanged, disconnectSocket,
 } from '../lib/socket.js';
 
 const DOC_TYPES = [
@@ -44,6 +44,7 @@ export function DriverApp() {
   const [aiEarningsSummary, setAiEarningsSummary] = useState('');
   const [aiEarningsLoading, setAiEarningsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [approvalNotice, setApprovalNotice] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const socketRef = useRef(null);
@@ -156,6 +157,7 @@ export function DriverApp() {
     const s = connectSocket();
     socketRef.current = s;
     joinDrivers(s);
+    joinUser(s, user?.id);
 
     const unsubRequested = onRideRequested(s, (ride) => {
       // New ride pushed instantly (no need to wait up to 5s for the poll).
@@ -194,6 +196,20 @@ export function DriverApp() {
       }
     });
 
+    // Live account approval notification — admin approves/rejects the driver.
+    const unsubUserStatus = onAdminUserStatusChanged(s, (data) => {
+      if (!cancelled && data.id === user?.id) {
+        setApprovalNotice({ status: data.status, role: data.role });
+        if (data.status === 'approved') {
+          setError('');
+          // Refresh driver profile to reflect updated status.
+          apiGetMyDriver()
+            .then((d) => { if (!cancelled) setDriver(d.driver); })
+            .catch(() => {});
+        }
+      }
+    });
+
     if (!cancelled) setDriverAvatar(user?.profile_picture ?? null);
     apiGetMyDriver()
       .then((data) => { if (!cancelled) setDriver(data.driver); })
@@ -211,6 +227,7 @@ export function DriverApp() {
       if (typeof unsubCompleted === 'function') unsubCompleted();
       if (typeof unsubCancelled === 'function') unsubCancelled();
       if (typeof unsubDocStatus === 'function') unsubDocStatus();
+      if (typeof unsubUserStatus === 'function') unsubUserStatus();
       stopWatching();
       try { leaveDrivers(socketRef.current); } catch (_) {}
       disconnectSocket();
@@ -362,6 +379,31 @@ export function DriverApp() {
           <div className="rounded-xl bg-error-container/50 text-error p-space-md text-body-sm flex items-center justify-between">
             <span>{error}</span>
             <button type="button" onClick={() => setError('')} className="font-bold shrink-0 ml-2">✕</button>
+          </div>
+        )}
+
+        {/* Live account approval notification */}
+        {approvalNotice && (
+          <div className={`rounded-xl p-space-md text-body-sm flex items-center justify-between gap-space-md ${
+            approvalNotice.status === 'approved'
+              ? 'bg-tertiary-container/30 text-on-tertiary-container border border-tertiary-container/40'
+              : 'bg-error-container/50 text-error border border-error-container/40'
+          }`}>
+            <div className="flex items-center gap-space-sm">
+              <Icon name={approvalNotice.status === 'approved' ? 'verified' : 'error'} size={20} />
+              <span>
+                {approvalNotice.status === 'approved'
+                  ? 'Your driver account has been approved! You can now go on duty.'
+                  : `Your driver account has been ${approvalNotice.status}.`}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setApprovalNotice(null)}
+              className="font-bold shrink-0 ml-2"
+            >
+              ✕
+            </button>
           </div>
         )}
 

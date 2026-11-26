@@ -162,6 +162,12 @@ export function onRideRequested(socket, callback) {
   return () => socket.off('ride-requested', callback);
 }
 
+/** Join the current user's own room to receive live account status updates. */
+export function joinUser(socket, userId) {
+  if (!socket || !userId) return;
+  socket.emit('join:user', userId);
+}
+
 /** Join the admin room to receive admin notifications. */
 export function joinAdmin(socket) {
   if (!socket) return;

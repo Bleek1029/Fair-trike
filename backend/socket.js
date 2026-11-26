@@ -73,6 +73,13 @@ export function initSocket(server) {
       if (typeof ack === 'function') ack({ ok: true });
     });
 
+    // User joins their own user-specific room to receive live status updates
+    // (e.g. account approved/rejected by admin).
+    socket.on('join:user', (ack) => {
+      socket.join(`user:${userId}`);
+      if (typeof ack === 'function') ack({ ok: true, room: `user:${userId}` });
+    });
+
     socket.on('join:admin', (ack) => {
       if (userRole !== 'admin') {
         if (typeof ack === 'function') ack({ ok: false, error: 'Admin only' });
@@ -153,6 +160,11 @@ export function emitAdminDriverCreated(driver) {
 export function emitAdminUserStatusChanged(user) {
   if (!io) return;
   io.to('admin').emit('admin:user-status-changed', user);
+  // Also notify the user themselves in their own room so they get a live
+  // update when their account is approved/rejected.
+  if (user && user.id) {
+    io.to(`user:${user.id}`).emit('admin:user-status-changed', user);
+  }
 }
 
 /** Notify admin room of a driver status change. */
