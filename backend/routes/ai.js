@@ -29,7 +29,7 @@ Scope:
 - App features: live tracking, ride history, earnings, documents.
 
 Do NOT answer off-topic questions. Politely decline and steer back to Fairtrike topics.
-When users ask for fare estimates, tell them the fare will be calculated by the app based on distance and their discount tier.`;
+When users ask for fare estimates, tell them the fare will be calculated by the app based on their discount tier (flat ₱30 base, no per-km charge).`;
 
 const ADMIN_SUMMARY_PROMPT = `Write a 3–5 sentence executive summary for the Fairtrike admin dashboard.
 Use ONLY the provided statistics. Do not invent numbers. Label the response "AI-generated".`;
@@ -66,7 +66,7 @@ router.post('/assistant', asyncHandler(async (req, res) => {
   // Inject fare context so the model can phrase estimates correctly
   const fareContext = `
 Current fare policy (server-side, not from model):
-- Regular: ₱30 flag-down + ₱3/km, minimum ₱30
+- Regular: flat ₱30 flag-down base fare, minimum ₱30
 - PWD / Student / Senior (discounted): 20% off, minimum ₱24
 `;
 
