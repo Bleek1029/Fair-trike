@@ -13,7 +13,8 @@ import { useToast } from '../components/Toast.jsx';
 import { FARE, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL } from '../config.js';
 import { apiCreateRide, apiAiParseBooking, apiAiNotification, getAccessToken } from '../api.js';
 import {
-  connectSocket, joinRide, leaveRide, onDriverLocation, onRideEvent,
+  connectSocket, joinRide, leaveRide, joinUser, onDriverLocation, onRideEvent,
+  onAdminUserStatusChanged,
 } from '../lib/socket.js';
 import { initialsOf, avatarUrl, haversine } from '../lib/utils.js';
 import { fmtDist, fmtTime, formatPeso } from '../lib/format.js';
@@ -354,6 +355,7 @@ const [selectedPreset, setSelectedPreset] = useState(null); // { id, for: 'start
     const s = connectSocket(token);
     socketRef.current = s;
     joinRide(s, booked.id);
+    joinUser(s, user.id);
     setRideStatus(booked.status);
 
     const unsubAccepted = onRideEvent(s, 'ride-accepted', async (data) => {
@@ -391,11 +393,19 @@ const [selectedPreset, setSelectedPreset] = useState(null); // { id, for: 'start
       }
     });
 
+    // Live account approval notification for the passenger.
+    const unsubUserStatus = onAdminUserStatusChanged(s, (data) => {
+      if (data.id === user.id) {
+        warning(`Your account has been ${data.status}.`);
+      }
+    });
+
     return () => {
       unsubAccepted();
       unsubCompleted();
       unsubCancelled();
       unsubLocation();
+      unsubUserStatus();
       leaveRide(s, booked.id);
       disconnectSocket();
       socketRef.current = null;
