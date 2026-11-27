@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { fetchRoute, geocodePlaceFreeText, reverseGeocode, searchPlaces, searchPlacesNear, setUserLocation } from '../lib/places.js';
+import { fetchRoute, geocodePlaceFreeText, reverseGeocode, searchPlaces, setUserLocation } from '../lib/places.js';
 import { MobileHeader } from '../components/MobileHeader.jsx';
 import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
@@ -11,7 +11,7 @@ import { FareEstimator } from '../components/FareEstimator.jsx';
 import { AiAssistant } from '../components/AiAssistant.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { FARE, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, SEARCH_DEBOUNCE_MS, EMERGENCY_TEL } from '../config.js';
-import { apiCreateRide, apiAiParseBooking, apiAiNotification, getAccessToken } from '../api.js';
+import { apiCreateRide, apiAiParseBooking, apiAiNotification, apiGeoIp, getAccessToken } from '../api.js';
 import {
   connectSocket, joinRide, leaveRide, joinUser, onDriverLocation, onRideEvent,
   onAdminUserStatusChanged,
@@ -85,7 +85,6 @@ export function MapApp() {
   const [driverName, setDriverName] = useState(null);
   const [driverAvatar, setDriverAvatar] = useState(null);
   const [rideCompleted, setRideCompleted] = useState(false);
-  const [rideStatus, setRideStatus] = useState(booked ? booked.status : null);
   const [showAssistant, setShowAssistant] = useState(false);
   const [nlBookingText, setNlBookingText] = useState('');
   const [nlBookingLoading, setNlBookingLoading] = useState(false);
@@ -273,8 +272,7 @@ export function MapApp() {
   // geo services). Used when browser GPS fails — denied permission, insecure
   // HTTP origin (e.g. testing over LAN), timeout, or no GPS hardware.
   const pickupFromIpLocation = async () => {
-    const r = await fetch('/api/geo/ip');
-    const d = await r.json();
+    const d = await apiGeoIp();
     if (!Number.isFinite(d?.lat) || !Number.isFinite(d?.lon)) return false;
     await applyCurrentPickup(d.lat, d.lon);
     setGpsText('Using approximate location • type a pickup point to refine');
@@ -535,6 +533,8 @@ export function MapApp() {
           setDestStr(parsed.dropoff);
           setStartCoord(a);
           setDestCoord(b);
+          resolvedCoordsRef.current = { start: a, dest: b };
+          lastRouteKeyRef.current = null; // force recalc on next calculateRoute
           placeMarker('start', parsed.pickup, a.lat, a.lng, parsed.pickup);
           placeMarker('dest', parsed.dropoff, b.lat, b.lng, parsed.dropoff);
           // Trigger route calculation
@@ -559,7 +559,15 @@ export function MapApp() {
     }
     // Reuse already-resolved coordinates so we don't re-geocode the same
     // pickup/dropoff after the user has already calculated the route.
-    const { start: a, dest: b } = resolvedCoordsRef.current;
+    let { start: a, dest: b } = resolvedCoordsRef.current;
+    if (!a || !b) {
+      // Fallback: geocode on demand when the route hasn't been calculated yet.
+      [a, b] = await Promise.all([
+        resolveCoord('start', startStr),
+        resolveCoord('dest', destStr),
+      ]);
+      resolvedCoordsRef.current = { start: a, dest: b };
+    }
     if (!a || !b) {
       setBookError('Pick a valid pickup and drop-off point before requesting a ride.');
       return;
@@ -658,8 +666,9 @@ export function MapApp() {
                 />
               </div>
               <div>
-                <span className="text-label-sm text-outline uppercase font-bold tracking-wider">Drop-Off Destination</span>
+                <label htmlFor="dropoff-input" className="text-label-sm text-outline uppercase font-bold tracking-wider block mb-1">Drop-Off Destination</label>
                 <input
+                  id="dropoff-input"
                   value={destStr}
                   onChange={(e) => { setActiveInput('dest'); onDestChange(e.target.value); }}
                   onFocus={() => setActiveInput('dest')}
@@ -789,6 +798,7 @@ export function MapApp() {
                   setDestCoord(null);
                   setRouteResult(null);
                   setRouteError('');
+                  resolvedCoordsRef.current = { start: null, dest: null };
                   setSearchParams({ pickup: '', dropoff: '' }, { replace: true });
                   if (startMarkerRef.current && mapRef.current) mapRef.current.removeLayer(startMarkerRef.current);
                   if (endMarkerRef.current && mapRef.current) mapRef.current.removeLayer(endMarkerRef.current);
