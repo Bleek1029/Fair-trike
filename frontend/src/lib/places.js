@@ -1,6 +1,7 @@
 // ── Dynamic place search (no hardcoding) ──
 // Live autocomplete + geocoding via backend proxy (/api/places)
-// -> Photon (autocomplete) + Nominatim fallback, biased to the default area.
+// -> Geoapify Places API, biased to the user's location / Olongapo area.
+// Falls back to Photon + Nominatim when GEOAPIFY_API_KEY is unset.
 // Supports location-biased search when the user's GPS fix is available.
 import { API_BASE, MAP_DEFAULT_CENTER } from '../config.js';
 

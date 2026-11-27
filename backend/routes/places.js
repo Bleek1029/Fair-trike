@@ -1,20 +1,26 @@
-// ── Dynamic place search: free, no API key, no hardcoding ──
-// Proxies Photon (autocomplete) + Nominatim (fallback) biased to Olongapo City,
-// and OSRM routing so the frontend never hardcodes places or API hosts.
+// ── Dynamic place search: Geoapify (free tier, 5,000 req/day) ──
+// Proxies Geoapify Places API for autocomplete + reverse geocoding so the
+// frontend never hardcodes places or API hosts. OSRM (free, no key) still
+// handles routing for fare/ETA calculation.
+// Falls back to Photon + Nominatim when GEOAPIFY_API_KEY is not set.
 import { Router } from 'express';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { ok } from '../lib/http.js';
+import { env } from '../config.js';
 
 const router = Router();
 
-// Olongapo City bbox: minLon,minLat,maxLon,maxLat
-const OLONGAPO_BBOX = '120.25,14.79,120.33,14.88';
-const OLONGAPO_VIEWBOX = '120.25,14.88,120.33,14.79'; // left,top,right,bottom for Nominatim
+// Olongapo City bounds: minLat,minLon,maxLat,maxLon (for results biasing)
+const OLONGAPO_MIN = { lat: 14.79, lon: 120.25 };
+const OLONGAPO_MAX = { lat: 14.88, lon: 120.33 };
 const OLONGAPO_CENTER = { lat: 14.83, lon: 120.285 };
 const UPSTREAM_TIMEOUT_MS = 7000;
 
+const GEOAPIFY_BASE = 'https://api.geoapify.com/v1';
+
 function inOlongapo(lat, lon) {
-  return lat >= 14.79 && lat <= 14.88 && lon >= 120.25 && lon <= 120.33;
+  return lat >= OLONGAPO_MIN.lat && lat <= OLONGAPO_MAX.lat
+    && lon >= OLONGAPO_MIN.lon && lon <= OLONGAPO_MAX.lon;
 }
 
 function haversineM(lat1, lon1, lat2, lon2) {
@@ -26,56 +32,133 @@ function haversineM(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-function photonLabel(p = {}) {
-  const parts = [p.name || p.street, p.district || p.suburb, p.city || 'Olongapo City'].filter(Boolean);
-  return parts.join(', ');
+function geoapifyHeaders() {
+  const headers = { Accept: 'application/json' };
+  if (env.geoapifyApiKey) {
+    headers['Authorization'] = `apikey ${env.geoapifyApiKey}`;
+  }
+  return headers;
 }
 
-// ── Core search logic shared by /search and /search/near ───────────────────
-// Queries Photon first, then Nominatim fallback, dedupes, attaches distM when a
-// user location is supplied, and ranks results (inside Olongapo first, then by
-// distance from user location, then by source preference).
+function hasGeoapifyKey() {
+  return Boolean(env.geoapifyApiKey);
+}
+
+// ── Geoapify place/autocomplete ──────────────────────────────────────────────
+async function geoapifyAutocomplete(q, biasLat, biasLon) {
+  if (!hasGeoapifyKey()) return [];
+  // Geoapify circle filter format: lon,lat,radius (meters)
+  const qs = new URLSearchParams({
+    text: q,
+    format: 'json',
+    limit: '10',
+    filter: `circle:${biasLon.toFixed(6)},${biasLat.toFixed(6)},50000`,
+    type: 'city,street,house,building,amenity,tourism',
+  });
+  const url = `${GEOAPIFY_BASE}/place/autocomplete?${qs.toString()}`;
+  const r = await fetch(url, {
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    headers: geoapifyHeaders(),
+  });
+  if (!r.ok) return [];
+  const d = await r.json();
+  return Array.isArray(d?.features) ? d.features : [];
+}
+
+// ── Geoapify reverse geocode ─────────────────────────────────────────────────
+async function geoapifyReverse(lat, lng) {
+  if (!hasGeoapifyKey()) return null;
+  const qs = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lng),
+    format: 'json',
+  });
+  const url = `${GEOAPIFY_BASE}/geocode/reverse?${qs.toString()}`;
+  const r = await fetch(url, {
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    headers: geoapifyHeaders(),
+  });
+  if (!r.ok) return null;
+  const d = await r.json();
+  const f = d?.features?.[0];
+  const props = f?.properties || {};
+  return props.formatted || props.city || null;
+}
+
+// ── Photon autocomplete fallback (no key) ────────────────────────────────────
+async function photonAutocomplete(q, biasLat, biasLon) {
+  const OLONGAPO_BBOX = '120.25,14.79,120.33,14.88';
+  try {
+    const url =
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(`${q}, Olongapo City`)}` +
+      `&bbox=${OLONGAPO_BBOX}&limit=10&lang=en&lat=${biasLat}&lon=${biasLon}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d?.features) ? d.features : [];
+  } catch {
+    return [];
+  }
+}
+
+// ── Nominatim reverse geocode fallback (no key) ──────────────────────────────
+async function nominatimReverse(lat, lng) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17&addressdetails=1`,
+      {
+        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+        headers: { Accept: 'application/json', 'User-Agent': 'FairTrike/1.0 (olingapo-trike-app)' },
+      },
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    const a = d.address || {};
+    return d.display_name || [a.road, a.suburb || a.village, a.city || 'Olongapo City'].filter(Boolean).join(', ') || null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Core search: Geoapify first, Photon fallback ─────────────────────────────
 async function searchPlacesCore(q, userLat, userLng) {
   const hasUserLoc = Number.isFinite(userLat) && Number.isFinite(userLng);
   const biasLat = hasUserLoc ? userLat : OLONGAPO_CENTER.lat;
-  const biasLng = hasUserLoc ? userLng : OLONGAPO_CENTER.lon;
+  const biasLon = hasUserLoc ? userLng : OLONGAPO_CENTER.lon;
 
   const out = [];
   const seen = new Set();
-  const push = (r) => {
-    if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
-    const key = `${r.name}|${r.lat.toFixed(5)},${r.lng.toFixed(5)}`;
+  const push = (name, full, lat, lng, source) => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const key = `${name}|${lat.toFixed(5)},${lng.toFixed(5)}`;
     if (seen.has(key)) return;
     seen.add(key);
+    const r = { name, full, lat, lng, source };
     if (hasUserLoc) {
-      r.distM = Math.round(haversineM(userLat, userLng, r.lat, r.lng));
+      r.distM = Math.round(haversineM(userLat, userLng, lat, lng));
     }
     out.push(r);
   };
 
-  // 1. Photon — built for autocomplete, CORS-open, no key. Biased to user
-  // location (or Olongapo center) so nearby results surface first.
-  try {
-    const url =
-      `https://photon.komoot.io/api/?q=${encodeURIComponent(`${q}, Olongapo City`)}` +
-      `&bbox=${OLONGAPO_BBOX}&limit=10&lang=en&lat=${biasLat}&lon=${biasLng}`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
-    if (r.ok) {
-      const d = await r.json();
-      for (const f of d?.features || []) {
-        const c = f?.geometry?.coordinates;
-        if (!c) continue;
-        const lng = Number(c[0]);
-        const lat = Number(c[1]);
-        const name = f.properties?.name || f.properties?.street || f.properties?.district || q;
-        push({ name, full: photonLabel(f.properties), lat, lng, source: 'photon' });
-      }
-    }
-  } catch { /* fall through to Nominatim */ }
+  // 1. Try Geoapify (with key), else Photon.
+  const features = hasGeoapifyKey()
+    ? await geoapifyAutocomplete(q, biasLat, biasLon)
+    : await photonAutocomplete(q, biasLat, biasLon);
 
-  // 2. Nominatim fallback — strict Olongapo-bounded search.
-  if (out.length < 6) {
+  for (const f of features) {
+    const props = f?.properties || {};
+    const lat = Number(props.lat);
+    const lng = Number(props.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const name = props.name || props.street || q;
+    const full = props.formatted || props.name || props.street || q;
+    push(name, full, lat, lng, hasGeoapifyKey() ? 'geoapify' : 'photon');
+  }
+
+  // 2. If we got very few results, try Nominatim as an extra fallback.
+  if (!hasGeoapifyKey() && out.length < 6) {
     try {
+      const OLONGAPO_VIEWBOX = '120.25,14.88,120.33,14.79';
       const url =
         `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=10` +
         `&countrycodes=ph&viewbox=${OLONGAPO_VIEWBOX}&bounded=1&q=${encodeURIComponent(q)}`;
@@ -88,23 +171,20 @@ async function searchPlacesCore(q, userLat, userLng) {
         for (const p of d || []) {
           const lat = Number(p.lat);
           const lng = Number(p.lon);
-          push({ name: p.name || p.display_name?.split(',')[0] || q, full: p.display_name, lat, lng, source: 'nominatim' });
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+          push(p.name || p.display_name?.split(',')[0] || q, p.display_name, lat, lng, 'nominatim');
         }
       }
     } catch { /* offline -> return what we have */ }
   }
 
-  // Rank: inside Olongapo first, then by distance from user location (if known),
-  // then by source preference (Photon before Nominatim for autocomplete quality).
+  // Rank: inside Olongapo first, then by distance from user location (if known).
   out.sort((a, b) => {
     const aIn = inOlongapo(a.lat, a.lng);
     const bIn = inOlongapo(b.lat, b.lng);
     if (aIn !== bIn) return Number(bIn) - Number(aIn);
-    if (hasUserLoc) {
-      return (a.distM ?? Infinity) - (b.distM ?? Infinity);
-    }
-    const srcOrder = { photon: 0, nominatim: 1 };
-    return (srcOrder[a.source] ?? 9) - (srcOrder[b.source] ?? 9);
+    if (hasUserLoc) return (a.distM ?? Infinity) - (b.distM ?? Infinity);
+    return 0;
   });
   return out.slice(0, 8);
 }
@@ -124,7 +204,7 @@ router.get('/search', asyncHandler(async (req, res) => {
 
 // ── GET /api/places/search/near?q=sm&lat=..&lng=.. ────────────────────────
 // Location-biased search: requires user coordinates and ranks results purely
-// by proximity. Convenience wrapper around /search with lat/lng.
+// by proximity.
 router.get('/search/near', asyncHandler(async (req, res) => {
   const q = String(req.query.q || '').trim();
   if (q.length < 2) return ok(res, { results: [] });
@@ -136,7 +216,6 @@ router.get('/search/near', asyncHandler(async (req, res) => {
   }
 
   const results = await searchPlacesCore(q, userLat, userLng);
-  // Near endpoint ranks purely by distance (distM already attached by core).
   results.sort((a, b) => (a.distM ?? Infinity) - (b.distM ?? Infinity));
   ok(res, { results, userLocation: true });
 }));
@@ -147,22 +226,11 @@ router.get('/reverse', asyncHandler(async (req, res) => {
   const lat = Number(req.query.lat);
   const lng = Number(req.query.lng ?? req.query.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return ok(res, { label: 'Current Location' });
-  try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17&addressdetails=1`,
-      {
-        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-        headers: { Accept: 'application/json', 'User-Agent': 'FairTrike/1.0 (olingapo-trike-app)' },
-      },
-    );
-    if (r.ok) {
-      const d = await r.json();
-      const a = d.address || {};
-      const label = d.display_name || [a.road, a.suburb || a.village, a.city || 'Olongapo City'].filter(Boolean).join(', ');
-      return ok(res, { label: label || 'Current Location', raw: d });
-    }
-  } catch { /* offline */ }
-  ok(res, { label: 'Current Location' });
+
+  const label = hasGeoapifyKey()
+    ? await geoapifyReverse(lat, lng)
+    : await nominatimReverse(lat, lng);
+  ok(res, { label: label || 'Current Location' });
 }));
 
 // ── GET /api/places/route?fromLat=..&fromLng=..&toLat=..&toLng=..&mode=driving ──
