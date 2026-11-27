@@ -44,7 +44,7 @@ fs.mkdirSync(uploadDir, { recursive: true });
 // - '*' in the list = allow all origins (use for testing only)
 // - Empty array = no cross-origin allowed (same-origin only)
 // - undefined = reflect request origin (dev default, allows any origin)
-const corsOrigin = env.corsOrigins.includes('*') ? true : (env.corsOrigins.length ? env.corsOrigins : undefined);
+const corsOrigin = env.corsOrigins.includes('*') ? true : (env.corsOrigins.length ? env.corsOrigins : false);
 app.use(cors({
   origin: corsOrigin,
   credentials: true,

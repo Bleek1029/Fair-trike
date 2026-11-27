@@ -71,7 +71,9 @@ export const apiForgotPassword = (payload) => request('POST', '/auth/forgot-pass
 export const apiResetPassword = (payload) => request('POST', '/auth/reset-password', { body: { ...payload, new_password: payload.new_password } });
 
 // Token management
-export const apiRefreshToken = (refreshToken) => request('POST', '/auth/refresh', { body: { refresh_token: refreshToken } });
+// Refresh token is an HttpOnly cookie — the backend reads it from the cookie,
+// so no body is needed.
+export const apiRefreshToken = () => request('POST', '/auth/refresh');
 export const apiLogout = () => request('POST', '/auth/logout');
 export const apiLogoutAll = () => request('POST', '/auth/logout-all');
 

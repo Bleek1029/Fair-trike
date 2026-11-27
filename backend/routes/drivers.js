@@ -26,7 +26,10 @@ const docStorage = multer.diskStorage({
 const docUpload = multer({
   storage: docStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => cb(null, DOC_ALLOWED.includes(file.mimetype)),
+  fileFilter: (_req, file, cb) =>
+    DOC_ALLOWED.includes(file.mimetype)
+      ? cb(null, true)
+      : cb(new Error(`Unsupported file type. Allowed: ${DOC_ALLOWED.join(', ')}`), false),
 });
 
 // ── GET /api/drivers ───────────────────────────────────────

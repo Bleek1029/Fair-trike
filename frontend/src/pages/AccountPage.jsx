@@ -16,8 +16,6 @@ export function AccountPage() {
   const [loading, setLoading] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [name, setName] = useState(user?.fullname || '');
-  // Keep the editable name in sync once the session finishes loading.
-  React.useEffect(() => { setName(user?.fullname || ''); }, [user?.fullname]);
   const fileRef = React.useRef(null);
   const avatar = avatarUrl(user?.profilePicture);
 

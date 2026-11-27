@@ -80,11 +80,11 @@ export function DriverMap({
 
     // Driver marker: follows the driver's live position.
     if (driverCoord) {
-      updateDriverMarker(driverCoord.lat, driverCoord.lng);
+      updateDriverMarker(driverCoord.lat, driverCoord.lng, true);
     }
   }, [mapReady, pickupCoord, dropoffCoord, pickupLabel, dropoffLabel, driverCoord]);
 
-  const updateDriverMarker = (lat, lng) => {
+  const updateDriverMarker = (lat, lng, first = false) => {
     if (!mapRef.current) return;
     if (driverMarkerRef.current) {
       driverMarkerRef.current.setLatLng([lat, lng]);
@@ -92,10 +92,16 @@ export function DriverMap({
       driverMarkerRef.current = L.marker([lat, lng], { icon: DRIVER_ICON }).addTo(mapRef.current);
       driverMarkerRef.current.bindPopup('You (driver)');
     }
-    // Auto-pan the map to follow the driver while on an active trip.
-    mapRef.current.panTo([lat, lng]);
+    // Center the map on the driver's first reported position only; subsequent
+    // live updates just move the marker so the passenger can still see the route.
+    if (first && !driverPositionRef.current) {
+      mapRef.current.panTo([lat, lng]);
+      driverPositionRef.current = { lat, lng };
+    }
     onDriverLocationChange?.({ lat, lng });
   };
+
+  const driverPositionRef = useRef(null);
 
   useEffect(() => {
     const container = document.getElementById('driver-map-container');

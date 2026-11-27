@@ -272,10 +272,9 @@ router.post('/forgot-password', rateLimiters.passwordReset, asyncHandler(async (
     [userId, email, codeHash]
   );
 
-  // Send password reset code via email in background (don't block the API response)
-  Promise.resolve(sendPasswordResetCode(email, code)).catch((err) => {
-    console.error('[Auth] Failed to send password reset code:', err.message);
-  });
+  // Send password reset code via email. Await it so a failure surfaces as an error
+  // instead of falsely telling the user a code was sent.
+  await sendPasswordResetCode(email, code);
 
   ok(res, { message: 'If an account exists, a reset code has been sent.' });
 }));

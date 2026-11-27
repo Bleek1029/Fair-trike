@@ -25,7 +25,10 @@ export async function rawRequest(method, url, { body, isForm, token, query, time
     finalUrl = `${url}${sep}${qs.toString()}`;
   }
 
-  console.log('🌐 API Request:', { method, url: finalUrl, headers, body: body ? JSON.stringify(body) : undefined });
+  const safeHeaders = { ...headers };
+  if (safeHeaders.Authorization) safeHeaders.Authorization = 'Bearer [REDACTED]';
+  const safeBody = body ? JSON.stringify(redactBody(body)) : undefined;
+  console.log('🌐 API Request:', { method, url: finalUrl, headers: safeHeaders, body: safeBody });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -56,7 +59,7 @@ export async function rawRequest(method, url, { body, isForm, token, query, time
     data = {};
   }
 
-  console.log('🌐 API Response:', { status: response.status, ok: response.ok, data });
+  console.log('🌐 API Response:', { status: response.status, ok: response.ok, data: redactBody(data) });
 
   if (!response.ok) {
     throw new ApiError(data.message || 'Request failed', {
@@ -65,4 +68,15 @@ export async function rawRequest(method, url, { body, isForm, token, query, time
     });
   }
   return data;
+}
+
+/** Redact sensitive fields from request/response bodies before logging. */
+function redactBody(obj) {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  const out = { ...obj };
+  const secrets = ['password', 'current_password', 'new_password', 'accessToken', 'refreshToken', 'token', 'code'];
+  for (const key of secrets) {
+    if (key in out) out[key] = '[REDACTED]';
+  }
+  return out;
 }

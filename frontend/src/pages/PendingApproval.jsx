@@ -15,9 +15,9 @@ export function PendingApproval() {
     const checkStatus = async () => {
       if (user) {
         try {
-          // The user object might have status from the token
-          // If we don't have status, we're likely already approved (since login would fail otherwise)
-          const status = user.status || 'approved';
+          // If status is missing, treat as pending so the user stays on this page
+          // instead of being redirected away from the approval screen prematurely.
+          const status = user.status || 'pending';
           if (status === 'approved') {
             setIsApproved(true);
             // Redirect to appropriate home page

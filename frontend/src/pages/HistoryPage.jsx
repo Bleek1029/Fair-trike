@@ -14,15 +14,21 @@ export function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     apiGetRideHistory()
       .then((d) => {
-        setRides(d.rides ?? []);
-        setLoading(false);
+        if (!cancelled) {
+          setRides(d.rides ?? []);
+          setLoading(false);
+        }
       })
       .catch((e) => {
-        setError(e.message);
-        setLoading(false);
+        if (!cancelled) {
+          setError(e.message);
+          setLoading(false);
+        }
       });
+    return () => { cancelled = true; };
   }, []);
 
   return (

@@ -33,8 +33,8 @@ router.post('/directions', asyncHandler(async (req, res) => {
     throw serviceUnavailable('Routing service unavailable.');
   }
 
-  const data = await upstream.json();
   if (!upstream.ok) throw serviceUnavailable('Routing service error.');
+  const data = await upstream.json();
   ok(res, data);
 }));
 

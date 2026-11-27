@@ -20,7 +20,7 @@ let wss = null;
 export function initWebSocketServer(httpServer) {
   if (wss) return wss;
 
-  wss = new WebSocketServer({ server: httpServer, maxPayload: 1024 * 1024 });
+  wss = new WebSocketServer({ server: httpServer, maxPayload: 64 * 1024 });
 
   wss.on('connection', (ws, req) => {
     console.log('Client connected (raw WebSocket)');

@@ -47,7 +47,7 @@ export function sendIndex(res, distDir, req, isAdmin = false) {
   });
 
   const html = readIndex(distDir).replace(
-    '</head>',
+    /<\/head>/i,
     `<script>window.__FAIRTRIKE__=${config};</script></head>`,
   );
 

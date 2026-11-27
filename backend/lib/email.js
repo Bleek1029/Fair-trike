@@ -59,8 +59,7 @@ export async function sendEmail({ to, subject, html, text }) {
       console.log(`[Email] Would send to ${to}:`, { subject });
       return true;
     }
-    console.error('[Email] Cannot send - SMTP not configured');
-    return false;
+    throw new Error('SMTP not configured');
   }
 
   try {
@@ -76,6 +75,9 @@ export async function sendEmail({ to, subject, html, text }) {
     return true;
   } catch (err) {
     console.error('[Email] Send failed:', err.message);
+    if (process.env.NODE_ENV === 'production') {
+      throw err;
+    }
     return false;
   }
 }

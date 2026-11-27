@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
+import { env } from '../config.js';
 
 // Check if using a test/fake key for development
 const isTestKey = process.env.GEMINI_API_KEY === 'test-key-for-local-dev';
@@ -56,8 +57,12 @@ export async function askGemini({ system, prompt, schema }) {
     return res.text;
   } catch (err) {
     console.error('[gemini] Error:', err.message, err.status ?? err.code);
-    // Fall back to mock on any error (quota exceeded, invalid key, network issues, etc.)
-    console.log('[gemini] Falling back to mock response due to error');
+    // In production, never silently substitute mock data for a real API failure —
+    // surface the error so the caller can decide how to respond.
+    if (env.isProd) {
+      throw err;
+    }
+    console.log('[gemini] Falling back to mock response due to error (dev only)');
     return getMockResponse({ system, prompt, schema });
   } finally {
     clearTimeout(timer);

@@ -12,15 +12,21 @@ export function DriverHistory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     apiGetMyRides()
       .then((data) => {
-        setRides(data.rides ?? []);
-        setLoading(false);
+        if (!cancelled) {
+          setRides(data.rides ?? []);
+          setLoading(false);
+        }
       })
       .catch((err) => {
-        setError(err.message);
-        setLoading(false);
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
       });
+    return () => { cancelled = true; };
   }, []);
 
   const fmtPeso = (n) => `₱${Number(n || 0).toFixed(2)}`;

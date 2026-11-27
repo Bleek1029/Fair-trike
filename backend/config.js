@@ -76,11 +76,13 @@ export const env = {
   // http://localhost:5173) instead of frontend/dist — keeps HMR in dev.
   adminSpaOrigin: (process.env.ADMIN_SPA_ORIGIN || '').trim().replace(/\/+$/, ''),
   jwt: {
-    // Fallback for Render: if JWT_SECRET not set, generate one at startup.
-    // NOTE: This invalidates all tokens on each restart. Set JWT_SECRET in Render Dashboard for production.
-    secret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production'
-      ? randomBytes(64).toString('hex')
-      : 'dev_secret_change_me_please_use_a_long_random_string'),
+    // Require JWT_SECRET explicitly in production; do not auto-generate (would
+    // invalidate all sessions on every restart). Dev falls back to a dummy secret.
+    secret: process.env.JWT_SECRET
+      ? process.env.JWT_SECRET
+      : process.env.NODE_ENV === 'production'
+        ? (() => { throw new Error('JWT_SECRET is required in production.'); })()
+        : 'dev_secret_change_me_please_use_a_long_random_string',
     expiresIn: (process.env.JWT_EXPIRES_IN || '15m').trim(),        // Short-lived access token
     refreshExpiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '30d').trim(), // Long-lived refresh token
   },

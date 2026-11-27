@@ -5,6 +5,7 @@
 
 import pino from 'pino';
 import { env } from '../config.js';
+import { randomUUID } from 'node:crypto';
 
 // Pretty printer for development
 const isDev = !env.isProd;
@@ -39,7 +40,7 @@ export function requestLogger(req, res, next) {
   const start = Date.now();
   const correlationId = req.headers['x-correlation-id'] ||
     req.headers['x-request-id'] ||
-    crypto.randomUUID();
+    randomUUID();
 
   // Attach correlation ID to request for downstream use
   req.correlationId = correlationId;
@@ -75,6 +76,4 @@ export function requestLogger(req, res, next) {
 // Export main logger
 export { logger };
 
-// Import crypto for UUID generation
-import { randomUUID } from 'node:crypto';
-const crypto = { randomUUID };
+export { randomUUID };
