@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { fetchRoute, geocodePlaceFreeText, reverseGeocode, searchPlaces } from '../lib/places.js';
+import { fetchRoute, geocodePlaceFreeText, reverseGeocode, searchPlaces, searchPlacesNear, setUserLocation } from '../lib/places.js';
 import { MobileHeader } from '../components/MobileHeader.jsx';
 import { BottomNav } from '../components/BottomNav.jsx';
 import { Icon } from '../components/Icon.jsx';
@@ -106,6 +106,8 @@ export function MapApp() {
           const { latitude: lat, longitude: lng } = pos.coords;
           map.setView([lat, lng], 15);
           setGpsText('GPS lock acquired • tap "Use current location" to set pickup');
+          // Bias place search toward the user's actual location.
+          setUserLocation(lat, lng);
         },
         () => setGpsText('GPS not available • Using default location'),
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
@@ -127,7 +129,8 @@ export function MapApp() {
     if (q.length < 2) { setSuggestions([]); setSearching(false); return; }
     setSearching(true);
     try {
-      const hits = await searchPlaces(q);
+      // Use location-biased search so nearby places surface first.
+      const hits = await searchPlaces(q, { useLocation: true });
       setSuggestions(hits);
     } finally {
       setSearching(false);
@@ -188,8 +191,8 @@ export function MapApp() {
     const pinClass = isPickup ? 'green-pin-marker' : 'red-pin-marker';
     const pinLabel = isPickup ? 'Pickup' : 'Drop-off';
     const icon = L.divIcon({
-      className: pinClass,
-      html: `<div class="${pinClass}"><div class="pin"><div class="pin-label">${pinLabel}</div></div></div>`,
+      className: `${pinClass} pin-marker`,
+      html: `<div class="${pinClass} pin-marker"><div class="pin"><div class="pin-label">${pinLabel}</div></div></div>`,
       iconSize: [28, 44], iconAnchor: [14, 44],
     });
 
@@ -256,6 +259,7 @@ export function MapApp() {
     }
     setStartStr(name);
     setStartCoord({ lat, lng });
+    setUserLocation(lat, lng);
     setRouteResult(null);
     // Sync to URL
     setSearchParams(prev => {
@@ -729,13 +733,17 @@ export function MapApp() {
               {suggestions.map((s, i) => (
                 <button type="button" key={`${s.name}-${s.lat?.toFixed?.(5)}-${i}`} onClick={() => chooseSuggestion(s)} className="suggestion-item w-full text-left">
                   <span className="font-semibold">{s.name}</span>
-                  <span className="block text-body-sm text-on-surface-variant">{s.full}</span>
+                  <span className="block text-body-sm text-on-surface-variant">{s.full}{s.distM != null ? ` • ${Math.round(s.distM / 1000)} km` : ''}</span>
                 </button>
               ))}
             </div>
           )}
           {searching && suggestions.length === 0 && (
             <p className="text-label-sm text-on-surface-variant">Searching places…</p>
+          )}
+          {!searching && suggestions.length === 0 && activeInput &&
+            (activeInput === 'start' ? startStr : destStr).trim().length >= 2 && (
+            <p className="text-label-sm text-on-surface-variant">No places found — try a nearby landmark or street.</p>
           )}
           {routeError && (
             <p className="text-label-sm text-error bg-error-container/40 rounded-lg p-2 flex items-center gap-1">

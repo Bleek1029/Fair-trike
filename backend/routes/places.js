@@ -17,16 +17,28 @@ function inOlongapo(lat, lon) {
   return lat >= 14.79 && lat <= 14.88 && lon >= 120.25 && lon <= 120.33;
 }
 
+function haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = (x) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 function photonLabel(p = {}) {
   const parts = [p.name || p.street, p.district || p.suburb, p.city || 'Olongapo City'].filter(Boolean);
   return parts.join(', ');
 }
 
-// ── GET /api/places/search?q=sm ──────────────────────────
-// Returns { results: [{ name, full, lat, lng, source }] }
-router.get('/search', asyncHandler(async (req, res) => {
-  const q = String(req.query.q || '').trim();
-  if (q.length < 2) return ok(res, { results: [] });
+// ── Core search logic shared by /search and /search/near ───────────────────
+// Queries Photon first, then Nominatim fallback, dedupes, attaches distM when a
+// user location is supplied, and ranks results (inside Olongapo first, then by
+// distance from user location, then by source preference).
+async function searchPlacesCore(q, userLat, userLng) {
+  const hasUserLoc = Number.isFinite(userLat) && Number.isFinite(userLng);
+  const biasLat = hasUserLoc ? userLat : OLONGAPO_CENTER.lat;
+  const biasLng = hasUserLoc ? userLng : OLONGAPO_CENTER.lon;
 
   const out = [];
   const seen = new Set();
@@ -35,14 +47,18 @@ router.get('/search', asyncHandler(async (req, res) => {
     const key = `${r.name}|${r.lat.toFixed(5)},${r.lng.toFixed(5)}`;
     if (seen.has(key)) return;
     seen.add(key);
+    if (hasUserLoc) {
+      r.distM = Math.round(haversineM(userLat, userLng, r.lat, r.lng));
+    }
     out.push(r);
   };
 
-  // 1. Photon — built for autocomplete, CORS-open, no key.
+  // 1. Photon — built for autocomplete, CORS-open, no key. Biased to user
+  // location (or Olongapo center) so nearby results surface first.
   try {
     const url =
       `https://photon.komoot.io/api/?q=${encodeURIComponent(`${q}, Olongapo City`)}` +
-      `&bbox=${OLONGAPO_BBOX}&limit=8&lang=en&lat=${OLONGAPO_CENTER.lat}&lon=${OLONGAPO_CENTER.lon}`;
+      `&bbox=${OLONGAPO_BBOX}&limit=10&lang=en&lat=${biasLat}&lon=${biasLng}`;
     const r = await fetch(url, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
     if (r.ok) {
       const d = await r.json();
@@ -61,7 +77,7 @@ router.get('/search', asyncHandler(async (req, res) => {
   if (out.length < 6) {
     try {
       const url =
-        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8` +
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=10` +
         `&countrycodes=ph&viewbox=${OLONGAPO_VIEWBOX}&bounded=1&q=${encodeURIComponent(q)}`;
       const r = await fetch(url, {
         signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
@@ -78,9 +94,51 @@ router.get('/search', asyncHandler(async (req, res) => {
     } catch { /* offline -> return what we have */ }
   }
 
-  // Prefer results inside the bbox, but don't drop valid nearby (e.g. Harbor Point / SBMA).
-  out.sort((a, b) => Number(inOlongapo(b.lat, b.lng)) - Number(inOlongapo(a.lat, a.lng)));
-  ok(res, { results: out.slice(0, 8) });
+  // Rank: inside Olongapo first, then by distance from user location (if known),
+  // then by source preference (Photon before Nominatim for autocomplete quality).
+  out.sort((a, b) => {
+    const aIn = inOlongapo(a.lat, a.lng);
+    const bIn = inOlongapo(b.lat, b.lng);
+    if (aIn !== bIn) return Number(bIn) - Number(aIn);
+    if (hasUserLoc) {
+      return (a.distM ?? Infinity) - (b.distM ?? Infinity);
+    }
+    const srcOrder = { photon: 0, nominatim: 1 };
+    return (srcOrder[a.source] ?? 9) - (srcOrder[b.source] ?? 9);
+  });
+  return out.slice(0, 8);
+}
+
+// ── GET /api/places/search?q=sm[&lat=..&lng=..] ──────────────────────────
+// Returns { results: [{ name, full, lat, lng, source, distM? }] }
+// Optional lat/lng biases results toward the user's location.
+router.get('/search', asyncHandler(async (req, res) => {
+  const q = String(req.query.q || '').trim();
+  if (q.length < 2) return ok(res, { results: [] });
+
+  const userLat = Number(req.query.lat);
+  const userLng = Number(req.query.lng);
+  const results = await searchPlacesCore(q, userLat, userLng);
+  ok(res, { results, userLocation: Number.isFinite(userLat) && Number.isFinite(userLng) });
+}));
+
+// ── GET /api/places/search/near?q=sm&lat=..&lng=.. ────────────────────────
+// Location-biased search: requires user coordinates and ranks results purely
+// by proximity. Convenience wrapper around /search with lat/lng.
+router.get('/search/near', asyncHandler(async (req, res) => {
+  const q = String(req.query.q || '').trim();
+  if (q.length < 2) return ok(res, { results: [] });
+
+  const userLat = Number(req.query.lat);
+  const userLng = Number(req.query.lng);
+  if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) {
+    return res.status(400).json({ success: false, message: 'lat and lng are required.' });
+  }
+
+  const results = await searchPlacesCore(q, userLat, userLng);
+  // Near endpoint ranks purely by distance (distM already attached by core).
+  results.sort((a, b) => (a.distM ?? Infinity) - (b.distM ?? Infinity));
+  ok(res, { results, userLocation: true });
 }));
 
 // ── GET /api/places/reverse?lat=14.83&lng=120.28 ─────────

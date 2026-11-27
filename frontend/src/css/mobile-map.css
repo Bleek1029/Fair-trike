@@ -105,16 +105,18 @@
   pointer-events: none;
 }
 
-/* Google Maps style red pin markers for pickup/dropoff */
-.red-pin-marker {
+/* ── Map pin markers (Google Maps style) ──
+    Pin shape lives on .pin-marker .pin; color variants only override
+    the fill color so both pickup and drop-off render identically shaped. ──
+*/
+.pin-marker {
   position: relative;
   display: inline-flex;
 }
 
-.red-pin-marker .pin {
+.pin-marker .pin {
   width: 28px;
   height: 40px;
-  background: #dc2626;
   border-radius: 14px 14px 14px 0;
   transform: rotate(-45deg);
   border: 3px solid #fff;
@@ -125,7 +127,7 @@
   pointer-events: none;
 }
 
-.red-pin-marker .pin::after {
+.pin-marker .pin::after {
   content: '';
   width: 10px;
   height: 10px;
@@ -135,12 +137,11 @@
   position: absolute;
 }
 
-.red-pin-marker .pin-label {
+.pin-marker .pin-label {
   position: absolute;
   top: 38px;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
-  background: #dc2626;
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -155,19 +156,14 @@
 .green-pin-marker .pin {
   background: #0d5c3a;
 }
-.green-pin-marker .pin::after {
-  background: #fff;
-}
 .green-pin-marker .pin-label {
   background: #0d5c3a;
 }
 
-/* Destination pin (red variant) */
+/* Destination pin (red variant) — distinct from pickup and from the
+   red current-location dot so the two are never confused on the map. */
 .red-pin-marker .pin {
   background: #dc2626;
-}
-.red-pin-marker .pin::after {
-  background: #fff;
 }
 .red-pin-marker .pin-label {
   background: #dc2626;
