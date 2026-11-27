@@ -9,19 +9,30 @@ export class ApiError extends Error {
 }
 
 // Low-level fetch wrapper: JSON handling, timeout, typed failures.
-export async function rawRequest(method, url, { body, isForm, token, timeoutMs = 15000 } = {}) {
+export async function rawRequest(method, url, { body, isForm, token, query, timeoutMs = 15000 } = {}) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body && !isForm) headers['Content-Type'] = 'application/json';
 
-  console.log('🌐 API Request:', { method, url, headers, body: body ? JSON.stringify(body) : undefined });
+  // Append query string if provided
+  let finalUrl = url;
+  if (query && Object.keys(query).length > 0) {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(query)) {
+      if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
+    }
+    const sep = url.includes('?') ? '&' : '?';
+    finalUrl = `${url}${sep}${qs.toString()}`;
+  }
+
+  console.log('🌐 API Request:', { method, url: finalUrl, headers, body: body ? JSON.stringify(body) : undefined });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let response;
   try {
-    response = await fetch(url, {
+    response = await fetch(finalUrl, {
       method,
       headers,
       body: body ? (isForm ? body : JSON.stringify(body)) : undefined,

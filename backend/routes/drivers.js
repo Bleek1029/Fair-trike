@@ -37,9 +37,10 @@ router.get('/', asyncHandler(async (req, res) => {
     `SELECT d.*, u.fullname, u.email, u.profile_picture
      FROM drivers d
      JOIN users u ON u.id = d.user_id
-     ${onlyApproved ? "WHERE d.status = 'approved'" : ''}
+     ${onlyApproved ? 'WHERE d.status = $1' : ''}
      ORDER BY d.created_at DESC
-     LIMIT 200`
+     LIMIT 200`,
+    onlyApproved ? ['approved'] : []
   );
   const drivers = result.rows.map((r) => ({
     ...publicDriver(r),
@@ -51,7 +52,7 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 // ── GET /api/drivers/me ────────────────────────────────────
-router.get('/me', requireAuth, asyncHandler(async (req, res) => {
+router.get('/me', requireAuth, requireRole(pool, 'driver'), asyncHandler(async (req, res) => {
   const result = await pool.query('SELECT * FROM drivers WHERE user_id = $1', [req.user.id]);
   if (result.rows.length === 0) throw notFound('No driver profile found.');
   ok(res, { driver: publicDriver(result.rows[0]) });

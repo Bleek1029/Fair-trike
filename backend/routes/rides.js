@@ -45,6 +45,12 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
   const pickupLabel = trim(req.body.pickup_label);
   const dropoffLabel = trim(req.body.dropoff_label);
   requireFields({ pickup_label: pickupLabel, dropoff_label: dropoffLabel }, ['pickup_label', 'dropoff_label']);
+  if (!req.body.pickup_coord || typeof req.body.pickup_coord !== 'object') {
+    throw badRequest('pickup_coord is required.');
+  }
+  if (!req.body.dropoff_coord || typeof req.body.dropoff_coord !== 'object') {
+    throw badRequest('dropoff_coord is required.');
+  }
   assertCoordPair([req.body.pickup_coord.lat, req.body.pickup_coord.lng]);
   assertCoordPair([req.body.dropoff_coord.lat, req.body.dropoff_coord.lng]);
 
@@ -182,8 +188,8 @@ router.post('/:id/complete', requireAuth, requireRole(pool, 'driver'), asyncHand
 router.post('/:id/cancel', requireAuth, asyncHandler(async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
   const result = await pool.query(
-    `UPDATE rides SET status = 'cancelled' WHERE id = $1 AND status = 'pending' RETURNING id`,
-    [id]
+    `UPDATE rides SET status = 'cancelled' WHERE id = $1 AND status = 'pending' AND passenger_user_id = $2 RETURNING id`,
+    [id, req.user.id]
   );
   if (result.rows.length === 0) throw notFound('No pending ride with that id.');
   emitRideEvent(id, 'ride-cancelled');
@@ -216,8 +222,8 @@ router.get('/earnings', requireAuth, requireRole(pool, 'driver'), asyncHandler(a
     `SELECT
        COUNT(*) FILTER (WHERE completed_at >= (date_trunc('day', NOW() AT TIME ZONE 'Asia/Manila')) AT TIME ZONE 'Asia/Manila') AS today_trips,
        COALESCE(SUM(fare) FILTER (WHERE completed_at >= (date_trunc('day', NOW() AT TIME ZONE 'Asia/Manila')) AT TIME ZONE 'Asia/Manila'), 0) AS today_earnings,
-       COUNT(*) FILTER (WHERE completed_at >= date_trunc('week', NOW() AT TIME ZONE 'Asia/Manila'))              AS week_trips,
-       COALESCE(SUM(fare) FILTER (WHERE completed_at >= date_trunc('week', NOW() AT TIME ZONE 'Asia/Manila')), 0) AS week_earnings,
+       COUNT(*) FILTER (WHERE completed_at >= (date_trunc('week', NOW() AT TIME ZONE 'Asia/Manila')) AT TIME ZONE 'Asia/Manila')              AS week_trips,
+       COALESCE(SUM(fare) FILTER (WHERE completed_at >= (date_trunc('week', NOW() AT TIME ZONE 'Asia/Manila')) AT TIME ZONE 'Asia/Manila'), 0) AS week_earnings,
        COUNT(*)                                                                       AS total_trips,
        COALESCE(SUM(fare), 0)                                                         AS total_earnings
      FROM rides

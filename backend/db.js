@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS password_reset_requests (
     email               VARCHAR(191) NOT NULL,
     new_password_hash   VARCHAR(255) NOT NULL,
     status              VARCHAR(20) NOT NULL DEFAULT 'pending'
-                        CHECK (status IN ('pending', 'approved', 'rejected')),
+                        CHECK (status IN ('pending', 'approved', 'rejected', 'used')),
     admin_note          TEXT DEFAULT NULL,
     reviewed_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
     reviewed_at         TIMESTAMPTZ DEFAULT NULL,
@@ -247,6 +247,7 @@ async function runEnsures() {
     console.log(`✅ Database "${dbname}" ready (users + drivers tables present).`);
   } catch (err) {
     console.error('❌ Could not apply schema:', err.message);
+    throw err;
   } finally {
     await client.end();
   }

@@ -97,10 +97,6 @@ export const env = {
     dir: process.env.UPLOAD_DIR || 'uploads',
     maxFileSizeMb: intFromEnv('MAX_FILE_SIZE_MB', 5),
   },
-  corsOrigins: (process.env.CORS_ORIGINS || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean),
   orsApiKey: (process.env.ORS_API_KEY || '').trim(),
   geoapifyApiKey: (process.env.GEOAPIFY_API_KEY || '').trim(),
   // Brute-force protection on credential endpoints (fixed-window limiter).

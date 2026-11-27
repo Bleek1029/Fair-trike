@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
     }
     validatingRef.current = true;
 
-    // Add a safety timeout to prevent permanent loading state (5s for good UX)
+    // Add a safety timeout to prevent permanent loading state (60s to cover Render cold starts)
     const safetyTimeout = setTimeout(() => {
       if (!mounted) return;
       validatingRef.current = false;
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
       clearAuth();
       setUser(null);
       setLoading(false);
-    }, 5000); // 5 second safety timeout (was 60s)
+    }, 60000); // 60 second safety timeout — covers Render free-tier cold starts
 
     // Async IIFE for health check + apiGetMe
     (async () => {

@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   apiGetMyDriver, apiGetAvailableRides, apiAcceptRide, apiCompleteRide,
   apiGetEarnings, apiGetDriverDocuments, apiUploadDriverDocument,
+  apiGetRide,
 } from '../api.js';
 import { apiAiSummary, apiUpdateProfile, apiRemovePicture } from '../api.js';
 import { MobileHeader } from '../components/MobileHeader.jsx';
@@ -239,10 +240,9 @@ export function DriverApp() {
   useEffect(() => {
     const urlRideId = searchParams.get('rideId');
     if (urlRideId && !accepted) {
-      // Fetch ride details from backend
-      fetch(`/api/rides/${urlRideId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` } })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
+      // Fetch ride details from backend via typed wrapper (uses correct access token)
+      apiGetRide(urlRideId)
+        .then((data) => {
           if (data?.ride) {
             setAccepted(data.ride);
             activeRideId.current = data.ride.id;
@@ -555,7 +555,7 @@ export function DriverApp() {
             </div>
               <div className="min-w-0">
                 <p className="text-title-sm font-bold truncate">{request.passengerName || 'Commuter'}</p>
-                <p className="text-body-sm text-on-surface-variant">{(request.distanceM / 1000).toFixed(1)} km · {request.pickup}</p>
+                <p className="text-body-sm text-on-surface-variant">{(request.distanceM != null ? (request.distanceM / 1000).toFixed(1) : '—')} km · {request.pickup}</p>
               </div>
             </div>
             <p className="text-body-sm text-on-surface-variant flex items-center gap-1">
@@ -603,7 +603,7 @@ export function DriverApp() {
               </div>
               <div className="min-w-0">
                 <p className="text-title-sm font-bold truncate">{accepted.passengerName || 'Commuter'}</p>
-                <p className="text-body-sm text-on-surface-variant">Passenger · {(accepted.distanceM / 1000).toFixed(1)} km</p>
+                <p className="text-body-sm text-on-surface-variant">Passenger · {(accepted.distanceM != null ? (accepted.distanceM / 1000).toFixed(1) : '—')} km</p>
               </div>
             </div>
             <p className="text-body-sm text-on-surface-variant">{accepted.pickup} → {accepted.dropoff}</p>

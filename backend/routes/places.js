@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { ok } from '../lib/http.js';
+import { badRequest } from '../lib/AppError.js';
 import { env } from '../config.js';
 
 const router = Router();
@@ -34,10 +35,15 @@ function haversineM(lat1, lon1, lat2, lon2) {
 
 function geoapifyHeaders() {
   const headers = { Accept: 'application/json' };
-  if (env.geoapifyApiKey) {
-    headers['Authorization'] = `apikey ${env.geoapifyApiKey}`;
-  }
   return headers;
+}
+
+function geoapifyQueryParams(baseParams = {}) {
+  const params = { ...baseParams };
+  if (env.geoapifyApiKey) {
+    params.apiKey = env.geoapifyApiKey;
+  }
+  return params;
 }
 
 function hasGeoapifyKey() {
@@ -48,13 +54,13 @@ function hasGeoapifyKey() {
 async function geoapifyAutocomplete(q, biasLat, biasLon) {
   if (!hasGeoapifyKey()) return [];
   // Geoapify circle filter format: lon,lat,radius (meters)
-  const qs = new URLSearchParams({
+  const qs = new URLSearchParams(geoapifyQueryParams({
     text: q,
     format: 'json',
     limit: '10',
     filter: `circle:${biasLon.toFixed(6)},${biasLat.toFixed(6)},50000`,
     type: 'city,street,house,building,amenity,tourism',
-  });
+  }));
   const url = `${GEOAPIFY_BASE}/place/autocomplete?${qs.toString()}`;
   const r = await fetch(url, {
     signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
@@ -68,11 +74,11 @@ async function geoapifyAutocomplete(q, biasLat, biasLon) {
 // ── Geoapify reverse geocode ─────────────────────────────────────────────────
 async function geoapifyReverse(lat, lng) {
   if (!hasGeoapifyKey()) return null;
-  const qs = new URLSearchParams({
+  const qs = new URLSearchParams(geoapifyQueryParams({
     lat: String(lat),
     lon: String(lng),
     format: 'json',
-  });
+  }));
   const url = `${GEOAPIFY_BASE}/geocode/reverse?${qs.toString()}`;
   const r = await fetch(url, {
     signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
@@ -212,7 +218,7 @@ router.get('/search/near', asyncHandler(async (req, res) => {
   const userLat = Number(req.query.lat);
   const userLng = Number(req.query.lng);
   if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) {
-    return res.status(400).json({ success: false, message: 'lat and lng are required.' });
+    throw badRequest('lat and lng are required.');
   }
 
   const results = await searchPlacesCore(q, userLat, userLng);
@@ -249,7 +255,7 @@ router.get('/route', asyncHandler(async (req, res) => {
 
   // Validate coordinates are finite
   if (![fromLat, fromLng, toLat, toLng].every(Number.isFinite)) {
-    return res.status(400).json({ success: false, message: 'Invalid coordinates.' });
+    throw badRequest('Invalid coordinates.');
   }
 
   // Validate coordinates are within reasonable Olongapo bounds (with small buffer)
@@ -262,18 +268,18 @@ router.get('/route', asyncHandler(async (req, res) => {
 
   for (const lat of latCoords) {
     if (lat < MIN_LAT || lat > MAX_LAT) {
-      return res.status(400).json({ success: false, message: `Latitude out of bounds (${MIN_LAT}–${MAX_LAT}).` });
+      throw badRequest(`Latitude out of bounds (${MIN_LAT}–${MAX_LAT}).`);
     }
   }
   for (const lng of lngCoords) {
     if (lng < MIN_LNG || lng > MAX_LNG) {
-      return res.status(400).json({ success: false, message: `Longitude out of bounds (${MIN_LNG}–${MAX_LNG}).` });
+      throw badRequest(`Longitude out of bounds (${MIN_LNG}–${MAX_LNG}).`);
     }
   }
 
   // Prevent zero-distance routes
   if (fromLat === toLat && fromLng === toLng) {
-    return res.status(400).json({ success: false, message: 'Origin and destination cannot be identical.' });
+    throw badRequest('Origin and destination cannot be identical.');
   }
 
   // Build the OSRM coordinate string: from;waypoint1;waypoint2;...;to

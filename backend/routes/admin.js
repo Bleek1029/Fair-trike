@@ -71,7 +71,7 @@ router.post('/drivers/:userId/status', requireAuth, requireRole(pool, 'admin'), 
 
     await client.query('COMMIT');
 
-    const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const userResult = await client.query('SELECT id, fullname, email, role, status, profile_picture, created_at FROM users WHERE id = $1', [userId]);
     const driver = result.rows[0];
     if (userResult.rows.length > 0) driver.user = userResult.rows[0];
 

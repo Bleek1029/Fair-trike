@@ -97,12 +97,14 @@ export const apiGetMyRides = () => request('GET', '/rides/mine');
 export const apiGetRideHistory = () => request('GET', '/rides/history');
 export const apiGetEarnings = () => request('GET', '/rides/earnings');
 export const apiCreateRide = (payload) => request('POST', '/rides', { body: payload });
+export const apiGetRide = (id) => request('GET', `/rides/${id}`);
+export const apiGeoIp = () => request('GET', '/geo/ip');
 
 // ── Admin ──
 export const apiAdminStats = () => request('GET', '/admin/stats');
 export const apiAdminDrivers = () => request('GET', '/admin/drivers');
 export const apiSetDriverStatus = (userId, status) => request('POST', `/admin/drivers/${userId}/status`, { body: { status } });
-export const apiAdminDocuments = () => request('GET', '/admin/documents');
+export const apiAdminDocuments = (params = {}) => request('GET', '/admin/documents', { query: params });
 export const apiSetDocumentStatus = (id, status) => request('POST', `/admin/documents/${id}/status`, { body: { status } });
 export const apiAdminUsers = () => request('GET', '/admin/users');
 export const apiAdminRides = () => request('GET', '/admin/rides');

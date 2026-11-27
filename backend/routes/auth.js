@@ -5,6 +5,7 @@ import { signAccessToken, createRefreshToken, rotateRefreshToken, revokeAllRefre
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { badRequest, notFound, conflict, unauthorized, forbidden } from '../lib/AppError.js';
 import { ok, created } from '../lib/http.js';
+import { rateLimiters } from '../lib/rateLimiter.js';
 import { normalizeEmail, trim, assertEmail, assertPassword, requireFields } from '../lib/validation.js';
 import { emitAdminUserCreated, emitAdminDriverCreated, emitAdminResetRequested } from '../socket.js';
 import { sendPasswordResetCode, sendWelcomeEmail } from '../lib/email.js';
@@ -237,13 +238,15 @@ router.post('/change-password', asyncHandler(async (req, res) => {
 
   const hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, user.id]);
+  // Invalidate all existing refresh tokens so stolen sessions can't persist.
+  await revokeAllRefreshTokens(user.id);
   ok(res, { message: 'Password updated successfully.' });
 }));
 
 // ── POST /api/auth/forgot-password ─────────────────────────
 // Initiates a password reset by email. Generates a 6-digit code, stores its
 // hash in password_reset_requests, and sends the code via email.
-router.post('/forgot-password', asyncHandler(async (req, res) => {
+router.post('/forgot-password', rateLimiters.passwordReset, asyncHandler(async (req, res) => {
   const email = normalizeEmail(req.body.email);
   if (!email) throw badRequest('Email is required.');
 
@@ -294,7 +297,7 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 
   const result = await pool.query(
     `SELECT * FROM password_reset_requests
-     WHERE new_password_hash = $1 AND created_at > NOW() - INTERVAL '1 hour'`,
+     WHERE new_password_hash = $1 AND status = 'approved' AND created_at > NOW() - INTERVAL '1 hour'`,
     [codeHash]
   );
   if (result.rows.length === 0) {

@@ -105,8 +105,8 @@ export function initSocket(server) {
               last_location_at = NOW() WHERE user_id = $3`,
           [lat, lng, userId]
         );
-      } catch {
-        // Persistence failure must not break real-time broadcast.
+      } catch (err) {
+        console.error('[socket] Failed to persist driver location:', err.message);
       }
 
       io.to(`ride:${rideId}`).emit('location-update', {

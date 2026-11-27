@@ -64,7 +64,7 @@ const cspDirectives = {
   baseUri: ["'self'"],
   formAction: ["'self'"],
   frameAncestors: ["'none'"],
-  upgradeInsecureRequests: env.isProd ? [] : null,
+  upgradeInsecureRequests: env.isProd ? [] : undefined,
 };
 
 app.use(helmet({

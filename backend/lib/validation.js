@@ -25,8 +25,12 @@ export function assertPassword(value) {
 
 // Coordinate sanity bounds for the Olongapo metro region + loose global guard.
 const LAT_MIN = -90, LAT_MAX = 90, LNG_MIN = -180, LNG_MAX = 180;
-export function assertCoordPair([lat, lon]) {
-  if (!Array.isArray([lat, lon]) || !Number.isFinite(lat) || !Number.isFinite(lon)) {
+export function assertCoordPair(coord) {
+  if (!Array.isArray(coord) || coord.length !== 2) {
+    throw badRequest('Invalid coordinates.');
+  }
+  const [lat, lon] = coord;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     throw badRequest('Invalid coordinates.');
   }
   if (lat < LAT_MIN || lat > LAT_MAX || lon < LNG_MIN || lon > LNG_MAX) {

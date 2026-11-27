@@ -2,8 +2,7 @@ import { Router } from 'express';
 import { askGemini } from '../lib/gemini.js';
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { ok } from '../lib/http.js';
-import { badRequest } from '../lib/AppError.js';
-import { computeFare } from '../lib/fares.js';
+import { badRequest, serviceUnavailable } from '../lib/AppError.js';
 
 const router = Router();
 const MAX_INPUT = Number(process.env.AI_MAX_INPUT_CHARS) || 1000;
@@ -116,8 +115,7 @@ Current fare policy (server-side, not from model):
     ok(res, { reply });
   } catch (err) {
     console.error('[ai]', err.status ?? err.name);
-    const [status, error] = mapAiError(err);
-    res.status(status).json({ error });
+    throw serviceUnavailable(mapAiError(err)[1]);
   }
 }));
 
@@ -137,8 +135,7 @@ router.post('/summary', asyncHandler(async (req, res) => {
     ok(res, { summary });
   } catch (err) {
     console.error('[ai]', err.status ?? err.name);
-    const [status, error] = mapAiError(err);
-    res.status(status).json({ error });
+    throw serviceUnavailable(mapAiError(err)[1]);
   }
 }));
 
@@ -157,8 +154,7 @@ router.post('/notification', asyncHandler(async (req, res) => {
     ok(res, { message });
   } catch (err) {
     console.error('[ai]', err.status ?? err.name);
-    const [statusCode, error] = mapAiError(err);
-    res.status(statusCode).json({ error });
+    throw serviceUnavailable(mapAiError(err)[1]);
   }
 }));
 
@@ -201,8 +197,7 @@ Rules:
     ok(res, parsed);
   } catch (err) {
     console.error('[ai]', err.status ?? err.name);
-    const [status, error] = mapAiError(err);
-    res.status(status).json({ error });
+    throw serviceUnavailable(mapAiError(err)[1]);
   }
 }));
 
