@@ -9,6 +9,10 @@ const OLONGAPO = { lat: MAP_DEFAULT_CENTER[0], lng: MAP_DEFAULT_CENTER[1] };
 // Small in-memory cache so re-typing doesn't re-hit the network.
 const searchCache = new Map();
 
+// Cache for computed routes so the same pickup→dropoff doesn't re-hit the
+// backend on every recalculation (key: "lat,lng|lat,lng:mode").
+const routeCache = new Map();
+
 // Request-ID guard: only the latest keystroke may update the dropdown.
 let latestSearchId = 0;
 
@@ -76,9 +80,15 @@ export async function reverseGeocode(lat, lng) {
 
 /**
  * Routed distance/duration/line via backend OSRM proxy.
- * Uses ROUTING_MODE from config (default: 'cycling' for tricycles)
+ * Uses ROUTING_MODE from config (default: 'cycling' for tricycles).
+ * Results are cached by "lat,lng|lat,lng:mode" so repeat lookups for the same
+ * ride don't re-hit the backend.
  */
 export async function fetchRoute(a, b, mode = ROUTING_MODE) {
+  const key = `${a.lat.toFixed(5)},${a.lng.toFixed(5)}|${b.lat.toFixed(5)},${b.lng.toFixed(5)}:${mode}`;
+  const cached = routeCache.get(key);
+  if (cached) return cached;
+
   const qs = new URLSearchParams({
     fromLat: String(a.lat),
     fromLng: String(a.lng),
@@ -87,7 +97,9 @@ export async function fetchRoute(a, b, mode = ROUTING_MODE) {
     mode,
   });
   const d = await fetchJson(`${API_BASE}/places/route?${qs.toString()}`, 9000);
-  return { distanceM: d.distanceM, durationS: d.durationS, line: d.line };
+  const result = { distanceM: d.distanceM, durationS: d.durationS, line: d.line };
+  routeCache.set(key, result);
+  return result;
 }
 
 export { OLONGAPO };

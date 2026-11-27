@@ -109,13 +109,17 @@ router.get('/reverse', asyncHandler(async (req, res) => {
 
 // ── GET /api/places/route?fromLat=..&fromLng=..&toLat=..&toLng=..&mode=driving ──
 // Server-side OSRM proxy so the app works even where router.project-osrm.org
-// is blocked by CORS/adblock. mode: driving | walking | cycling.
+// is blocked by CORS/adblock.
+// mode: driving | walking | cycling   (default: driving — tricycles use roads)
+// alternatives: 1 to return up to 3 alternative routes
+// waypoints:   semicolon-separated "lat,lng;lat,lng" intermediate stops
 router.get('/route', asyncHandler(async (req, res) => {
   const fromLat = Number(req.query.fromLat);
   const fromLng = Number(req.query.fromLng);
   const toLat = Number(req.query.toLat);
   const toLng = Number(req.query.toLng);
   const mode = ['driving', 'walking', 'cycling'].includes(req.query.mode) ? req.query.mode : 'driving';
+  const wantAlternatives = req.query.alternatives === '1';
 
   // Validate coordinates are finite
   if (![fromLat, fromLng, toLat, toLng].every(Number.isFinite)) {
@@ -127,7 +131,6 @@ router.get('/route', asyncHandler(async (req, res) => {
   // Allow ~10km buffer for nearby areas (Subic, SBMA, etc.)
   const MIN_LAT = 14.7, MAX_LAT = 14.95;
   const MIN_LNG = 120.15, MAX_LNG = 120.45;
-  const coords = [fromLat, fromLng, toLat, toLng];
   const latCoords = [fromLat, toLat];
   const lngCoords = [fromLng, toLng];
 
@@ -147,13 +150,39 @@ router.get('/route', asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Origin and destination cannot be identical.' });
   }
 
-  const url =
-    `https://router.project-osrm.org/route/v1/${mode}/${fromLng},${fromLat};${toLng},${toLat}` +
-    `?overview=full&geometries=geojson&steps=false`;
+  // Build the OSRM coordinate string: from;waypoint1;waypoint2;...;to
+  let coords = `${fromLng},${fromLat}`;
+  const waypoints = [];
+  if (req.query.waypoints) {
+    for (const wp of String(req.query.waypoints).split(';')) {
+      const [wLat, wLng] = wp.split(',').map(Number);
+      if (Number.isFinite(wLat) && Number.isFinite(wLng)) {
+        waypoints.push({ lat: wLat, lng: wLng });
+        coords += `;${wLng},${wLat}`;
+      }
+    }
+  }
+  coords += `;${toLng},${toLat}`;
+
+  const qs = new URLSearchParams({
+    overview: 'full',
+    geometries: 'geojson',
+    steps: 'false',
+    ...(wantAlternatives ? { alternatives: 'true' } : {}),
+  });
+  const url = `https://router.project-osrm.org/route/v1/${mode}/${coords}?${qs.toString()}`;
   const r = await fetch(url, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   const d = await r.json();
-  const route = d?.routes?.[0];
-  if (!route) {
+
+  const buildRoute = (route) => ({
+    distanceM: route.distance,
+    durationS: route.duration,
+    line: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+    weight: route.weight,
+  });
+
+  const routes = (d?.routes || []).map(buildRoute);
+  if (routes.length === 0) {
     // Fallback: return direct distance with 30% padding for tricycle road routing
     const haversine = (locA, locB) => {
       const R = 6371000;
@@ -173,13 +202,17 @@ router.get('/route', asyncHandler(async (req, res) => {
       distanceM,
       durationS,
       line: [[fromLat, fromLng], [toLat, toLng]],
+      alternatives: [],
     });
   }
+
   ok(res, {
     mode,
-    distanceM: route.distance,
-    durationS: route.duration,
-    line: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+    waypoints,
+    distanceM: routes[0].distanceM,
+    durationS: routes[0].durationS,
+    line: routes[0].line,
+    alternatives: routes.slice(1),
   });
 }));
 

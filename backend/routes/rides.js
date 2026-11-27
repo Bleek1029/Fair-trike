@@ -6,7 +6,8 @@ import { ok, created } from '../lib/http.js';
 import { badRequest, notFound, conflict } from '../lib/AppError.js';
 import { assertCoordPair, requireFields, trim } from '../lib/validation.js';
 import { computeFare, normalizeRideType } from '../lib/fares.js';
-import { emitRideRequested, emitRideEvent } from '../socket.js';
+import { computeRouteDistance, haversineMeters } from '../lib/route.js';
+import { emitRideRequested, emitRideRequestedTo, emitRideEvent } from '../socket.js';
 
 const router = Router();
 
@@ -46,7 +47,19 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
   requireFields({ pickup_label: pickupLabel, dropoff_label: dropoffLabel }, ['pickup_label', 'dropoff_label']);
   assertCoordPair([req.body.pickup_coord.lat, req.body.pickup_coord.lng]);
   assertCoordPair([req.body.dropoff_coord.lat, req.body.dropoff_coord.lng]);
-  const distanceM = Math.max(0, Number.parseInt(req.body.distance_m, 10) || 0);
+
+  // ── Authoritative server-side distance & fare ─────────────────────────
+  // Never trust client-supplied distance_m (a rider could under-report to pay
+  // less). Compute the routed distance from the coordinates ourselves and use
+  // it for the fare. The client's distance_m is kept only as a hint / fallback.
+  const { distanceM: serverDistanceM } = await computeRouteDistance(
+    req.body.pickup_coord.lat, req.body.pickup_coord.lng,
+    req.body.dropoff_coord.lat, req.body.dropoff_coord.lng
+  );
+  const clientDistanceM = Math.max(0, Number.parseInt(req.body.distance_m, 10) || 0);
+  // Use the larger of server-computed vs client-reported so the fare reflects
+  // at least the real route distance; never less than what the server measured.
+  const distanceM = Math.max(serverDistanceM, clientDistanceM);
   // Fare tier: regular | pwd | discounted — PWD and student/senior tiers get
   // the statutory 20% discount (₱30.00 → ₱24.00 at the standard fare).
   const rideType = normalizeRideType(req.body.ride_type);
@@ -61,16 +74,67 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
       distanceM, computeFare(distanceM, rideType)]
   );
   const ride = publicRide(inserted.rows[0]);
-  emitRideRequested(ride);
+
+  // ── Nearest-driver notification ───────────────────────────────────────
+  // Notify the closest approved drivers (by live location) first so the ride
+  // is claimed faster, reducing passenger wait and driver deadheading.
+  // Falls back to broadcasting to all drivers when no driver has a live fix.
+  try {
+    const drivers = await pool.query(
+      `SELECT d.user_id, d.last_lat, d.last_lng
+       FROM drivers d
+       JOIN users u ON u.id = d.user_id
+       WHERE d.status = 'approved' AND u.role = 'driver'
+         AND d.last_lat IS NOT NULL AND d.last_lng IS NOT NULL`
+    );
+    let targetDriverIds = [];
+    if (drivers.rows.length > 0) {
+      const pickup = { lat: req.body.pickup_coord.lat, lng: req.body.pickup_coord.lng };
+      const withDist = drivers.rows.map((d) => ({
+        userId: d.user_id,
+        dist: haversineMeters(pickup.lat, pickup.lng, d.last_lat, d.last_lng),
+      }));
+      withDist.sort((a, b) => a.dist - b.dist);
+      targetDriverIds = withDist.slice(0, 5).map((d) => d.userId);
+    }
+    if (targetDriverIds.length > 0) {
+      emitRideRequestedTo(ride, targetDriverIds);
+    } else {
+      emitRideRequested(ride);
+    }
+  } catch {
+    // If driver-location lookup fails, fall back to the global broadcast.
+    emitRideRequested(ride);
+  }
+
   created(res, { ride });
 }));
 
 // ── GET /api/rides/available — pending ride offers (drivers) ──
-router.get('/available', requireAuth, requireRole(pool, 'driver'), asyncHandler(async (_req, res) => {
+// Ordered by proximity to the driver's last known location so the nearest
+// rides surface first (reduces deadheading and response time).
+router.get('/available', requireAuth, requireRole(pool, 'driver'), asyncHandler(async (req, res) => {
   const result = await pool.query(
     `${RIDES_SELECT} WHERE r.status = 'pending' ORDER BY r.created_at ASC LIMIT 20`
   );
-  ok(res, { rides: result.rows.map(publicRide) });
+  let rides = result.rows.map(publicRide);
+
+  // Attach the requesting driver's last known location for proximity sorting.
+  const driver = await pool.query(
+    `SELECT last_lat, last_lng FROM drivers WHERE user_id = $1`, [req.user.id]
+  );
+  const driverLat = driver.rows[0]?.last_lat;
+  const driverLng = driver.rows[0]?.last_lng;
+
+  if (driverLat != null && driverLng != null && rides.length > 0) {
+    rides.sort((a, b) => {
+      const da = haversineMeters(driverLat, driverLng, a.pickupCoord.lat, a.pickupCoord.lng);
+      const db = haversineMeters(driverLat, driverLng, b.pickupCoord.lat, b.pickupCoord.lng);
+      return da - db;
+    });
+  }
+
+  ok(res, { rides });
 }));
 
 // ── POST /api/rides/:id/accept — claim a pending ride ────

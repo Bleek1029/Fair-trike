@@ -34,5 +34,6 @@ export const API_BASE = viteEnv.VITE_API_URL || '/api';
 export const UPLOADS_BASE = '/uploads';
 
 // Routing mode: 'driving' | 'cycling' | 'walking'
-// 'cycling' often better for tricycles (smaller vehicles, narrower roads)
-export const ROUTING_MODE = 'cycling';
+// 'driving' matches tricycles (motor vehicles on roads); OSRM driving profile
+// returns realistic road geometry and duration for the Olongapo road network.
+export const ROUTING_MODE = 'driving';

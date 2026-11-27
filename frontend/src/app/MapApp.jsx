@@ -51,6 +51,12 @@ export function MapApp() {
   const searchTimeoutRef = useRef(null);
   const socketRef = useRef(null);
   const urlSyncRef = useRef(false); // Prevent circular updates
+  // Last-resolved coordinates so requestRide can reuse them instead of
+  // re-geocoding the same pickup/dropoff.
+  const resolvedCoordsRef = useRef({ start: null, dest: null });
+  // Key of the last route we calculated ("pickup|dropoff") to avoid recalculating
+  // identical routes on every click.
+  const lastRouteKeyRef = useRef(null);
 
   // Deep linking: read from URL query params, fallback to location.state, then defaults
   const urlPickup = searchParams.get('pickup');
@@ -131,6 +137,8 @@ export function MapApp() {
   const onStartChange = useCallback((value) => {
     setStartStr(value);
     setRouteResult(null);
+    resolvedCoordsRef.current.start = null;
+    lastRouteKeyRef.current = null;
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => searchSuggestions(value), SEARCH_DEBOUNCE_MS);
     // Sync to URL (debounced to avoid excessive history entries)
@@ -151,6 +159,8 @@ export function MapApp() {
   const onDestChange = useCallback((value) => {
     setDestStr(value);
     setRouteResult(null);
+    resolvedCoordsRef.current.dest = null;
+    lastRouteKeyRef.current = null;
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => searchSuggestions(value), SEARCH_DEBOUNCE_MS);
     // Sync to URL (debounced to avoid excessive history entries)
@@ -446,17 +456,28 @@ export function MapApp() {
   );
 
   const calculateRoute = async () => {
-    const a = await resolveCoord('start', startStr);
-    const b = await resolveCoord('dest', destStr);
+    // Resolve both coordinates in parallel (independent lookups).
+    const [a, b] = await Promise.all([
+      resolveCoord('start', startStr),
+      resolveCoord('dest', destStr),
+    ]);
     if (!a || !b) {
       setRouteResult(null);
       setRouteError('Location not recognized. Pick a place from the suggestions, or tap "Use Current Location" for pickup.');
       return;
     }
+    // Dedup: skip recalculating an identical route we already have.
+    const routeKey = `${startStr}|${destStr}`;
+    if (routeKey === lastRouteKeyRef.current && routeResult) {
+      resolvedCoordsRef.current = { start: a, dest: b };
+      return;
+    }
+    lastRouteKeyRef.current = routeKey;
+    resolvedCoordsRef.current = { start: a, dest: b };
     setRouteError('');
     setCalculating(true);
     try {
-      // Backend OSRM proxy with 'cycling' mode (better for tricycles/small vehicles)
+      // Backend OSRM proxy with 'driving' mode (tricylcles are motor vehicles on roads)
       // Falls back to direct estimate if routing service unavailable.
       let distance = null;
       let duration = null;
@@ -532,8 +553,9 @@ export function MapApp() {
       navigate('/login');
       return;
     }
-    const a = await resolveCoord('start', startStr);
-    const b = await resolveCoord('dest', destStr);
+    // Reuse already-resolved coordinates so we don't re-geocode the same
+    // pickup/dropoff after the user has already calculated the route.
+    const { start: a, dest: b } = resolvedCoordsRef.current;
     if (!a || !b) {
       setBookError('Pick a valid pickup and drop-off point before requesting a ride.');
       return;

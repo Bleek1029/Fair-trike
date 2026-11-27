@@ -144,6 +144,14 @@ export function emitRideRequested(data = {}) {
   io.to('drivers').emit('ride-requested', data);
 }
 
+/** Notify specific drivers of a new pending ride request (nearest-first matching). */
+export function emitRideRequestedTo(data = {}, driverUserIds = []) {
+  if (!io) return;
+  for (const userId of driverUserIds) {
+    io.to(`user:${userId}`).emit('ride-requested', data);
+  }
+}
+
 /** Notify admin room of a new pending user/driver registration. */
 export function emitAdminUserCreated(user) {
   if (!io) return;
